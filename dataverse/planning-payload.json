@@ -1,0 +1,120 @@
+{
+  "domains": [
+    {
+      "name": "Project Intake",
+      "description": "Business language and boundaries for the app"
+    }
+  ],
+  "tables": [
+    {
+      "schemaName": "maftagsc_ProjectRequest",
+      "displayName": "Project Request",
+      "displayCollectionName": "Project Requests",
+      "logicalSingularName": "maftagsc_projectrequest",
+      "logicalPluralName": "maftagsc_projectrequests",
+      "entitySetName": "maftagsc_projectrequests",
+      "tableLogicalName": "maftagsc_projectrequests",
+      "description": "Tracks incoming requests for work",
+      "ownership": "UserOwned",
+      "ownershipType": "UserOwned",
+      "isActivity": false,
+      "hasActivities": false,
+      "hasNotes": true,
+      "primaryName": {
+        "schemaName": "maftagsc_ProjectRequestName",
+        "displayName": "Name",
+        "description": "Primary name for the request",
+        "maxLength": 100
+      },
+      "columns": [
+        {
+          "schemaName": "maftagsc_requeststatus",
+          "displayName": "Request Status",
+          "logicalName": "maftagsc_requeststatus",
+          "type": "Picklist",
+          "globalOptionSetName": "maftagsc_requeststatus",
+          "requiredLevel": "ApplicationRequired"
+        },
+        {
+          "schemaName": "maftagsc_requestedon",
+          "displayName": "Requested On",
+          "logicalName": "maftagsc_requestedon",
+          "type": "DateTime",
+          "format": "DateOnly",
+          "requiredLevel": "None"
+        }
+      ],
+      "attributes": [
+        {
+          "schemaName": "maftagsc_requeststatus",
+          "displayName": "Request Status",
+          "type": "Picklist",
+          "globalOptionSetName": "maftagsc_requeststatus",
+          "requiredLevel": "ApplicationRequired"
+        },
+        {
+          "schemaName": "maftagsc_requestedon",
+          "displayName": "Requested On",
+          "type": "DateTime",
+          "format": "DateOnly",
+          "requiredLevel": "None"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "type": "ManyToOne",
+      "fromTable": "maftagsc_projectrequests",
+      "toTable": "maftagsc_departments",
+      "referencingEntity": "maftagsc_projectrequests",
+      "referencedEntity": "maftagsc_departments",
+      "schemaName": "maftagsc_ProjectRequest_Department",
+      "lookupSchemaName": "maftagsc_DepartmentId",
+      "lookupDisplayName": "Department"
+    }
+  ],
+  "provisioningPlansJson": [
+    {
+      "path": "dataverse/provision-tables.plan.json",
+      "purpose": "Create or update tables and columns after review"
+    },
+    {
+      "path": "dataverse/provision-relationships.plan.json",
+      "purpose": "Apply relationship changes after table provisioning"
+    },
+    {
+      "path": "dataverse/register-datasources.plan.json",
+      "purpose": "Register Dataverse tables with pac code add-data-source and regenerate the SDK"
+    }
+  ],
+  "orgStructure": {
+    "businessUnits": [
+      { "name": "Field Operations", "parentName": null },
+      { "name": "West Region", "parentName": "Field Operations" }
+    ],
+    "securityGroups": [
+      {
+        "displayName": "Field Operations - West",
+        "mailNickname": "field-ops-west",
+        "entraObjectId": null
+      }
+    ],
+    "teams": [
+      {
+        "name": "Field Operations - West",
+        "businessUnitName": "West Region",
+        "teamType": "Owner",
+        "membershipSource": "EntraGroup",
+        "securityGroupDisplayName": "Field Operations - West"
+      }
+    ],
+    "roleMappings": [
+      {
+        "teamName": "Field Operations - West",
+        "roleName": "Project Tracker Collaborator",
+        "scope": "BusinessUnit"
+      }
+    ]
+  }
+}
