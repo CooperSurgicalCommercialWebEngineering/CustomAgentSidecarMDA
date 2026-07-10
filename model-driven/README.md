@@ -20,13 +20,18 @@ The deployable Dataverse copies are created as web resources in the
 
 The side pane uses four non-secret identifiers: Application (client) ID,
 Directory (tenant) ID, Power Platform environment ID, and Copilot Studio agent
-schema name. They are compiled into the single-file HTML web resource by
-`pnpm run build:model-driven`. No client secret is created or shipped.
+schema name. The generic runtime resolves an enabled configuration by the
+current Model-driven App ID and fails closed when no unique match exists. The
+current HR values remain in `hrSidecarBootstrap.ts` as a compatibility bridge
+until the runtime configuration repository is implemented. No client secret is
+created or shipped, and MSAL tokens use memory storage only.
 
 ## Build
 
-The maintained source is `hrAgentSidePane.ts`; `hrAgentSidePane.template.html`
-provides the accessible shell. Build and type-check it from the repository root:
+The maintained conversation source is `hrAgentSidePane.ts`, the form launcher
+source is `hrAgentSidePaneLauncher.ts`, and `hrAgentSidePane.template.html`
+provides the accessible shell. Both TypeScript entries use the same app-keyed
+configuration repository. Build and type-check them from the repository root:
 
 ```text
 pnpm run typecheck:model-driven
@@ -34,8 +39,14 @@ pnpm run build:model-driven
 ```
 
 The build bundles MSAL Browser and the Agents SDK directly into
-`hrAgentSidePane.html`, then synchronizes the deployable solution projection.
-Do not edit the generated HTML directly.
+`hrAgentSidePane.html`, compiles the launcher into `hrAgentSidePane.js`, then
+synchronizes both deployable solution projections. Do not edit either generated
+web resource directly.
+
+The app-keyed compatibility runtime was deployed in place to the existing
+`HRAgentSidecar` development solution on 2026-07-10 after explicit project-owner
+approval. Any later import or publish still requires target-environment
+confirmation and the repository's deployment safeguards.
 
 ## Side-pane smoke test
 

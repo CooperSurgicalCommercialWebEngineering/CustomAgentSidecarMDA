@@ -11,43 +11,14 @@ import {
     type CopilotStudioWebChatConnection
 } from "@microsoft/agents-copilotstudio-client";
 import type { Activity } from "@microsoft/agents-activity";
+import { sidecarConfigurationRepository } from "./hrSidecarBootstrap";
+import {
+    getEntityBinding,
+    normalizeGuid,
+    type SidecarConfiguration
+} from "./sidecarConfiguration";
 
-const CONFIG = Object.freeze({
-    clientId: "9d03cd77-5246-4c9c-8e9d-262bff547a25",
-    tenantId: "d92190b9-98e7-46da-8b11-580e06c7d15d",
-    environmentId: "f9b87f8b-0abf-e629-affb-b13195d1ed14",
-    agentSchemaName: "cr0b1_HRMgmtClassic",
-    scope: "https://api.powerplatform.com/CopilotStudio.Copilots.Invoke",
-    redirectPath: "/WebResources/maftagsc_/copilot/authRedirect.html"
-});
-
-const SUPPORTED_ENTITIES = new Set([
-    "systemuser",
-    "position",
-    "businessunit",
-    "maftagsc_timeofftype",
-    "maftagsc_timeoffbalance",
-    "maftagsc_timeoffrequest",
-    "maftagsc_expensereport",
-    "maftagsc_expenseline",
-    "maftagsc_benefitplan",
-    "maftagsc_benefitenrollment"
-]);
-const GUID_PATTERN = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
-
-const SCREEN_NAMES: Readonly<Record<string, string>> = Object.freeze({
-    systemuser: "Employee record form",
-    position: "Position record form",
-    businessunit: "Department record form",
-    maftagsc_timeofftype: "Time Off Type record form",
-    maftagsc_timeoffbalance: "Time Off Balance record form",
-    maftagsc_timeoffrequest: "Time Off Request record form",
-    maftagsc_expensereport: "Expense Report record form",
-    maftagsc_expenseline: "Expense Line record form",
-    maftagsc_benefitplan: "Benefit Plan record form",
-    maftagsc_benefitenrollment: "Benefit Enrollment record form"
-});
 
 interface LaunchContext {
     pageType: "entityrecord" | "entitylist";
@@ -55,6 +26,11 @@ interface LaunchContext {
     recordId: string | null;
     recordName: string;
     appId: string | null;
+}
+
+interface LaunchRequest {
+    configuration: SidecarConfiguration;
+    context: LaunchContext;
 }
 
 interface HostPageInput {
@@ -112,22 +88,13 @@ declare global {
     }
 }
 
-const msalClient = new PublicClientApplication({
-    auth: {
-        clientId: CONFIG.clientId,
-        authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
-        redirectUri: `${window.location.origin}${CONFIG.redirectPath}`
-    },
-    cache: {
-        cacheLocation: "localStorage"
-    }
-});
-
+let msalClient: PublicClientApplication | null = null;
 let msalInitialized = false;
 let startInProgress = false;
 let activeConnection: CopilotStudioWebChatConnection | null = null;
 let activeToken: string | null = null;
 let activeContext: LaunchContext | null = null;
+let activeConfiguration: SidecarConfiguration | null = null;
 let resetInProgress = false;
 
 function getRequiredElement<T extends HTMLElement>(id: string): T {
@@ -138,7 +105,7 @@ function getRequiredElement<T extends HTMLElement>(id: string): T {
     return element as T;
 }
 
-function parseContext(): LaunchContext {
+async function parseLaunchRequest(): Promise<LaunchRequest> {
     const encoded = new URLSearchParams(window.location.search).get("data");
     if (!encoded || encoded.length > 2000) {
         throw new Error("Screen context wasn't provided.");
@@ -151,38 +118,28 @@ function parseContext(): LaunchContext {
         throw new Error("Screen context is invalid.");
     }
 
-    const entityName = String(value.entityName || "").toLowerCase();
-    if (!SUPPORTED_ENTITIES.has(entityName)) {
+    const appId = normalizeGuid(value.appId);
+    const configuration = await sidecarConfigurationRepository.getByAppId(appId);
+    const entityName = String(value.entityName || "").trim().toLowerCase();
+    if (!getEntityBinding(configuration, entityName)) {
         throw new Error("Screen-specific help isn't available for this table.");
     }
 
-    const recordId = value.recordId == null
-        ? null
-        : String(value.recordId).toLowerCase();
-    if (recordId && !GUID_PATTERN.test(recordId)) {
+    const recordId = value.recordId == null ? null : normalizeGuid(value.recordId);
+    if (value.recordId != null && !recordId) {
         throw new Error("The current record identifier is invalid.");
     }
 
-    const appId = value.appId == null ? null : String(value.appId).toLowerCase();
-    if (appId && !GUID_PATTERN.test(appId)) {
-        throw new Error("The current app identifier is invalid.");
-    }
-
     return {
-        pageType: value.pageType === "entitylist" ? "entitylist" : "entityrecord",
-        entityName,
-        recordId,
-        recordName: String(value.recordName || "").slice(0, 200),
-        appId
+        configuration,
+        context: {
+            pageType: value.pageType === "entitylist" ? "entitylist" : "entityrecord",
+            entityName,
+            recordId,
+            recordName: String(value.recordName || "").slice(0, 200),
+            appId
+        }
     };
-}
-
-function normalizeGuid(value: unknown): string | null {
-    const normalized = String(value ?? "")
-        .trim()
-        .replace(/^\{([^{}]+)\}$/, "$1")
-        .toLowerCase();
-    return GUID_PATTERN.test(normalized) ? normalized : null;
 }
 
 function getHostXrm(): HostXrm | null {
@@ -218,7 +175,10 @@ function getCurrentRecordName(
     return String(formEntity.getPrimaryAttributeValue?.() ?? "").slice(0, 200);
 }
 
-function getCurrentContext(fallback: LaunchContext): LaunchContext {
+function getCurrentContext(
+    fallback: LaunchContext,
+    configuration: SidecarConfiguration
+): LaunchContext {
     try {
         const hostXrm = getHostXrm();
         const input = hostXrm?.Utility?.getPageContext?.().input;
@@ -226,7 +186,7 @@ function getCurrentContext(fallback: LaunchContext): LaunchContext {
             ? input.pageType
             : null;
         const entityName = String(input?.entityName ?? "").trim().toLowerCase();
-        if (!pageType || !SUPPORTED_ENTITIES.has(entityName)) {
+        if (!pageType || !getEntityBinding(configuration, entityName)) {
             return fallback;
         }
 
@@ -284,37 +244,58 @@ function showError(error: unknown): void {
     retry.hidden = false;
 }
 
-async function initializeMsal(): Promise<void> {
+function getMsalClient(configuration: SidecarConfiguration): PublicClientApplication {
+    if (!msalClient) {
+        msalClient = new PublicClientApplication({
+            auth: {
+                clientId: configuration.clientId,
+                authority: `https://login.microsoftonline.com/${configuration.tenantId}`,
+                redirectUri: `${window.location.origin}${configuration.redirectPath}`
+            },
+            cache: {
+                cacheLocation: "memoryStorage"
+            }
+        });
+    }
+    return msalClient;
+}
+
+async function initializeMsal(configuration: SidecarConfiguration): Promise<PublicClientApplication> {
+    const client = getMsalClient(configuration);
     if (!msalInitialized) {
-        await msalClient.initialize();
+        await client.initialize();
         let redirectResult: AuthenticationResult | null = null;
         try {
-            redirectResult = await msalClient.handleRedirectPromise();
+            redirectResult = await client.handleRedirectPromise();
         } catch (error) {
             if (getSafeErrorCode(error) !== "no_token_request_cache_error") {
                 throw error;
             }
         }
         if (redirectResult?.account) {
-            msalClient.setActiveAccount(redirectResult.account);
+            client.setActiveAccount(redirectResult.account);
         }
         msalInitialized = true;
     }
+    return client;
 }
 
-function getCachedAccount(): AccountInfo | undefined {
-    return msalClient.getActiveAccount() ?? msalClient.getAllAccounts()[0];
+function getCachedAccount(client: PublicClientApplication): AccountInfo | undefined {
+    return client.getActiveAccount() ?? client.getAllAccounts()[0];
 }
 
-async function acquireToken(interactive: boolean): Promise<string | null> {
-    await initializeMsal();
-    const account = getCachedAccount();
+async function acquireToken(
+    interactive: boolean,
+    configuration: SidecarConfiguration
+): Promise<string | null> {
+    const client = await initializeMsal(configuration);
+    const account = getCachedAccount(client);
 
     if (account) {
-        msalClient.setActiveAccount(account);
+        client.setActiveAccount(account);
         try {
-            const result = await msalClient.acquireTokenSilent({
-                scopes: [CONFIG.scope],
+            const result = await client.acquireTokenSilent({
+                scopes: [configuration.scope],
                 account
             });
             return result.accessToken;
@@ -330,30 +311,42 @@ async function acquireToken(interactive: boolean): Promise<string | null> {
         return null;
     }
 
-    const result: AuthenticationResult = await msalClient.acquireTokenPopup({
-        scopes: [CONFIG.scope],
+    const result: AuthenticationResult = await client.acquireTokenPopup({
+        scopes: [configuration.scope],
         account,
         prompt: account ? undefined : "select_account"
     });
-    msalClient.setActiveAccount(result.account);
+    client.setActiveAccount(result.account);
     return result.accessToken;
 }
 
-function getScreenName(context: LaunchContext): string {
-    const recordScreen = SCREEN_NAMES[context.entityName] ?? "HR Management record form";
+function getScreenName(
+    context: LaunchContext,
+    configuration: SidecarConfiguration
+): string {
+    const recordScreen = getEntityBinding(configuration, context.entityName)?.screenName ??
+        configuration.defaultScreenName;
     return context.pageType === "entitylist"
         ? recordScreen.replace(/ record form$/, " list")
         : recordScreen;
 }
 
-function createContextEnvelope(context: LaunchContext, userText: string): string {
+function createContextEnvelope(
+    context: LaunchContext,
+    userText: string,
+    configuration: SidecarConfiguration
+): string {
     const recordDescription = context.recordName
         ? ` The open record is named "${context.recordName}".`
         : "";
 
     return [
-        "[Trusted HR Management app context]",
-        `The user is currently on the ${getScreenName(context)}.${recordDescription}`,
+        `[Trusted ${configuration.contextLabel} context]`,
+        `The user is currently on the ${getScreenName(context, configuration)}.${recordDescription}`,
+        `App ID: ${context.appId ?? "unavailable"}`,
+        `Page type: ${context.pageType}`,
+        `Table: ${context.entityName}`,
+        `Record ID: ${context.recordId ?? "unavailable"}`,
         "Use this exact screen as the primary context for navigation and how-to questions. Do not infer or substitute a different screen.",
         "[End trusted app context]",
         "",
@@ -361,7 +354,11 @@ function createContextEnvelope(context: LaunchContext, userText: string): string
     ].join("\n");
 }
 
-function createContextStore(webChat: WebChatApi, getContext: () => LaunchContext): unknown {
+function createContextStore(
+    webChat: WebChatApi,
+    getContext: () => LaunchContext,
+    configuration: SidecarConfiguration
+): unknown {
     return webChat.createStore({}, ({ dispatch }) => next => action => {
         if (
             action.type === "DIRECT_LINE/CONNECT_FULFILLED" ||
@@ -373,8 +370,11 @@ function createContextStore(webChat: WebChatApi, getContext: () => LaunchContext
                 payload: {
                     name: "pvaSetContext",
                     value: {
-                        CurrentScreen: getScreenName(context),
+                        CurrentAppId: context.appId,
+                        CurrentPageType: context.pageType,
+                        CurrentScreen: getScreenName(context, configuration),
                         CurrentTable: context.entityName,
+                        CurrentRecordId: context.recordId,
                         CurrentRecordName: context.recordName
                     }
                 }
@@ -412,7 +412,11 @@ function resetWebChatHost(): HTMLElement {
     return replacement;
 }
 
-function renderConversation(token: string, context: LaunchContext): void {
+function renderConversation(
+    token: string,
+    context: LaunchContext,
+    configuration: SidecarConfiguration
+): void {
     if (
         !window.WebChat ||
         typeof window.WebChat.createStore !== "function" ||
@@ -422,8 +426,8 @@ function renderConversation(token: string, context: LaunchContext): void {
     }
 
     const settings = new ConnectionSettings({
-        environmentId: CONFIG.environmentId,
-        schemaName: CONFIG.agentSchemaName
+        environmentId: configuration.environmentId,
+        schemaName: configuration.agentSchemaName
     });
     const client = new CopilotStudioClient(settings, token);
     const connection = CopilotStudioWebChat.createConnection(client, {
@@ -438,12 +442,12 @@ function renderConversation(token: string, context: LaunchContext): void {
             return originalPostActivity(activity);
         }
 
-        const currentContext = getCurrentContext(activeContext ?? context);
+        const currentContext = getCurrentContext(activeContext ?? context, configuration);
         activeContext = currentContext;
 
         return originalPostActivity({
             ...activity,
-            text: createContextEnvelope(currentContext, originalText),
+            text: createContextEnvelope(currentContext, originalText, configuration),
             channelData: {
                 ...activity.channelData,
                 [ORIGINAL_TEXT_KEY]: originalText
@@ -451,10 +455,10 @@ function renderConversation(token: string, context: LaunchContext): void {
         } as Activity);
     };
     const store = createContextStore(window.WebChat, () => {
-        const currentContext = getCurrentContext(activeContext ?? context);
+        const currentContext = getCurrentContext(activeContext ?? context, configuration);
         activeContext = currentContext;
         return currentContext;
-    });
+    }, configuration);
 
     const chat = getRequiredElement<HTMLElement>("chat");
     const webChat = getRequiredElement<HTMLElement>("webchat");
@@ -476,11 +480,12 @@ function renderConversation(token: string, context: LaunchContext): void {
     activeConnection = connection;
     activeToken = token;
     activeContext = context;
+    activeConfiguration = configuration;
     chat.focus();
 }
 
 async function startNewConversation(): Promise<void> {
-    if (resetInProgress || !activeToken || !activeContext) {
+    if (resetInProgress || !activeToken || !activeContext || !activeConfiguration) {
         return;
     }
     if (!window.confirm("Start a new conversation? The current chat history will be cleared.")) {
@@ -496,7 +501,11 @@ async function startNewConversation(): Promise<void> {
         activeConnection?.end();
         activeConnection = null;
         resetWebChatHost();
-        renderConversation(activeToken, getCurrentContext(activeContext));
+        renderConversation(
+            activeToken,
+            getCurrentContext(activeContext, activeConfiguration),
+            activeConfiguration
+        );
     } catch (error) {
         getRequiredElement<HTMLElement>("chat").hidden = true;
         getRequiredElement<HTMLElement>("status").hidden = false;
@@ -519,13 +528,13 @@ async function start(interactive: boolean): Promise<void> {
     setStatus(interactive ? "Signing you in…" : "Starting a secure conversation…");
 
     try {
-        const context = parseContext();
-        const token = await acquireToken(interactive);
+        const { configuration, context } = await parseLaunchRequest();
+        const token = await acquireToken(interactive, configuration);
         if (!token) {
             showSignIn();
             return;
         }
-        renderConversation(token, context);
+        renderConversation(token, context, configuration);
     } catch (error) {
         // Never expose token, account, response, or HR context details in the UI or browser logs.
         showError(error);

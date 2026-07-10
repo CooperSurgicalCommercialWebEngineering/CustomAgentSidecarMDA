@@ -46,7 +46,7 @@
       <Library name="maftagsc_/copilot/hrAgentSidePane.js" libraryUniqueId="{53e65b86-27c6-48ed-8d11-36731c766be1}" />
     </formLibraries>
     <events>
-      <event name="onload" application="false" active="false">
+      <event name="onload" application="false" active="true">
         <Handlers>
           <Handler functionName="HRAgentSidecar.initializeGuide" libraryName="maftagsc_/copilot/hrAgentSidePane.js" handlerUniqueId="{31e84979-4bbf-42a1-aa0a-afce500985c4}" enabled="true" parameters="" passExecutionContext="true" />
         </Handlers>

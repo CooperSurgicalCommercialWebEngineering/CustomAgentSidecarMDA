@@ -18,7 +18,10 @@ test("generated side pane uses the registered scope and dedicated popup redirect
     assert.match(html, /cr0b1_HRMgmtClassic/);
     assert.doesNotMatch(html, /Default_HR_Management_App_Guide_9e5461/);
     assert.match(html, /pvaSetContext/);
-    assert.match(html, /Trusted HR Management app context/);
+    assert.match(html, /HR Management app/);
+    assert.match(html, /CurrentAppId/);
+    assert.match(html, /CurrentPageType/);
+    assert.match(html, /CurrentRecordId/);
     assert.match(html, /Benefit Plan record form/);
     assert.match(html, /Segoe UI Web \(West European\)/);
     assert.match(html, /primaryFont/);
@@ -27,20 +30,25 @@ test("generated side pane uses the registered scope and dedicated popup redirect
     assert.match(html, /entitylist/);
     assert.match(html, /New conversation/);
     assert.match(html, /The current chat history will be cleared/);
+    assert.match(html, /memoryStorage/);
+    assert.doesNotMatch(html, /cacheLocation:"localStorage"/);
     assert.doesNotMatch(html, /hrAgentContext/);
     assert.equal((html.match(/<!doctype html>/gi) ?? []).length, 1);
 });
 
 test("library icon is used by the persistent collapsed side pane", async () => {
     const launcher = await read(sourceRoot, "hrAgentSidePane.js");
+    const launcherSource = await read(sourceRoot, "hrAgentSidePaneLauncher.ts");
     const icon = await read(sourceRoot, "hrGuideLibrary.svg");
 
-    assert.match(launcher, /imageSrc: ICON_WEB_RESOURCE/);
+    assert.match(launcherSource, /imageSrc: configuration\.iconWebResource/);
     assert.match(launcher, /WebResources\/maftagsc_\/copilot\/hrGuideLibrary\.svg/);
-    assert.match(launcher, /canClose: false/);
-    assert.match(launcher, /isSelected: false/);
-    assert.match(launcher, /alwaysRender: true/);
-    assert.match(launcher, /HRAgentSidecar\.initializeGuide = initialize/);
+    assert.match(launcherSource, /canClose: false/);
+    assert.match(launcherSource, /isSelected: false/);
+    assert.match(launcherSource, /alwaysRender: true/);
+    assert.match(launcherSource, /sidecarConfigurationRepository\.getByAppId/);
+    assert.match(launcherSource, /window\.AgentSidecar\.initializeGuide = initialize/);
+    assert.match(launcherSource, /window\.HRAgentSidecar\.initializeGuide = initialize/);
     assert.doesNotMatch(launcher, /pane\.select\(\)|HRAgentSidecar\.openGuide/);
     assert.match(icon, /viewBox="0 0 24 24"/);
     assert.match(icon, /currentColor/);
@@ -64,6 +72,7 @@ test("all HR Management main forms register the collapsed guide on load", async 
         assert.match(xml, /<Library name="maftagsc_\/copilot\/hrAgentSidePane\.js"/);
         assert.match(xml, /functionName="HRAgentSidecar\.initializeGuide"/);
         assert.match(xml, /passExecutionContext="true"/);
+        assert.match(xml, /<event name="onload" application="false" active="true">/);
         assert.match(formXml, /<formLibraries>/);
         assert.match(formXml, /<events>/);
     }
@@ -78,8 +87,9 @@ test("live page context replaces stale record details before each message", asyn
     assert.match(source, /formEntityName !== entityName \|\| formRecordId !== recordId/);
     assert.match(source, /action\.type === "WEB_CHAT\/SEND_MESSAGE"/);
     assert.match(source, /recordName: currentRecordName \?\? \(isSameRecord \? fallback\.recordName : ""\)/);
-    assert.match(source, /createContextEnvelope\(currentContext, originalText\)/);
-    assert.match(source, /renderConversation\(activeToken, getCurrentContext\(activeContext\)\)/);
+    assert.match(source, /createContextEnvelope\(currentContext, originalText, configuration\)/);
+    assert.match(source, /getCurrentContext\(activeContext, activeConfiguration\)/);
+    assert.match(source, /await sidecarConfigurationRepository\.getByAppId\(appId\)/);
 });
 
 test("solution projections exactly match maintained web resources", async () => {

@@ -12,6 +12,7 @@ const copilotRoot = path.join(
 );
 const entryPath = path.join(copilotRoot, "hrAgentSidePane.ts");
 const launcherPath = path.join(copilotRoot, "hrAgentSidePane.js");
+const launcherEntryPath = path.join(copilotRoot, "hrAgentSidePaneLauncher.ts");
 const iconPath = path.join(copilotRoot, "hrGuideLibrary.svg");
 const templatePath = path.join(copilotRoot, "hrAgentSidePane.template.html");
 const outputPath = path.join(copilotRoot, "hrAgentSidePane.html");
@@ -83,6 +84,7 @@ if (!template.includes(marker)) {
 
 const safeBundle = await bundle(entryPath);
 const html = template.replace(marker, () => `<script>${safeBundle}</script>`);
+const launcherBundle = await bundle(launcherEntryPath);
 
 if ((html.match(/<!doctype html>/gi) ?? []).length !== 1 || html.includes(marker)) {
     throw new Error("The generated side-pane HTML failed its structural validation.");
@@ -112,9 +114,10 @@ if (
 }
 
 await writeFile(outputPath, html, "utf8");
+await writeFile(launcherPath, launcherBundle, "utf8");
 await writeFile(solutionOutputPath, html, "utf8");
 await writeFile(solutionAuthRedirectPath, authRedirectHtml, "utf8");
-await writeFile(solutionLauncherPath, await readFile(launcherPath, "utf8"), "utf8");
+await writeFile(solutionLauncherPath, launcherBundle, "utf8");
 await writeFile(solutionIconPath, await readFile(iconPath, "utf8"), "utf8");
 
 console.log(`Built ${path.relative(process.cwd(), outputPath)}`);

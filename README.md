@@ -146,6 +146,9 @@ See the accepted decisions:
 - [Separate Model-driven HR solution](docs/adr/0001-use-separate-model-driven-hr-solution.md)
 - [Superseded Direct Line token broker](docs/adr/0002-use-secured-direct-line-token-broker.md)
 - [Delegated authentication and Microsoft 365 Agents SDK](docs/adr/0003-use-delegated-agents-sdk-for-authenticated-side-pane.md)
+- [Reusable core and target binding product architecture](docs/adr/0004-productize-sidecar-as-core-and-target-bindings.md)
+
+The accepted productization roadmap is documented in the [Reusable Agent Sidecar Platform implementation plan](docs/agent-sidecar-reusable-platform-plan.md).
 
 ## HR data model
 
@@ -186,6 +189,7 @@ SharePoint and Copilot Studio knowledge-source configuration are environment-lev
 | [docs/entity-help](docs/entity-help) | Entity-level agent knowledge and routing manifest. |
 | [docs/user-guides](docs/user-guides) | Cross-entity process and administration guides. |
 | [docs/adr](docs/adr) | Architecture Decision Records. |
+| [Reusable platform plan](docs/agent-sidecar-reusable-platform-plan.md) | Accepted solution boundary and phased implementation plan for cross-environment reuse. |
 | [dataverse](dataverse) | Planning payload, OOB discovery, and prototype feedback. |
 | [plugins/HRAgentSidecar.TokenBroker](plugins/HRAgentSidecar.TokenBroker) | Temporary Direct Line rollback plug-in; not used by the delegated runtime. |
 | [scripts](scripts) | Dataverse authentication and secure rollback-configuration helpers. |

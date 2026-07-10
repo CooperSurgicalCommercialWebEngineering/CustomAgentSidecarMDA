@@ -2,13 +2,11 @@
 
 ## Next-session objective
 
-Complete interactive sign-in and grounded-response validation of the deployed Benefit Plan vertical slice. The solution now contains a delegated Microsoft Entra client, Microsoft 365 Agents SDK integration, reusable side-pane web resources, and an app-scoped modern command in the existing **HR Management** Model-driven App.
-
-Do not expand the command to the other nine supported entities until the Benefit Plan slice passes the smoke test.
+Complete interactive sign-in and grounded-response validation of the deployed app-keyed compatibility runtime. The solution contains a delegated Microsoft Entra client, Microsoft 365 Agents SDK integration, reusable side-pane web resources, and active OnLoad registrations on all seven supported custom HR main forms in the existing **HR Management** Model-driven App.
 
 ## Start the next session with this request
 
-> Continue from HANDOFF.md. In the existing HR Management app, complete Microsoft sign-in from the Benefit Plan **HR Management App Guide** side pane and validate grounded answers against the user's SharePoint access. Expand to other entities only after the vertical slice passes.
+> Continue from HANDOFF.md. In the existing HR Management app, complete Microsoft sign-in from the automatically registered **HR Management App Guide** side pane and validate grounded answers against the user's SharePoint access.
 
 ## Current solution identity
 
@@ -119,10 +117,10 @@ The launcher and HTML source are maintained under `model-driven/webresources/`; 
 - The server-side smoke test passed: the Custom API exchanged the configured secret for a correctly shaped short-lived Direct Line token without logging the token, user ID, or response payload.
 - Runtime browser testing confirms that the saved Benefit Plan command accepts record ID `6757d024-f37b-f111-ab0e-000d3a34027f`, opens exactly one side pane, and reuses it on a second selection. A new unsaved Benefit Plan also opens the pane without requiring a record ID.
 - The delegated client is deployed and the pane reaches its explicit **Sign in with your Microsoft work account to continue** state. Interactive popup completion and authenticated grounded-response acceptance testing remain.
-- The command has not been expanded beyond Benefit Plan.
+- The persistent collapsed pane is registered on all seven supported custom HR main forms.
 - The navigation-aware context build was deployed and read back from Dataverse on 2026-07-09. The deployed resources contain `getPageContext`, verified primary-attribute retrieval, per-message `WEB_CHAT/SEND_MESSAGE` refresh, the trusted context envelope, and no unsupported `hrAgentContext` event. External-browser acceptance testing across two screens remains.
 - The shared library icon was deployed and published on 2026-07-10. Dataverse read-back confirmed SVG web-resource type 11 and resource ID `8b95fcc6-35be-4f86-8e64-09135c7b194d`.
-- Automatic collapsed-pane registration was deployed and published on 2026-07-10. Dataverse read-back confirmed the OnLoad handler on all seven supported main forms, the nonclosable/nonselected/always-rendered launcher settings, and deletion of the former Benefit Plan command action.
+- Automatic collapsed-pane registration was corrected, deployed, and published on 2026-07-10. Dataverse read-back confirmed `active="true"`, the OnLoad handler, and execution-context passing on all seven supported main forms. A clean browser reload created exactly one collapsed pane automatically; opening it reached the delegated Microsoft sign-in state.
 - Security roles for the custom HR tables remain outside this vertical slice.
 - Power Automate approval and balance-maintenance flows remain outside this vertical slice.
 - Browser-level automated tests for the Model-driven App side pane are not yet implemented.
@@ -199,14 +197,12 @@ Responsibilities:
 
 ### Command or form integration
 
-Preferred user experience:
+Implemented user experience:
 
-- Add a modern command named **HR Management App Guide** to each supported main form.
-- The command calls the JavaScript launcher with `PrimaryControl`/form context.
-- Reuse the same command logic across all ten entities.
-- Do not create ten separate launcher implementations.
-
-A form `OnLoad` auto-open behavior should not be added unless explicitly approved; a user-invoked command is less intrusive and avoids unnecessary agent initialization.
+- Register the shared launcher on each supported form's OnLoad event.
+- Create one persistent, nonclosable pane in a collapsed state; do not select it automatically.
+- Reuse the same launcher and stable pane ID across all supported forms.
+- Do not create per-entity launcher implementations or duplicate panes.
 
 ## Remaining integration decisions
 
