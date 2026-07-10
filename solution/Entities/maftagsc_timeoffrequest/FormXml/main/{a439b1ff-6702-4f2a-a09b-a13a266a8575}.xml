@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{a439b1ff-6702-4f2a-a09b-a13a266a8575}</formid>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form>
+      <tabs>
+        <tab verticallayout="true" id="{DEED3B26-5757-4632-B4BF-0890D92B7ECF}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{402AF268-A3B7-456A-A3C6-CA7C7BF0E82B}">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{EE88EBE1-A3E0-44CE-8BFA-B840877FC5EB}">
+                        <labels>
+                          <label description="Time Off Request Name" languagecode="1033" />
+                        </labels>
+                        <control id="maftagsc_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="maftagsc_name" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{931FE095-B4DE-4DC5-B397-B6409BB67AE5}">
+                        <labels>
+                          <label description="Owner" languagecode="1033" />
+                        </labels>
+                        <control id="ownerid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="ownerid" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <formLibraries>
+      <Library name="maftagsc_/copilot/hrAgentSidePane.js" libraryUniqueId="{650b993b-5970-4481-817b-eecab5d39bff}" />
+    </formLibraries>
+    <events>
+      <event name="onload" application="false" active="false">
+        <Handlers>
+          <Handler functionName="HRAgentSidecar.initializeGuide" libraryName="maftagsc_/copilot/hrAgentSidePane.js" handlerUniqueId="{dc969850-e75e-4c04-a179-1050541ce76a}" enabled="true" parameters="" passExecutionContext="true" />
+        </Handlers>
+      </event>
+      </events>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

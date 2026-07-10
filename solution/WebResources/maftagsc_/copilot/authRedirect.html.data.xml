@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{4a1a66c8-4fd4-4fa6-855a-aea38420eacf}</WebResourceId>
+  <Name>maftagsc_/copilot/authRedirect.html</Name>
+  <DisplayName>HR Management App Guide authentication redirect</DisplayName>
+  <Description>Minimal same-origin redirect page used to complete MSAL popup authentication.</Description>
+  <WebResourceType>1</WebResourceType>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsEnabledForMobileClient>0</IsEnabledForMobileClient>
+  <IsAvailableForMobileOffline>0</IsAvailableForMobileOffline>
+  <IsCustomizable>1</IsCustomizable>
+  <CanBeDeleted>1</CanBeDeleted>
+  <IsHidden>1</IsHidden>
+  <FileName>/WebResources/maftagsc_copilotauthRedirecthtml4A1A66C8-4FD4-4FA6-855A-AEA38420EACF</FileName>
+</WebResource>

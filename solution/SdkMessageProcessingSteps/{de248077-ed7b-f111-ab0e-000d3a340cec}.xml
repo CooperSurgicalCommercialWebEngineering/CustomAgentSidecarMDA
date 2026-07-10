@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SdkMessageProcessingStep Name="HRAgentSidecar.TokenBroker.DirectLineTokenBroker: maftagsc_GetDirectLineToken of any Entity" SdkMessageProcessingStepId="{de248077-ed7b-f111-ab0e-000d3a340cec}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SdkMessageName>maftagsc_GetDirectLineToken</SdkMessageName>
+  <PluginTypeName>HRAgentSidecar.TokenBroker.DirectLineTokenBroker, HRAgentSidecar.TokenBroker, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a12cb488886f0882</PluginTypeName>
+  <PluginTypeId>1f850078-ed7b-f111-ab0e-000d3a34027f</PluginTypeId>
+  <AsyncAutoDelete>0</AsyncAutoDelete>
+  <Description>Synchronous PostOperation Direct Line token exchange. Configure the secret only in Secure Configuration.</Description>
+  <FilteringAttributes></FilteringAttributes>
+  <InvocationSource>0</InvocationSource>
+  <Mode>0</Mode>
+  <Rank>1</Rank>
+  <EventHandlerTypeCode>4602</EventHandlerTypeCode>
+  <Stage>40</Stage>
+  <IsCustomizable>1</IsCustomizable>
+  <IsHidden>0</IsHidden>
+  <SupportedDeployment>0</SupportedDeployment>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <SdkMessageProcessingStepImages />
+</SdkMessageProcessingStep>

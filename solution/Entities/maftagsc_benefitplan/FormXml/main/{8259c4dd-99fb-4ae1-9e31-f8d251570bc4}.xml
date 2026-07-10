@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{8259c4dd-99fb-4ae1-9e31-f8d251570bc4}</formid>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form>
+      <tabs>
+        <tab verticallayout="true" id="{1AF7FE11-12C6-4467-B43C-3A9A7296E116}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{58DB3595-2001-407C-85F9-9C571AF285B6}">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{5C85DF29-EF2C-4CF4-ABF2-1D1ECA00941B}">
+                        <labels>
+                          <label description="Benefit Plan Name" languagecode="1033" />
+                        </labels>
+                        <control id="maftagsc_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="maftagsc_name" />
+                      </cell>
+                    </row>
+                    <row></row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <formLibraries>
+      <Library name="maftagsc_/copilot/hrAgentSidePane.js" libraryUniqueId="{806f8a6b-8bc7-4df3-8136-4135ac496b63}" />
+    </formLibraries>
+    <events>
+      <event name="onload" application="false" active="false">
+        <Handlers>
+          <Handler functionName="HRAgentSidecar.initializeGuide" libraryName="maftagsc_/copilot/hrAgentSidePane.js" handlerUniqueId="{55c99950-9d2f-4283-88bf-45bb570ba7b2}" enabled="true" parameters="" passExecutionContext="true" />
+        </Handlers>
+      </event>
+      </events>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

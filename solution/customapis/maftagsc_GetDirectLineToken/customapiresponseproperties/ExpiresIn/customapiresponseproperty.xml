@@ -1,0 +1,11 @@
+<customapiresponseproperty uniquename="ExpiresIn">
+  <description default="Token lifetime in seconds.">
+    <label description="Token lifetime in seconds." languagecode="1033" />
+  </description>
+  <displayname default="Expires In">
+    <label description="Expires In" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <name>maftagsc_GetDirectLineToken.ExpiresIn</name>
+  <type>7</type>
+</customapiresponseproperty>

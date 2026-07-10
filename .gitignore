@@ -34,3 +34,7 @@ solution/*.zip
 # Temp
 *.tmp
 *.log
+
+.env
+__pycache__/
+*.pyc

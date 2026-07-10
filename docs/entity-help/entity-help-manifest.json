@@ -1,0 +1,128 @@
+{
+  "solution": "HR Agent Sidecar",
+  "contextParameter": "entityName",
+  "documentType": "entity-help",
+  "generatedOn": "2026-07-09",
+  "entities": [
+    {
+      "businessEntity": "Employee",
+      "entityLogicalName": "systemuser",
+      "entitySetName": "systemusers",
+      "domain": "Organization",
+      "markdown": "HR-Agent-Sidecar-Employee-Help.md",
+      "docx": "HR-Agent-Sidecar-Employee-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Employee-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Employee-and-Organization-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Position",
+      "entityLogicalName": "position",
+      "entitySetName": "positions",
+      "domain": "Organization",
+      "markdown": "HR-Agent-Sidecar-Position-Help.md",
+      "docx": "HR-Agent-Sidecar-Position-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Position-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Employee-and-Organization-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Department",
+      "entityLogicalName": "businessunit",
+      "entitySetName": "businessunits",
+      "domain": "Organization",
+      "markdown": "HR-Agent-Sidecar-Department-Help.md",
+      "docx": "HR-Agent-Sidecar-Department-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Department-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Employee-and-Organization-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Time Off Type",
+      "entityLogicalName": "maftagsc_timeofftype",
+      "entitySetName": "maftagsc_timeofftypes",
+      "domain": "Time Off",
+      "markdown": "HR-Agent-Sidecar-Time-Off-Type-Help.md",
+      "docx": "HR-Agent-Sidecar-Time-Off-Type-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Time-Off-Type-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Time-Off-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Time Off Balance",
+      "entityLogicalName": "maftagsc_timeoffbalance",
+      "entitySetName": "maftagsc_timeoffbalances",
+      "domain": "Time Off",
+      "markdown": "HR-Agent-Sidecar-Time-Off-Balance-Help.md",
+      "docx": "HR-Agent-Sidecar-Time-Off-Balance-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Time-Off-Balance-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Time-Off-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Time Off Request",
+      "entityLogicalName": "maftagsc_timeoffrequest",
+      "entitySetName": "maftagsc_timeoffrequests",
+      "domain": "Time Off",
+      "markdown": "HR-Agent-Sidecar-Time-Off-Request-Help.md",
+      "docx": "HR-Agent-Sidecar-Time-Off-Request-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Time-Off-Request-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Time-Off-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Expense Report",
+      "entityLogicalName": "maftagsc_expensereport",
+      "entitySetName": "maftagsc_expensereports",
+      "domain": "Expenses",
+      "markdown": "HR-Agent-Sidecar-Expense-Report-Help.md",
+      "docx": "HR-Agent-Sidecar-Expense-Report-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Expense-Report-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Expense-Reimbursement-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Expense Line",
+      "entityLogicalName": "maftagsc_expenseline",
+      "entitySetName": "maftagsc_expenselines",
+      "domain": "Expenses",
+      "markdown": "HR-Agent-Sidecar-Expense-Line-Help.md",
+      "docx": "HR-Agent-Sidecar-Expense-Line-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Expense-Line-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Expense-Reimbursement-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Benefit Plan",
+      "entityLogicalName": "maftagsc_benefitplan",
+      "entitySetName": "maftagsc_benefitplans",
+      "domain": "Benefits",
+      "markdown": "HR-Agent-Sidecar-Benefit-Plan-Help.md",
+      "docx": "HR-Agent-Sidecar-Benefit-Plan-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Benefit-Plan-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Benefits-Administration-Process.pdf"
+      ]
+    },
+    {
+      "businessEntity": "Benefit Enrollment",
+      "entityLogicalName": "maftagsc_benefitenrollment",
+      "entitySetName": "maftagsc_benefitenrollments",
+      "domain": "Benefits",
+      "markdown": "HR-Agent-Sidecar-Benefit-Enrollment-Help.md",
+      "docx": "HR-Agent-Sidecar-Benefit-Enrollment-Help.docx",
+      "pdf": "HR-Agent-Sidecar-Benefit-Enrollment-Help.pdf",
+      "processDocuments": [
+        "../user-guides/HR-Agent-Sidecar-Benefits-Administration-Process.pdf"
+      ]
+    }
+  ]
+}

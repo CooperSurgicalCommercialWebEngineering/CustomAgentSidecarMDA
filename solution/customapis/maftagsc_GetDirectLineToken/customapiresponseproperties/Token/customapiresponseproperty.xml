@@ -1,0 +1,11 @@
+<customapiresponseproperty uniquename="Token">
+  <description default="Short-lived Direct Line token.">
+    <label description="Short-lived Direct Line token." languagecode="1033" />
+  </description>
+  <displayname default="Token">
+    <label description="Token" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <name>maftagsc_GetDirectLineToken.Token</name>
+  <type>10</type>
+</customapiresponseproperty>

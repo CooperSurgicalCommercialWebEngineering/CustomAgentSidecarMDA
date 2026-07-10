@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HR Management App Guide</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, system-ui, Roboto, "Helvetica Neue", sans-serif;
+            color: #242424;
+            background: #ffffff;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        #status {
+            box-sizing: border-box;
+            display: grid;
+            min-height: 100%;
+            place-items: center;
+            padding: 24px;
+            text-align: center;
+        }
+
+        #status[hidden],
+        #chat[hidden],
+        #sign-in[hidden] {
+            display: none;
+        }
+
+        #chat {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .chat-toolbar {
+            box-sizing: border-box;
+            display: flex;
+            min-height: 40px;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 4px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #ffffff;
+        }
+
+        #new-conversation {
+            min-height: 30px;
+            padding: 4px 10px;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            color: #0f6cbd;
+            background: #ffffff;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #new-conversation:hover {
+            border-color: #0f6cbd;
+            background: #f5f5f5;
+        }
+
+        #new-conversation:disabled {
+            color: #a0a0a0;
+            cursor: wait;
+        }
+
+        #new-conversation:focus-visible {
+            outline: 2px solid #0f6cbd;
+            outline-offset: 2px;
+        }
+
+        #webchat {
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .status-card {
+            max-width: 320px;
+        }
+
+        .status-card h1 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .status-card p {
+            margin: 0;
+            color: #616161;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            margin: 0 auto 16px;
+            border: 3px solid #d1d1d1;
+            border-top-color: #0f6cbd;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        #sign-in {
+            min-height: 32px;
+            margin-top: 18px;
+            padding: 5px 14px;
+            border: 1px solid #0f6cbd;
+            border-radius: 4px;
+            color: #ffffff;
+            background: #0f6cbd;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #sign-in:hover {
+            background: #115ea3;
+        }
+
+        #sign-in:focus-visible {
+            outline: 2px solid #242424;
+            outline-offset: 2px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .spinner { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <main id="status" role="status" aria-live="polite">
+        <div class="status-card">
+            <div id="spinner" class="spinner" aria-hidden="true"></div>
+            <h1>HR Management App Guide</h1>
+            <p id="status-message">Starting a secure conversation…</p>
+            <button id="sign-in" type="button" hidden>Sign in</button>
+        </div>
+    </main>
+    <div id="chat" role="region" aria-label="HR Management App Guide conversation" tabindex="-1" hidden>
+        <div class="chat-toolbar" role="toolbar" aria-label="Conversation commands">
+            <button
+                id="new-conversation"
+                type="button"
+                title="Clear this chat and start a new conversation"
+            >New conversation</button>
+        </div>
+        <div id="webchat"></div>
+    </div>
+
+    <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+    <!-- HR_AGENT_SIDEPANE_BUNDLE -->
+</body>
+</html>

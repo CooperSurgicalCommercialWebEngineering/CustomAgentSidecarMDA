@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{454a8362-ed7b-f111-ab0e-000d3a34006b}</WebResourceId>
+  <Name>maftagsc_/copilot/hrAgentSidePane.html</Name>
+  <DisplayName>HR Management App Guide side pane</DisplayName>
+  <Description>HR Management App Guide secured side-pane vertical slice.</Description>
+  <WebResourceType>1</WebResourceType>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsEnabledForMobileClient>0</IsEnabledForMobileClient>
+  <IsAvailableForMobileOffline>0</IsAvailableForMobileOffline>
+  <IsCustomizable>1</IsCustomizable>
+  <CanBeDeleted>1</CanBeDeleted>
+  <IsHidden>0</IsHidden>
+  <FileName>/WebResources/maftagsc_copilothrAgentSidePanehtml454A8362-ED7B-F111-AB0E-000D3A34006B</FileName>
+</WebResource>

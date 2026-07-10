@@ -1,0 +1,11 @@
+<customapiresponseproperty uniquename="UserId">
+  <description default="Unguessable Direct Line user identifier.">
+    <label description="Unguessable Direct Line user identifier." languagecode="1033" />
+  </description>
+  <displayname default="User ID">
+    <label description="User ID" languagecode="1033" />
+  </displayname>
+  <iscustomizable>1</iscustomizable>
+  <name>maftagsc_GetDirectLineToken.UserId</name>
+  <type>10</type>
+</customapiresponseproperty>

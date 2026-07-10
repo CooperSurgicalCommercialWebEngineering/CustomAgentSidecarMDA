@@ -1,120 +1,267 @@
 {
+  "solution": {
+    "uniqueName": "HRAgentSidecar",
+    "displayName": "HR Agent Sidecar",
+    "version": "1.0.0.0",
+    "publisherUniqueName": "agentsidecar",
+    "publisherPrefix": "maftagsc",
+    "targetEnvironment": "https://carremacodeapps.crm.dynamics.com"
+  },
   "domains": [
+    { "name": "Organization", "description": "Employees, reporting hierarchy, positions, and departments" },
+    { "name": "Time Off", "description": "Time-off types, annual balances, requests, and manager approval" },
+    { "name": "Expenses", "description": "Itemized employee reimbursement reports, receipts, and manager approval" },
+    { "name": "Benefits", "description": "Benefit plans and employee enrollments" }
+  ],
+  "oobReferences": [
     {
-      "name": "Project Intake",
-      "description": "Business language and boundaries for the app"
+      "logicalName": "systemuser",
+      "displayName": "Employee",
+      "decision": "reuse-and-augment",
+      "columnsUsed": ["systemuserid", "employeeid", "fullname", "internalemailaddress", "mobilephone", "parentsystemuserid", "positionid", "businessunitid", "isdisabled"],
+      "customColumns": [
+        { "schemaName": "maftagsc_hiredate", "displayName": "Hire Date", "type": "DateTime", "format": "DateOnly", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_employmenttype", "displayName": "Employment Type", "type": "Picklist", "globalOptionSetName": "maftagsc_employmenttype", "requiredLevel": "None" }
+      ]
+    },
+    {
+      "logicalName": "position",
+      "displayName": "Position",
+      "decision": "reuse",
+      "columnsUsed": ["positionid", "name", "description", "parentpositionid", "statecode", "statuscode"]
+    },
+    {
+      "logicalName": "businessunit",
+      "displayName": "Department",
+      "decision": "reuse",
+      "columnsUsed": ["businessunitid", "name", "divisionname", "costcenter", "parentbusinessunitid", "isdisabled"]
+    }
+  ],
+  "globalOptionSets": [
+    {
+      "name": "maftagsc_employmenttype",
+      "displayName": "Employment Type",
+      "options": [
+        { "label": "Full Time", "value": 100000000 },
+        { "label": "Part Time", "value": 100000001 },
+        { "label": "Contractor", "value": 100000002 },
+        { "label": "Intern", "value": 100000003 }
+      ]
+    },
+    {
+      "name": "maftagsc_expensecategory",
+      "displayName": "Expense Category",
+      "options": [
+        { "label": "Travel", "value": 100000000 },
+        { "label": "Lodging", "value": 100000001 },
+        { "label": "Meals", "value": 100000002 },
+        { "label": "Mileage", "value": 100000003 },
+        { "label": "Supplies", "value": 100000004 },
+        { "label": "Training", "value": 100000005 },
+        { "label": "Other", "value": 100000006 }
+      ]
+    },
+    {
+      "name": "maftagsc_benefitcategory",
+      "displayName": "Benefit Category",
+      "options": [
+        { "label": "Medical", "value": 100000000 },
+        { "label": "Dental", "value": 100000001 },
+        { "label": "Vision", "value": 100000002 },
+        { "label": "Life Insurance", "value": 100000003 },
+        { "label": "Retirement", "value": 100000004 },
+        { "label": "Other", "value": 100000005 }
+      ]
+    },
+    {
+      "name": "maftagsc_coveragelevel",
+      "displayName": "Coverage Level",
+      "options": [
+        { "label": "Employee Only", "value": 100000000 },
+        { "label": "Employee and Spouse", "value": 100000001 },
+        { "label": "Employee and Children", "value": 100000002 },
+        { "label": "Family", "value": 100000003 }
+      ]
     }
   ],
   "tables": [
     {
-      "schemaName": "maftagsc_ProjectRequest",
-      "displayName": "Project Request",
-      "displayCollectionName": "Project Requests",
-      "logicalSingularName": "maftagsc_projectrequest",
-      "logicalPluralName": "maftagsc_projectrequests",
-      "entitySetName": "maftagsc_projectrequests",
-      "tableLogicalName": "maftagsc_projectrequests",
-      "description": "Tracks incoming requests for work",
-      "ownership": "UserOwned",
-      "ownershipType": "UserOwned",
-      "isActivity": false,
-      "hasActivities": false,
-      "hasNotes": true,
-      "primaryName": {
-        "schemaName": "maftagsc_ProjectRequestName",
-        "displayName": "Name",
-        "description": "Primary name for the request",
-        "maxLength": 100
-      },
+      "schemaName": "maftagsc_timeofftype",
+      "displayName": "Time Off Type",
+      "displayCollectionName": "Time Off Types",
+      "logicalSingularName": "maftagsc_timeofftype",
+      "entitySetName": "maftagsc_timeofftypes",
+      "ownershipType": "OrganizationOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Time Off Type Name", "maxLength": 100 },
       "columns": [
-        {
-          "schemaName": "maftagsc_requeststatus",
-          "displayName": "Request Status",
-          "logicalName": "maftagsc_requeststatus",
-          "type": "Picklist",
-          "globalOptionSetName": "maftagsc_requeststatus",
-          "requiredLevel": "ApplicationRequired"
-        },
-        {
-          "schemaName": "maftagsc_requestedon",
-          "displayName": "Requested On",
-          "logicalName": "maftagsc_requestedon",
-          "type": "DateTime",
-          "format": "DateOnly",
-          "requiredLevel": "None"
-        }
+        { "schemaName": "maftagsc_code", "displayName": "Code", "type": "String", "maxLength": 30, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_defaultannualhours", "displayName": "Default Annual Hours", "type": "Decimal", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_requiresapproval", "displayName": "Requires Approval", "type": "Boolean", "requiredLevel": "ApplicationRequired", "defaultValue": true }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_timeoffbalance",
+      "displayName": "Time Off Balance",
+      "displayCollectionName": "Time Off Balances",
+      "logicalSingularName": "maftagsc_timeoffbalance",
+      "entitySetName": "maftagsc_timeoffbalances",
+      "ownershipType": "UserOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Time Off Balance Name", "maxLength": 200 },
+      "columns": [
+        { "schemaName": "maftagsc_calendaryear", "displayName": "Calendar Year", "type": "Integer", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_allocatedhours", "displayName": "Allocated Hours", "type": "Decimal", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_pendinghours", "displayName": "Pending Hours", "type": "Decimal", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_usedhours", "displayName": "Used Hours", "type": "Decimal", "requiredLevel": "ApplicationRequired" }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_timeoffrequest",
+      "displayName": "Time Off Request",
+      "displayCollectionName": "Time Off Requests",
+      "logicalSingularName": "maftagsc_timeoffrequest",
+      "entitySetName": "maftagsc_timeoffrequests",
+      "ownershipType": "UserOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Time Off Request Name", "maxLength": 200 },
+      "columns": [
+        { "schemaName": "maftagsc_startdate", "displayName": "Start Date", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_enddate", "displayName": "End Date", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_requestedhours", "displayName": "Requested Hours", "type": "Decimal", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_reason", "displayName": "Reason", "type": "Memo", "maxLength": 4000, "requiredLevel": "None" },
+        { "schemaName": "maftagsc_submittedon", "displayName": "Submitted On", "type": "DateTime", "format": "DateAndTime", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_decidedon", "displayName": "Decided On", "type": "DateTime", "format": "DateAndTime", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_decisioncomment", "displayName": "Decision Comment", "type": "Memo", "maxLength": 4000, "requiredLevel": "None" }
       ],
-      "attributes": [
-        {
-          "schemaName": "maftagsc_requeststatus",
-          "displayName": "Request Status",
-          "type": "Picklist",
-          "globalOptionSetName": "maftagsc_requeststatus",
-          "requiredLevel": "ApplicationRequired"
-        },
-        {
-          "schemaName": "maftagsc_requestedon",
-          "displayName": "Requested On",
-          "type": "DateTime",
-          "format": "DateOnly",
-          "requiredLevel": "None"
-        }
+      "statusReasons": [
+        { "label": "Draft", "value": 703600000, "state": "Active" },
+        { "label": "Submitted", "value": 703600001, "state": "Active" },
+        { "label": "Approved", "value": 703600002, "state": "Inactive" },
+        { "label": "Rejected", "value": 703600003, "state": "Inactive" },
+        { "label": "Cancelled", "value": 703600004, "state": "Inactive" }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_expensereport",
+      "displayName": "Expense Report",
+      "displayCollectionName": "Expense Reports",
+      "logicalSingularName": "maftagsc_expensereport",
+      "entitySetName": "maftagsc_expensereports",
+      "ownershipType": "UserOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Expense Report Name", "maxLength": 200 },
+      "columns": [
+        { "schemaName": "maftagsc_reportdate", "displayName": "Report Date", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_businesspurpose", "displayName": "Business Purpose", "type": "Memo", "maxLength": 4000, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_totalamount", "displayName": "Total Amount", "type": "Money", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_submittedon", "displayName": "Submitted On", "type": "DateTime", "format": "DateAndTime", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_decidedon", "displayName": "Decided On", "type": "DateTime", "format": "DateAndTime", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_decisioncomment", "displayName": "Decision Comment", "type": "Memo", "maxLength": 4000, "requiredLevel": "None" }
+      ],
+      "statusReasons": [
+        { "label": "Draft", "value": 703600000, "state": "Active" },
+        { "label": "Submitted", "value": 703600001, "state": "Active" },
+        { "label": "Approved", "value": 703600002, "state": "Inactive" },
+        { "label": "Rejected", "value": 703600003, "state": "Inactive" },
+        { "label": "Paid", "value": 703600004, "state": "Inactive" },
+        { "label": "Cancelled", "value": 703600005, "state": "Inactive" }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_expenseline",
+      "displayName": "Expense Line",
+      "displayCollectionName": "Expense Lines",
+      "logicalSingularName": "maftagsc_expenseline",
+      "entitySetName": "maftagsc_expenselines",
+      "ownershipType": "UserOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Expense Line Name", "maxLength": 200 },
+      "columns": [
+        { "schemaName": "maftagsc_expensedate", "displayName": "Expense Date", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_merchant", "displayName": "Merchant", "type": "String", "maxLength": 200, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_expensecategory", "displayName": "Expense Category", "type": "Picklist", "globalOptionSetName": "maftagsc_expensecategory", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_amount", "displayName": "Amount", "type": "Money", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_description", "displayName": "Description", "type": "Memo", "maxLength": 4000, "requiredLevel": "None" },
+        { "schemaName": "maftagsc_receipt", "displayName": "Receipt", "type": "File", "requiredLevel": "None" }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_benefitplan",
+      "displayName": "Benefit Plan",
+      "displayCollectionName": "Benefit Plans",
+      "logicalSingularName": "maftagsc_benefitplan",
+      "entitySetName": "maftagsc_benefitplans",
+      "ownershipType": "OrganizationOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Benefit Plan Name", "maxLength": 200 },
+      "columns": [
+        { "schemaName": "maftagsc_plancode", "displayName": "Plan Code", "type": "String", "maxLength": 50, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_provider", "displayName": "Provider", "type": "String", "maxLength": 200, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_benefitcategory", "displayName": "Benefit Category", "type": "Picklist", "globalOptionSetName": "maftagsc_benefitcategory", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_description", "displayName": "Description", "type": "Memo", "maxLength": 4000, "requiredLevel": "None" },
+        { "schemaName": "maftagsc_employeecost", "displayName": "Employee Cost", "type": "Money", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_employercost", "displayName": "Employer Cost", "type": "Money", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_effectivestart", "displayName": "Effective Start", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_effectiveend", "displayName": "Effective End", "type": "DateTime", "format": "DateOnly", "requiredLevel": "None" }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_benefitenrollment",
+      "displayName": "Benefit Enrollment",
+      "displayCollectionName": "Benefit Enrollments",
+      "logicalSingularName": "maftagsc_benefitenrollment",
+      "entitySetName": "maftagsc_benefitenrollments",
+      "ownershipType": "UserOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Benefit Enrollment Name", "maxLength": 200 },
+      "columns": [
+        { "schemaName": "maftagsc_coveragelevel", "displayName": "Coverage Level", "type": "Picklist", "globalOptionSetName": "maftagsc_coveragelevel", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_electedon", "displayName": "Elected On", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_coveragestart", "displayName": "Coverage Start", "type": "DateTime", "format": "DateOnly", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_coverageend", "displayName": "Coverage End", "type": "DateTime", "format": "DateOnly", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_employeecontribution", "displayName": "Employee Contribution", "type": "Money", "requiredLevel": "None" }
+      ],
+      "statusReasons": [
+        { "label": "Active", "value": 1, "state": "Active" },
+        { "label": "Waived", "value": 703600000, "state": "Inactive" },
+        { "label": "Ended", "value": 703600001, "state": "Inactive" }
       ]
     }
   ],
   "relationships": [
-    {
-      "type": "ManyToOne",
-      "fromTable": "maftagsc_projectrequests",
-      "toTable": "maftagsc_departments",
-      "referencingEntity": "maftagsc_projectrequests",
-      "referencedEntity": "maftagsc_departments",
-      "schemaName": "maftagsc_ProjectRequest_Department",
-      "lookupSchemaName": "maftagsc_DepartmentId",
-      "lookupDisplayName": "Department"
-    }
+    { "schemaName": "maftagsc_systemuser_timeoffbalance", "fromTable": "maftagsc_timeoffbalance", "lookupSchemaName": "maftagsc_employee", "lookupDisplayName": "Employee", "toTable": "systemuser", "required": true },
+    { "schemaName": "maftagsc_timeofftype_timeoffbalance", "fromTable": "maftagsc_timeoffbalance", "lookupSchemaName": "maftagsc_timeofftype", "lookupDisplayName": "Time Off Type", "toTable": "maftagsc_timeofftype", "required": true },
+    { "schemaName": "maftagsc_systemuser_timeoffrequest", "fromTable": "maftagsc_timeoffrequest", "lookupSchemaName": "maftagsc_employee", "lookupDisplayName": "Employee", "toTable": "systemuser", "required": true },
+    { "schemaName": "maftagsc_timeofftype_timeoffrequest", "fromTable": "maftagsc_timeoffrequest", "lookupSchemaName": "maftagsc_timeofftype", "lookupDisplayName": "Time Off Type", "toTable": "maftagsc_timeofftype", "required": true },
+    { "schemaName": "maftagsc_systemuser_timeoffapprover", "fromTable": "maftagsc_timeoffrequest", "lookupSchemaName": "maftagsc_approver", "lookupDisplayName": "Approver", "toTable": "systemuser", "required": false },
+    { "schemaName": "maftagsc_systemuser_expensereport", "fromTable": "maftagsc_expensereport", "lookupSchemaName": "maftagsc_employee", "lookupDisplayName": "Employee", "toTable": "systemuser", "required": true },
+    { "schemaName": "maftagsc_systemuser_expenseapprover", "fromTable": "maftagsc_expensereport", "lookupSchemaName": "maftagsc_approver", "lookupDisplayName": "Approver", "toTable": "systemuser", "required": false },
+    { "schemaName": "maftagsc_expensereport_expenseline", "fromTable": "maftagsc_expenseline", "lookupSchemaName": "maftagsc_expensereport", "lookupDisplayName": "Expense Report", "toTable": "maftagsc_expensereport", "required": true },
+    { "schemaName": "maftagsc_systemuser_benefitenrollment", "fromTable": "maftagsc_benefitenrollment", "lookupSchemaName": "maftagsc_employee", "lookupDisplayName": "Employee", "toTable": "systemuser", "required": true },
+    { "schemaName": "maftagsc_benefitplan_benefitenrollment", "fromTable": "maftagsc_benefitenrollment", "lookupSchemaName": "maftagsc_benefitplan", "lookupDisplayName": "Benefit Plan", "toTable": "maftagsc_benefitplan", "required": true }
   ],
-  "provisioningPlansJson": [
-    {
-      "path": "dataverse/provision-tables.plan.json",
-      "purpose": "Create or update tables and columns after review"
-    },
-    {
-      "path": "dataverse/provision-relationships.plan.json",
-      "purpose": "Apply relationship changes after table provisioning"
-    },
-    {
-      "path": "dataverse/register-datasources.plan.json",
-      "purpose": "Register Dataverse tables with pac code add-data-source and regenerate the SDK"
+  "security": {
+    "organizationWide": ["systemuser", "position", "businessunit", "maftagsc_timeofftype", "maftagsc_benefitplan"],
+    "restrictedPersonal": ["maftagsc_timeoffbalance", "maftagsc_timeoffrequest", "maftagsc_expensereport", "maftagsc_expenseline", "maftagsc_benefitenrollment"],
+    "accessModel": "Employees can read their own personal records; managers can read direct-report requests and expense reports where approval is required; HR administrators can read and maintain all HR records."
+  },
+  "automation": [
+    { "name": "Time Off Manager Approval", "trigger": "Time Off Request submitted", "approver": "systemuser.parentsystemuserid", "implementation": "Power Automate approval flow" },
+    { "name": "Expense Manager Approval", "trigger": "Expense Report submitted", "approver": "systemuser.parentsystemuserid", "implementation": "Power Automate approval flow" },
+    { "name": "Time Off Balance Maintenance", "trigger": "Time Off Request approved, cancelled, or rejected", "implementation": "Power Automate flow or Dataverse plug-in" }
+  ],
+  "modelDrivenApp": {
+    "name": "HR Agent Sidecar",
+    "sidePane": {
+      "pattern": "HTML web resource hosts Copilot Studio webchat; JavaScript web resource opens it with Xrm.App.sidePanes",
+      "availability": "All table forms in the Model-driven App",
+      "contextParameters": ["entityName", "recordId"],
+      "configuration": "Environment variables hold environment-specific Copilot Studio channel values"
     }
+  },
+  "provisioningPlansJson": [
+    { "path": "dataverse/planning-payload.json", "purpose": "Re-runnable source of truth for the HR schema" },
+    { "path": "dataverse/hr-oob-discovery.md", "purpose": "Persist OOB reuse findings and custom-table rationale" }
   ],
   "orgStructure": {
-    "businessUnits": [
-      { "name": "Field Operations", "parentName": null },
-      { "name": "West Region", "parentName": "Field Operations" }
-    ],
-    "securityGroups": [
-      {
-        "displayName": "Field Operations - West",
-        "mailNickname": "field-ops-west",
-        "entraObjectId": null
-      }
-    ],
-    "teams": [
-      {
-        "name": "Field Operations - West",
-        "businessUnitName": "West Region",
-        "teamType": "Owner",
-        "membershipSource": "EntraGroup",
-        "securityGroupDisplayName": "Field Operations - West"
-      }
-    ],
-    "roleMappings": [
-      {
-        "teamName": "Field Operations - West",
-        "roleName": "Project Tracker Collaborator",
-        "scope": "BusinessUnit"
-      }
-    ]
+    "businessUnits": [],
+    "securityGroups": [],
+    "teams": [],
+    "roleMappings": [],
+    "decision": "Do not create parallel department or authorization structures; reuse existing businessunit, team, and role assets."
   }
 }

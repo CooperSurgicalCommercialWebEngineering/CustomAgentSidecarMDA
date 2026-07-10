@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WebResource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <WebResourceId>{8b95fcc6-35be-4f86-8e64-09135c7b194d}</WebResourceId>
+  <Name>maftagsc_/copilot/hrGuideLibrary.svg</Name>
+  <DisplayName>HR Management App Guide library icon</DisplayName>
+  <Description>Theme-aware library book icon shared by the HR Management App Guide command and side pane.</Description>
+  <WebResourceType>11</WebResourceType>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsEnabledForMobileClient>0</IsEnabledForMobileClient>
+  <IsAvailableForMobileOffline>0</IsAvailableForMobileOffline>
+  <IsCustomizable>1</IsCustomizable>
+  <CanBeDeleted>1</CanBeDeleted>
+  <IsHidden>0</IsHidden>
+  <FileName>/WebResources/maftagsc_copilothrGuideLibrarysvg8B95FCC6-35BE-4F86-8E64-09135C7B194D</FileName>
+</WebResource>
