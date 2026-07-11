@@ -36,14 +36,14 @@
         </tab>
       </tabs>
       <formLibraries>
-      <Library name="maftagsc_/copilot/hrAgentSidePane.js" libraryUniqueId="{af8b0a14-4bf4-42f5-8252-e8fdfb07f300}" />
-    </formLibraries>
-    <events>
-      <event name="onload" application="false" active="true">
-        <Handlers>
-          <Handler functionName="HRAgentSidecar.initializeGuide" libraryName="maftagsc_/copilot/hrAgentSidePane.js" handlerUniqueId="{508e231a-e72c-42f0-b1ea-47c7690fa655}" enabled="true" parameters="" passExecutionContext="true" />
-        </Handlers>
-      </event>
+        <Library name="maftagsc_/copilot/hrAgentSidePane.js" libraryUniqueId="{af8b0a14-4bf4-42f5-8252-e8fdfb07f300}" />
+      </formLibraries>
+      <events>
+        <event name="onload" application="false" active="true">
+          <Handlers>
+            <Handler functionName="HRAgentSidecar.initializeGuide" libraryName="maftagsc_/copilot/hrAgentSidePane.js" handlerUniqueId="{508e231a-e72c-42f0-b1ea-47c7690fa655}" enabled="true" parameters="" passExecutionContext="true" />
+          </Handlers>
+        </event>
       </events>
     </form>
     <IsCustomizable>1</IsCustomizable>

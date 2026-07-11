@@ -10,5 +10,65 @@
   "localAppUrl": "http://localhost:3000",
   "logoPath": "Default",
   "connectionReferences": {},
-  "databaseReferences": {}
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "sidecarconfigurations": {
+          "entitySetName": "maftagsc_sidecarconfigurations",
+          "logicalName": "maftagsc_sidecarconfiguration"
+        },
+        "targetbindings": {
+          "entitySetName": "maftagsc_targetbindings",
+          "logicalName": "maftagsc_targetbinding"
+        },
+        "users": {
+          "entitySetName": "systemusers",
+          "logicalName": "systemuser"
+        },
+        "systemuserroles": {
+          "entitySetName": "systemuserrolescollection",
+          "logicalName": "systemuserroles"
+        },
+        "securityroles": {
+          "entitySetName": "roles",
+          "logicalName": "role"
+        },
+        "model_drivenapps": {
+          "entitySetName": "appmodules",
+          "logicalName": "appmodule"
+        },
+        "appmodulecomponents": {
+          "entitySetName": "appmodulecomponents",
+          "logicalName": "appmodulecomponent"
+        },
+        "systemforms": {
+          "entitySetName": "systemforms",
+          "logicalName": "systemform"
+        },
+        "agents": {
+          "entitySetName": "bots",
+          "logicalName": "bot"
+        },
+        "solutions": {
+          "entitySetName": "solutions",
+          "logicalName": "solution"
+        },
+        "publishers": {
+          "entitySetName": "publishers",
+          "logicalName": "publisher"
+        },
+        "environment_39a902ba": {
+          "entitySetName": "Environment",
+          "logicalName": "environment_39a902ba",
+          "isHidden": false
+        },
+        "entities": {
+          "entitySetName": "entities",
+          "logicalName": "entity",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
 }

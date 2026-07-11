@@ -1,8 +1,24 @@
-# HR Agent Sidecar
+# Agent Sidecar Platform
 
-HR Agent Sidecar adds a contextual Copilot Studio assistant to the existing **HR Management** Dataverse Model-driven App. The assistant lives in a persistent side pane, follows the user as they move between HR records, and uses the signed-in user's Microsoft identity when accessing user-scoped knowledge.
+Agent Sidecar Platform adds app-keyed contextual Copilot Studio assistants to Dataverse Model-driven Apps. The proven **HR Management** sidecar remains the deployed reference runtime; the React Code App in [src](src) is now the reusable **Agent Sidecar Administration** experience.
 
-The repository began as a Power Apps Code App scaffold and still contains the React prototype under [src](src). The accepted production architecture, however, is a separate Model-driven App solution named **HR Agent Sidecar** (`HRAgentSidecar`). Its deployable source is the unpacked Dataverse solution under [solution](solution), with maintained side-pane source under [model-driven](model-driven).
+The accepted product architecture uses a managed **Agent Sidecar Core**, one **Target Binding** solution per Model-driven App, and multiple sidecars keyed by app ID in one environment. Administration is a Power Apps Code App restricted to System Administrators. The administration schema and generated Dataverse clients are now connected; the Code App itself has not been deployed.
+
+## Sidecar administration
+
+The Code App provides:
+
+- A portfolio dashboard with current health and lifecycle state.
+- A five-step flow for selecting a Model-driven App, enabling tables, resolving an existing Copilot Studio agent, configuring public-client identity and pane settings, and reviewing deployment impact.
+- Automatic Health Validation when a configuration opens.
+- Explicit Configuration Drift review and approved reconciliation.
+- Disable/re-enable, automatic rollback messaging, blocking rollback-failure remediation, and dependency-aware scoped uninstall.
+- A single provider composition seam: mock lifecycle behavior for local development and generated Dataverse services in the Power Apps host.
+- Responsive Fluent UI v9 layouts and `HashRouter` routing for the Power Apps host.
+- Dataverse-backed app, form, agent, solution, role, configuration, and binding discovery.
+- Idempotent form-handler deployment, semantic handler adoption, generated `PublishXml` and `AddSolutionComponent` operations, canonical read-back fingerprints, scoped rollback, and solution ownership checks.
+
+Run the mock experience locally with `npm run dev:local`. Validate it with `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:e2e`, and `npm run build`. Connected read-only host validation is the next runtime gate. Do not run `npm run deploy` without explicit approval for the live environment.
 
 ## What the solution provides
 
@@ -82,7 +98,7 @@ sequenceDiagram
 | **Copilot Studio agent** | **HR Mgmt Classic** interprets the question and uses the supplied screen context to select relevant HR guidance. |
 | **Knowledge library** | Entity-specific Markdown plus process guides provide screen purpose, field meaning, lifecycle, approval, exception, and cross-entity guidance. The routing contract is documented in [docs/entity-help/README.md](docs/entity-help/README.md). |
 | **Dataverse solution** | Packages the Model-driven App, custom HR schema, forms, choices, web resources, and related solution metadata. See [solution](solution). |
-| **React prototype** | Preserves the earlier plan-first UX prototype and mock-provider architecture under [src](src). It is useful for design validation but is not the deployed side-pane runtime. |
+| **Administration Code App** | Provides the reusable administration portfolio and lifecycle UX under [src](src). Mock and connected Dataverse providers share one contract. It is not the deployed side-pane runtime and has not yet been pushed as a Code App. |
 
 ## Context synchronization
 
@@ -147,6 +163,7 @@ See the accepted decisions:
 - [Superseded Direct Line token broker](docs/adr/0002-use-secured-direct-line-token-broker.md)
 - [Delegated authentication and Microsoft 365 Agents SDK](docs/adr/0003-use-delegated-agents-sdk-for-authenticated-side-pane.md)
 - [Reusable core and target binding product architecture](docs/adr/0004-productize-sidecar-as-core-and-target-bindings.md)
+- [Code App administration architecture](docs/adr/0005-use-code-app-for-sidecar-administration.md)
 
 The accepted productization roadmap is documented in the [Reusable Agent Sidecar Platform implementation plan](docs/agent-sidecar-reusable-platform-plan.md).
 
@@ -193,7 +210,7 @@ SharePoint and Copilot Studio knowledge-source configuration are environment-lev
 | [dataverse](dataverse) | Planning payload, OOB discovery, and prototype feedback. |
 | [plugins/HRAgentSidecar.TokenBroker](plugins/HRAgentSidecar.TokenBroker) | Temporary Direct Line rollback plug-in; not used by the delegated runtime. |
 | [scripts](scripts) | Dataverse authentication and secure rollback-configuration helpers. |
-| [src](src) | Original React/Fluent UI Code App prototype. |
+| [src](src) | Agent Sidecar Administration React/Fluent UI Code App prototype. |
 | [HANDOFF.md](HANDOFF.md) | Detailed implementation, deployment, and verification history. |
 
 ## Build and validate
@@ -221,11 +238,12 @@ pnpm run test:model-driven
 
 `build:model-driven` bundles MSAL Browser and the Microsoft 365 Agents SDK into the deployable HTML web resource. It also synchronizes the maintained launcher, authentication redirect, and SVG icon into [solution/WebResources](solution/WebResources). Do not edit the generated HTML projection directly.
 
-Validate the retained React prototype:
+Validate the administration Code App prototype:
 
 ```bash
 pnpm run lint
 pnpm run test
+pnpm run test:e2e
 pnpm run build
 ```
 
@@ -258,6 +276,8 @@ After deployment, validate the live form XML and web resources through Dataverse
 - The former Benefit Plan command action has been removed from source and Dataverse.
 - Live context refresh, record-name validation, trusted context delivery, and **New conversation** are implemented.
 - The custom library icon is deployed and used by the side-pane switcher.
+- The reusable administration Code App prototype is implemented with mock providers; 23 unit/component tests and five browser workflow tests pass.
+- Administration Dataverse discovery, schema planning, real-provider binding, deployment, and live runtime migration have not started.
 - Model-driven tests, TypeScript checks, React tests/build, and rollback plug-in build pass.
 - Dataverse read-back confirmed the seven form handlers, launcher settings, and command removal.
 - Security roles, approval automation, and time-off balance-maintenance flows remain separate future work.

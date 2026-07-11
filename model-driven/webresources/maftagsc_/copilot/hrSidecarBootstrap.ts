@@ -1,5 +1,9 @@
 import type { SidecarConfiguration, SidecarEntityBinding } from "./sidecarConfiguration";
-import { BootstrapSidecarConfigurationRepository } from "./sidecarConfigurationRepository";
+import {
+    BootstrapSidecarConfigurationRepository,
+    DataverseSidecarConfigurationRepository,
+    FallbackSidecarConfigurationRepository
+} from "./sidecarConfigurationRepository";
 
 function entityBinding(logicalName: string, screenName: string): SidecarEntityBinding {
     return Object.freeze({ logicalName, screenName });
@@ -42,6 +46,19 @@ export const SIDECAR_BOOTSTRAP_CONFIGURATIONS: readonly SidecarConfiguration[] =
     HR_SIDECAR_CONFIGURATION
 ]);
 
-export const sidecarConfigurationRepository = new BootstrapSidecarConfigurationRepository(
+const bootstrapRepository = new BootstrapSidecarConfigurationRepository(
     SIDECAR_BOOTSTRAP_CONFIGURATIONS
+);
+
+export const sidecarConfigurationRepository = new FallbackSidecarConfigurationRepository(
+    new DataverseSidecarConfigurationRepository(() => {
+        const host = globalThis as typeof globalThis & {
+            Xrm?: { WebApi?: { retrieveMultipleRecords: (...args: [string, string, number?]) => Promise<{ entities: Record<string, unknown>[] }> } };
+            parent?: { Xrm?: { WebApi?: { retrieveMultipleRecords: (...args: [string, string, number?]) => Promise<{ entities: Record<string, unknown>[] }> } } };
+        };
+        const webApi = host.Xrm?.WebApi ?? host.parent?.Xrm?.WebApi;
+        if (!webApi) throw new Error("sidecar_dataverse_webapi_unavailable");
+        return webApi;
+    }),
+    bootstrapRepository
 );

@@ -84,6 +84,8 @@
       <RootComponent type="1" schemaName="maftagsc_benefitplan" behavior="0" />
       <RootComponent type="1" schemaName="maftagsc_expenseline" behavior="0" />
       <RootComponent type="1" schemaName="maftagsc_expensereport" behavior="0" />
+      <RootComponent type="1" schemaName="maftagsc_sidecarconfiguration" behavior="0" />
+      <RootComponent type="1" schemaName="maftagsc_targetbinding" behavior="0" />
       <RootComponent type="1" schemaName="maftagsc_timeoffbalance" behavior="0" />
       <RootComponent type="1" schemaName="maftagsc_timeoffrequest" behavior="0" />
       <RootComponent type="1" schemaName="maftagsc_timeofftype" behavior="0" />
@@ -95,9 +97,11 @@
       <RootComponent type="62" schemaName="maftagsc_HRManagement" behavior="0" />
       <RootComponent type="80" schemaName="maftagsc_HRManagement" behavior="0" />
       <RootComponent type="9" schemaName="maftagsc_benefitcategory" behavior="0" />
+      <RootComponent type="9" schemaName="maftagsc_bindingvalidationstate" behavior="0" />
       <RootComponent type="9" schemaName="maftagsc_coveragelevel" behavior="0" />
       <RootComponent type="9" schemaName="maftagsc_employmenttype" behavior="0" />
       <RootComponent type="9" schemaName="maftagsc_expensecategory" behavior="0" />
+      <RootComponent type="9" schemaName="maftagsc_sidecarhealthstate" behavior="0" />
       <RootComponent type="91" id="{8008865f-ed7b-f111-ab0e-000d3a340cec}" schemaName="HRAgentSidecar.TokenBroker, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a12cb488886f0882" behavior="0" />
       <RootComponent type="92" id="{de248077-ed7b-f111-ab0e-000d3a340cec}" behavior="0" />
     </RootComponents>

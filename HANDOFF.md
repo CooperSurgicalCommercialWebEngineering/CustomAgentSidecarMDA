@@ -1,292 +1,180 @@
-# HR Agent Sidecar — Model-driven App Copilot Web Resource Handoff
+# Agent Sidecar Administration — Session Handoff
 
-## Next-session objective
+## Original objective — keep this as the north star
 
-Complete interactive sign-in and grounded-response validation of the deployed app-keyed compatibility runtime. The solution contains a delegated Microsoft Entra client, Microsoft 365 Agents SDK integration, reusable side-pane web resources, and active OnLoad registrations on all seven supported custom HR main forms in the existing **HR Management** Model-driven App.
+Create an administrator experience that drives the behavior of the Agent Sidecar for Model-driven Apps.
+
+A System Administrator must be able to:
+
+1. Open the Agent Sidecar Administration Power Apps Code App.
+2. Select a Model-driven App.
+3. Select eligible tables and active main forms from that app.
+4. Select an existing published Copilot Studio agent.
+5. Configure pane behavior and delegated Microsoft identity settings.
+6. Preview the exact impact.
+7. Deploy the sidecar bindings.
+8. Validate health, detect/reconcile drift, disable, re-enable, and uninstall safely.
+
+The deliverable is a reusable administration control plane, not another HR-specific launcher. The existing HR sidecar is the compatibility/reference implementation and must remain safe.
 
 ## Start the next session with this request
 
-> Continue from HANDOFF.md. In the existing HR Management app, complete Microsoft sign-in from the automatically registered **HR Management App Guide** side pane and validate grounded answers against the user's SharePoint access.
+> Continue from HANDOFF.md. Keep the original objective as the north star: finish and validate the administrator experience that controls Agent Sidecar behavior. First repair the current discovery-test type error, then prove that HR Management exposes its seven app tables and active main forms in the authenticated local Power Apps host. Stay read-only in the environment. Do not mutate HR forms and do not deploy the Code App.
 
-## Current solution identity
+## Current position against the objective
+
+| Capability | Status | Notes |
+|---|---|---|
+| Administration portfolio | Implemented and connected | Authenticated host loads; zero configured apps is currently expected. |
+| Administrator authorization | Validated | Current user is recognized as System Administrator. |
+| Five-step setup wizard | Implemented | Includes selected-app state, forms-only targeting, validation, review, and exact redirect URI. |
+| Model-driven App discovery | Validated (connected) | Apps load; HR Management shows its 7 eligible tables. Root cause of the earlier empty list was the `entity` Retrieve failure below, which rejected the `Promise.all` in `discoverTargetApps`. |
+| Table/form discovery | Validated (connected) | Maps app entity components (`componenttype eq 1`) to table metadata via **RetrieveMultiple** on `entity`, then active main forms. HR Management = 7 tables, friendly names, 1 active main form each. |
+| Copilot Studio agent resolution | Validated (connected) | **HR Mgmt Classic** (`cr0b1_HRMgmtClassic`, published) resolves read-only in the wizard. |
+| Dataverse configuration storage | Provisioned | Organization-owned Sidecar Configuration and Target Binding tables exist with active alternate keys. |
+| Dataverse-backed sidecar runtime | Implemented | Existing HR static configuration remains as compatibility fallback. |
+| Preview/deploy engine | Preview validated read-only end-to-end | Wizard Review step reached; `previewDeployment` reports 7 tables / 7 active main forms with rollback protection. Deploy not performed. |
+| Lifecycle controls | Implemented, not end-to-end validated | Validation, drift detection, reconcile, disable/re-enable, rollback, and scoped uninstall exist. |
+| Solution packaging | Validated | Unmanaged export/unpack/repack and ZIP integrity passed. |
+| Code App deployment | Not performed | Requires separate explicit approval. |
+| Live form mutation | Not performed by this administrator | First mutation test must use a controlled non-HR form. |
+
+## Immediate work — COMPLETED this session
+
+The discovery defect is fixed and the read-only connected wizard journey is validated end-to-end (Application → Tables → Agent → Identity → Review). No deploy, no live form mutation.
+
+### Root cause (found via the Dataverse-skills `dv-query` skill, read-only)
+
+- HR Management app ID: `62e8fdf6-e77b-f111-ab0e-000d3a34048c`; app metadata id (`appmoduleidunique`): `9c9d3b51-b988-4d16-9a75-9c2046dc301a`.
+- The app has seven `appmodulecomponent` records of component type `1` (entities), no type `60` form components.
+- The adapter resolved each entity metadata id with **`EntitiesService.get(id)` (Retrieve)**, but the OOB `entity` table **does not support Retrieve-by-id**: `"The 'Retrieve' method does not support entities of type 'entity'."` That threw during resolution, surfaced as *"Resolve app table metadata failed: [object Object]"*, and — because `discoverTargetApps` runs `Promise.all(targetApp per app)` — rejected the whole list, so **no apps appeared** either.
+
+### Fix (in `src/services/model-driven-app-discovery.ts` + test)
+
+1. Replaced the data-source method `getEntity(metadataId)` with **`listEntities(metadataIds[])`** using **`EntitiesService.getAll`** (RetrieveMultiple) with an `entityid eq … or …` filter — RetrieveMultiple **is** supported on `entity`.
+2. `discoverAppForms` chunks metadata ids (`ENTITY_CHUNK_SIZE = 20`) and resolves per chunk.
+3. Friendly display name now comes from **`originallocalizedname`** (e.g. "Benefit Plan"), not `name` (which returns the logical name).
+4. `componentstate eq 0` on `systemform` was confirmed queryable in-environment — **kept**.
+
+Do not manually edit generated files (`src/generated/**`). The OOB `entity` data source (`EntitiesService`, `EntitiesModel`, `.power/schemas`) and its `power.config.json` `databaseReferences` entry are already registered; the PAC host must be **restarted** after any data-source change so it reloads `power.config.json`.
+
+### Authoritative live result (read-only)
+
+HR Management → 7 tables, each 1 active main form: Benefit Enrollment, Benefit Plan, Expense Line, Expense Report, Time Off Balance, Time Off Request, Time Off Type.
+
+### Baseline
+
+`npm run typecheck`, full `npm test` (26/26), `npm run lint` (0 warnings), and `npm run build` all pass. Only the pre-existing non-blocking main-chunk size warning remains.
+
+## Next session
+
+The immediate discovery objective is complete. The next step in the original objective is the final proof point: **one controlled non-HR lifecycle test** (deploy → validate → drift/reconcile → disable/re-enable → uninstall) against a controlled non-HR form, to demonstrate the administrator — not manual form editing — safely drives sidecar behavior. Requires explicit deploy approval first.
+
+## Active local host
+
+- Vite runs on port `3001` (`npx vite --port 3001`); PAC connection host runs on port `3000` (`pac code run --port 3000 --appUrl http://localhost:3001`).
+- Play URL: `https://apps.powerapps.com/play/e/f9b87f8b-0abf-e629-affb-b13195d1ed14/app/local?_localAppUrl=http://localhost:3001&_localConnectionUrl=http://localhost:3000`.
+- Browser gotcha: a full URL navigation to the play URL drops the MSAL session; reload the top frame instead. The browser-automation page handles were unreliable this session (they resolve to the hidden MSAL login iframe) — `screenshot_page` is trustworthy; automated clicks are not, so the user drove the wizard clicks.
+- Read-only connected validation was done via the Dataverse-skills `dv-query` skill (Python SDK) — the supported path for Dataverse reads.
+
+A new session may not inherit browser-page access or server processes. Verify before assuming they remain available.
+
+## Environment and solution identity
 
 | Item | Value |
 |---|---|
 | Environment URL | `https://carremacodeapps.crm.dynamics.com` |
+| Environment ID | `f9b87f8b-0abf-e629-affb-b13195d1ed14` |
+| Organization ID | `a5550e24-4411-f111-afbe-6045bd053d21` |
 | Solution unique name | `HRAgentSidecar` |
 | Solution display name | `HR Agent Sidecar` |
-| Solution version | `1.0.0.0` |
 | Publisher unique name | `agentsidecar` |
 | Publisher prefix | `maftagsc` |
-| Publisher option-value prefix | `70360` |
+| Publisher choice prefix | `70360` |
 | PAC auth profile | `pp-custo99c-d-u-6ae3eeaf` |
-
-The environment and PAC profile must be reverified in the new session before any push, import, publish, or Dataverse change.
-
-## Accepted architecture decision
-
-The accepted decision is recorded in `docs/adr/0001-use-separate-model-driven-hr-solution.md`:
-
-- Package the capability in the separate `HRAgentSidecar` solution.
-- Use a Dataverse Model-driven App.
-- Host the Copilot Studio chat experience in an HTML web resource.
-- Use a JavaScript web resource to open and manage the pane with `Xrm.App.sidePanes`.
-- Pass the current table logical name and record ID from every supported form.
-- Keep schema, app, web resources, environment variables, and command customizations deployable together.
-
-ADR-0003 supersedes the former Direct Line decision: the HTML host now uses delegated Microsoft Entra authentication and Microsoft 365 Agents SDK because the agent is configured with **Authenticate with Microsoft** and must preserve user-scoped SharePoint authorization.
-
-Do not replace this with a standalone SPA, Code App page, separate login application, external web host, or custom Node.js backend.
-
-## Implemented work
-
-### Dataverse schema
-
-The base HR schema is implemented, published, exported, unpacked, cleaned, and validated. Final validation completed with 191 checks and 0 failures.
-
-The solution contains:
-
-- Seven custom HR tables.
-- Four global choices.
-- A partial `systemuser` solution projection containing only `maftagsc_hiredate` and `maftagsc_employmenttype`.
-- Relationships, forms, and views generated by Dataverse.
-- No full `position` or `businessunit` roots.
-- No unrelated missing dependencies.
-
-The re-runnable schema source is `dataverse/planning-payload.json`. OOB reuse findings are in `dataverse/hr-oob-discovery.md`.
-
-### Documentation and agent knowledge
-
-General process documentation exists in `docs/user-guides/`:
-
-- Solution and Entity Guide.
-- Employee and Organization Data Process.
-- Time Off Business Process.
-- Expense Reimbursement Business Process.
-- Benefits Administration Business Process.
-
-Screen-specific help exists in `docs/entity-help/` for all ten business entities:
-
-- Employee (`systemuser`).
-- Position (`position`).
-- Department (`businessunit`).
-- Time Off Type (`maftagsc_timeofftype`).
-- Time Off Balance (`maftagsc_timeoffbalance`).
-- Time Off Request (`maftagsc_timeoffrequest`).
-- Expense Report (`maftagsc_expensereport`).
-- Expense Line (`maftagsc_expenseline`).
-- Benefit Plan (`maftagsc_benefitplan`).
-- Benefit Enrollment (`maftagsc_benefitenrollment`).
-
-Each entity topic is available as agent-ready Markdown, published PDF, and editable Word source. `docs/entity-help/entity-help-manifest.json` is the deterministic routing map from a table logical name to its entity-help and process documents. `docs/entity-help/README.md` defines the grounding contract.
-
-The published Copilot Studio agent is **HR Management App Guide**. Its knowledge has already been configured and saved in SharePoint and is working. SharePoint and Copilot Studio knowledge-source provisioning, synchronization, and packaging are external dependencies and are out of scope for this solution.
-
-### Benefit Plan side-pane vertical slice
-
-The following components are implemented, published, exported, unpacked into `solution/`, and verified by a clean unmanaged repack:
-
-- Existing target app: **HR Management** (`maftagsc_HRManagement`); the app was reused, not recreated.
-- HTML Web Chat host: `maftagsc_/copilot/hrAgentSidePane.html`.
-- Shared JavaScript launcher: `maftagsc_/copilot/hrAgentSidePane.js`.
-- Stable reusable pane ID: `maftagsc_hr_management_app_guide`, width 420 pixels.
-- Unbound Custom API: `maftagsc_GetDirectLineToken`.
-- Custom API outputs: `Token`, `ExpiresIn`, and `UserId`.
-- Signed `HRAgentSidecar.TokenBroker` plug-in assembly.
-- Legacy synchronous PostOperation token-broker step retained temporarily for rollback; its existing Direct Line secret remains isolated in per-environment Secure Configuration.
-- The former Benefit Plan command action has been removed. Users open the guide from its persistent side-pane switcher icon instead.
-- Shared theme-aware SVG icon: `maftagsc_/copilot/hrGuideLibrary.svg`. The open-library mark is used by the side-pane switcher and uses `currentColor` with no script, embedded CSS, or hardcoded colors.
-- Every HR Management main form—Benefit Plan, Benefit Enrollment, Expense Line, Expense Report, Time Off Balance, Time Off Request, and Time Off Type—registers `HRAgentSidecar.initializeGuide` on form load.
-- The guide pane is created with `isSelected: false`, `canClose: false`, and `alwaysRender: true`. It therefore starts collapsed, remains available from the switcher throughout the app session, and preserves the active conversation while users navigate among supported forms.
-- The launcher validates allowlisted `entityName`, normalized `recordId`, bounded `recordName`, and optional app context. The unsupported `hrAgentContext` event remains disabled; screen context now uses Copilot Studio's supported `pvaSetContext` event plus a trusted context envelope on each user message.
-- Dataverse record identifiers are validated by hexadecimal `8-4-4-4-12` shape without incorrectly enforcing RFC UUID version or variant bits.
-- The HTML host loads Web Chat from Microsoft's working `latest/webchat.js` CDN endpoint and supplies the DirectLine-compatible connection created by `CopilotStudioWebChat`.
-- MSAL Browser acquires `https://api.powerplatform.com/CopilotStudio.Copilots.Invoke` for the signed-in user, silently when cached and through a user-initiated popup otherwise.
-- `CopilotStudioClient` connects to environment `f9b87f8b-0abf-e629-affb-b13195d1ed14` and the explicitly selected **HR Mgmt Classic** bot schema `cr0b1_HRMgmtClassic` (Dataverse bot ID `ebd95280-067c-f111-ab0e-000d3a34048c`).
-- The side-pane toolbar includes **New conversation**. After confirmation it ends the current Agents SDK connection, clears the local transcript, and creates a fresh context-aware conversation without requiring another sign-in.
-- The persistent pane resolves `Xrm.Utility.getPageContext()` from the model-driven app host immediately before every outbound user message. Navigation between supported record forms and lists therefore refreshes `CurrentScreen`, `CurrentTable`, and the trusted message envelope without reopening the pane. For a record form, it also reads the host form's primary attribute only after its table and normalized record ID match the authoritative page context; this supplies the new record's display name without leaking a name from the prior screen.
-- **New conversation** also resolves the current host page before creating the replacement connection, so a reset begins with the screen that is open at reset time rather than the original launch screen.
-- The browser client ID is `9d03cd77-5246-4c9c-8e9d-262bff547a25`; the tenant ID is `d92190b9-98e7-46da-8b11-580e06c7d15d`. These are non-secret identifiers; no client secret exists.
-- `pnpm run build:model-driven` bundles the client into one deployable HTML web resource and synchronizes the solution projection.
-
-The launcher and HTML source are maintained under `model-driven/webresources/`; their deployable Dataverse projections are under `solution/WebResources/`.
-
-## Runtime validation status
-
-- The Direct Line secret is attached to the token-broker step's Secure Configuration in the development environment. The value was entered through native hidden macOS dialogs and was not printed or written to disk.
-- The server-side smoke test passed: the Custom API exchanged the configured secret for a correctly shaped short-lived Direct Line token without logging the token, user ID, or response payload.
-- Runtime browser testing confirms that the saved Benefit Plan command accepts record ID `6757d024-f37b-f111-ab0e-000d3a34027f`, opens exactly one side pane, and reuses it on a second selection. A new unsaved Benefit Plan also opens the pane without requiring a record ID.
-- The delegated client is deployed and the pane reaches its explicit **Sign in with your Microsoft work account to continue** state. Interactive popup completion and authenticated grounded-response acceptance testing remain.
-- The persistent collapsed pane is registered on all seven supported custom HR main forms.
-- The navigation-aware context build was deployed and read back from Dataverse on 2026-07-09. The deployed resources contain `getPageContext`, verified primary-attribute retrieval, per-message `WEB_CHAT/SEND_MESSAGE` refresh, the trusted context envelope, and no unsupported `hrAgentContext` event. External-browser acceptance testing across two screens remains.
-- The shared library icon was deployed and published on 2026-07-10. Dataverse read-back confirmed SVG web-resource type 11 and resource ID `8b95fcc6-35be-4f86-8e64-09135c7b194d`.
-- Automatic collapsed-pane registration was corrected, deployed, and published on 2026-07-10. Dataverse read-back confirmed `active="true"`, the OnLoad handler, and execution-context passing on all seven supported main forms. A clean browser reload created exactly one collapsed pane automatically; opening it reached the delegated Microsoft sign-in state.
-- Security roles for the custom HR tables remain outside this vertical slice.
-- Power Automate approval and balance-maintenance flows remain outside this vertical slice.
-- Browser-level automated tests for the Model-driven App side pane are not yet implemented.
-
-## Contextual-grounding contract
-
-The side-pane launch path must capture at least:
-
-| Context value | Source | Purpose |
-|---|---|---|
-| `entityName` | `formContext.data.entity.getEntityName()` | Select the correct entity-help topic through the manifest. |
-| `recordId` | `formContext.data.entity.getId()` | Identify the current Dataverse record for authorized contextual operations. |
-| `recordName` | Current form primary name, when available | Improve user-facing orientation without replacing the stable record ID. |
-| `appId` | Model-driven App context, when available | Confirm that the request came from HR Agent Sidecar. |
-| `userId` | Authenticated Dataverse context, when needed | Support authorized operations; never use it to bypass Dataverse security. |
-
-Required behavior:
-
-1. `entityName` is the primary routing key.
-2. Resolve it through `docs/entity-help/entity-help-manifest.json`.
-3. Ground screen-specific answers in the matching Markdown entity-help document.
-4. Also search the linked process guide for lifecycle, sequencing, responsibilities, approval, and exception guidance.
-5. Use the business display name in responses unless a technical identifier is necessary.
-6. Treat `recordId` only as a pointer to the current record; it is not knowledge content.
-7. Live record retrieval must use authenticated Dataverse capabilities and honor existing table/row/field security.
-8. Never place unrelated PII, financial data, receipt contents, tokens, or complete connector responses into prompts or logs.
-
-### Required fallback behavior
-
-If `entityName` is missing or not found in the manifest:
-
-- The agent may use solution-level and process documentation.
-- It must state that screen-specific context was unavailable.
-- It must not guess which entity is active.
-
-If `recordId` is missing because the form is creating a new record:
-
-- Continue with entity-level help.
-- Do not attempt record-specific actions.
-- Explain that record-specific assistance becomes available after the record is saved.
-
-## Proposed web-resource component boundary
-
-Use publisher-prefixed solution component names. Confirm exact names against existing solution metadata before creation.
-
-### HTML web resource
-
-Proposed name: `maftagsc_/copilot/hrAgentSidePane.html`
-
-Responsibilities:
-
-- Render the chat container.
-- Read only validated launch parameters supplied by the side-pane controller.
-- Initialize the approved Copilot Studio web-chat/channel integration.
-- Display a clear loading state and actionable error state.
-- Send sanitized business context to the conversation initialization layer.
-- Remain responsive in a narrow side pane.
-- Meet keyboard, focus, contrast, and accessible-name requirements.
-
-### JavaScript web resource
-
-Proposed name: `maftagsc_/copilot/hrAgentSidePane.js`
-
-Responsibilities:
-
-- Obtain `formContext` from the command/form event.
-- Read and normalize `entityName`, brace-free `recordId`, and optional display context.
-- Create or reuse a stable pane ID through `Xrm.App.sidePanes.createPane`.
-- Navigate the pane to the HTML web resource.
-- Pass context through a safely encoded `data` parameter or another supported web-resource data contract.
-- Focus an existing pane instead of opening duplicates.
-- Avoid logging record values or sensitive context.
-- Surface user-friendly failures while retaining diagnostic detail only in safe developer logs.
-
-### Command or form integration
-
-Implemented user experience:
-
-- Register the shared launcher on each supported form's OnLoad event.
-- Create one persistent, nonclosable pane in a collapsed state; do not select it automatically.
-- Reuse the same launcher and stable pane ID across all supported forms.
-- Do not create per-entity launcher implementations or duplicate panes.
-
-## Remaining integration decisions
-
-The published agent identity, knowledge source, delegated channel architecture, pane width, and pane-reuse behavior are resolved. The accepted security decision is recorded in `docs/adr/0003-use-delegated-agents-sdk-for-authenticated-side-pane.md`: use delegated Entra authentication with PKCE and Microsoft 365 Agents SDK so the agent receives the signed-in user's identity. The previous Direct Line ADR is superseded.
-
-The Direct Line Custom API, plug-in, registration step, and Secure Configuration remain in the solution only as temporary rollback components. The deployed side pane no longer invokes them. Remove them only after authenticated runtime acceptance testing passes.
-
-No environment variable is needed for the current slice. The only unresolved product boundary is whether a later iteration may include authorized live Dataverse record data. Until that boundary is approved, send only the bounded launch context and do not add record-field values to prompts.
-
-## Security guardrails
-
-- Use the registered public-client MSAL flow only to obtain the delegated Copilot Studio API token; do not create a client secret or a separate credential store.
-- Do not hardcode API keys, tokens, connection strings, channel secrets, or client secrets.
-- Use Power Platform environment variables only for non-secret environment-specific configuration.
-- Store secret values in approved secret/connection facilities and exchange them through a supported server/channel flow.
-- Do not use `dangerouslySetInnerHTML` for agent output.
-- Render agent messages as escaped text or through a narrowly sanitized renderer.
-- Apply a strict allowlist when parsing `data` parameters.
-- Validate `entityName` against the manifest/table allowlist.
-- Normalize and validate GUIDs before use.
-- Do not trust a client-provided `recordId` as authorization; Dataverse security remains authoritative.
-- Do not log prompts or full responses that may contain HR, financial, or receipt information.
-- Confirm Content Security Policy and allowed origins for the selected Copilot Studio channel.
-- Ensure the custom HR supplementary security role exists before enabling live data access.
-
-## Important repository rules
-
-- This repository is a Power Apps Code App template but this feature belongs to the unpacked Model-driven App solution artifacts.
-- Do not convert the project to another framework or hosting target.
-- Do not edit generated Dataverse or connector files directly.
-- Preserve the accepted separate-solution boundary.
-- Use OOB Dataverse entities for Employee, Position, Department, owner, currency, state/status, and audit.
-- Before creating any Dataverse component, perform existing-component discovery and prefer reuse.
-- Any Dataverse operation is gated on the Dataverse-skills plugin being installed and verified in the new session.
-- Any solution import/export/publish must target the verified `HRAgentSidecar` solution and `carremacodeapps` environment.
-
-## Recommended next-session execution sequence
-
-1. Read `AGENTS.md`, this handoff, both accepted ADRs, and `model-driven/README.md`.
-2. Verify PAC authentication and the target environment before any Dataverse operation.
-3. Open a saved Benefit Plan, select **HR Management App Guide**, select **Sign in**, and complete the Microsoft popup if required.
-4. Run the grounded-answer smoke test in `model-driven/README.md` and confirm SharePoint authorization follows the signed-in user.
-5. Repeat with a new unsaved Benefit Plan and confirm entity-level help works without a record ID.
-6. Inspect browser network traffic only for the absence of secrets and long-lived credentials; never capture or log an access token.
-7. After acceptance passes, remove the obsolete Direct Line Custom API, plug-in, step, and secure-configuration helper, then export/unpack/repack again.
-8. Only then add the shared command to the next approved entity without copying the launcher implementation.
-
-## Initial acceptance criteria
-
-The first production-worthy slice is complete when:
-
-- A user on the Benefit Plan main form can select **HR Management App Guide**. *(passed on a saved Benefit Plan)*
-- Exactly one side pane opens and can be focused/reused. *(passed)*
-- The pane hosts the published Copilot Studio agent through delegated Entra authentication and Microsoft 365 Agents SDK. *(deployed; interactive sign-in completion pending)*
-- The launcher accepts `entityName=maftagsc_benefitplan` and the normalized current `recordId`. *(saved-record launch passed; conversation-level context validation remains blocked by bot access)*
-- A question such as “What is this screen for?” is answered from Benefit Plan help.
-- A question such as “What process should I follow before making this plan active?” combines Benefit Plan help with Benefits Administration process guidance.
-- A new unsaved Benefit Plan still receives entity-level help without record-specific operations.
-- Unsupported/missing entity context produces the documented fallback instead of a guessed answer.
-- Opening the command again reuses the pane instead of creating duplicates.
-- No secret is present in solution source, browser code, logs, or committed environment files.
-- Dataverse permissions remain the enforcement boundary for any live record data.
-- The solution exports, unpacks, and repacks cleanly. *(passed)*
-
-## Key files for the next session
-
-- `HANDOFF.md` — this implementation handoff.
-- `AGENTS.md` — repository-wide architecture and tool rules.
-- `CONTEXT.md` — canonical HR business glossary.
-- `docs/adr/0001-use-separate-model-driven-hr-solution.md` — accepted architecture decision.
-- `dataverse/planning-payload.json` — schema and planned app/side-pane definition.
-- `dataverse/hr-oob-discovery.md` — OOB reuse findings.
-- `docs/entity-help/README.md` — entity grounding contract and routing table.
-- `docs/entity-help/entity-help-manifest.json` — machine-readable entity routing map.
-- `docs/entity-help/*.md` — agent-ready entity knowledge.
-- `docs/user-guides/*.pdf` — process and solution documentation.
-- `solution/` — current unpacked solution source.
-
-## Known tooling history
-
-- PAC CLI was available and authenticated in this environment during the schema session.
-- Direct Dataverse CLI MCP authentication previously encountered a macOS silent-token `MsalServiceException`.
-- Python-authenticated Dataverse SDK/Web API operations worked successfully.
-- Current GA Dataverse MCP discovery used `describe("tables/")`; a historical `list_tables` tool was not registered.
-- Do not run concurrent piped JSON-RPC calls against the Dataverse CLI MCP; that previously triggered a .NET `AccessViolationException`.
-
-Reverify tooling rather than assuming the next session inherited authentication or MCP state.
+| Delegated user | `macarrer@msftbapb2bcommercial.onmicrosoft.com` |
+
+Reverify environment identity before any Dataverse write, publish, solution operation, or deployment.
+
+## Safety and scope guardrails
+
+- Do not deploy the Code App without separate explicit confirmation.
+- Before deployment ask exactly: **“Ready to deploy to `https://carremacodeapps.crm.dynamics.com`? This will update the live app.”**
+- Do not use an HR form for the first metadata mutation test.
+- Do not edit `src/generated/`.
+- Do not edit solution XML while fixing app discovery.
+- Some solution XML files changed externally during the prior work; reread current contents before any later solution edit.
+- Keep generated services behind adapters; components must not call them directly.
+- Preserve delegated Microsoft identity and user-scoped authorization.
+- Do not add secrets, direct database clients, a custom backend, or non-Power-Platform hosting.
+- Avoid renewed MCP/token-broker investigation unless it directly blocks the administration journey.
+- Do not broaden scope into further packaging or lifecycle hardening until discovery and the read-only wizard journey pass.
+
+## Implemented administration architecture
+
+- React 18, TypeScript, Vite, Fluent UI v9, TanStack Query.
+- `HashRouter`, Power Apps host port 3000, production `base: './'`.
+- Components render; hooks orchestrate; provider/services abstract data; generated services stay behind adapters.
+- Mock and connected providers implement the same contract.
+- `src/services/real-sidecar-admin-provider.ts` handles connected discovery and lifecycle operations.
+- `src/services/sidecar-provider-factory.ts` selects mock data in tests or when `VITE_USE_MOCK=true`, otherwise loads the connected provider.
+- Dataverse tables:
+  - `maftagsc_sidecarconfiguration`
+  - `maftagsc_targetbinding`
+- Alternate keys:
+  - `maftagsc_sidecarconfiguration_appid_key`
+  - `maftagsc_targetbinding_form_key`
+- Exact redirect URI:
+  - `https://carremacodeapps.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html`
+- Runtime library/function:
+  - `maftagsc_/copilot/hrAgentSidePane.js`
+  - `AgentSidecar.initializeGuide`
+
+## Previously passing validation baseline
+
+Before the partial discovery change:
+
+- Code App typecheck passed.
+- Model-driven TypeScript passed.
+- ESLint passed.
+- UI tests passed: 24/24.
+- Model-driven tests passed: 6/6.
+- Production build passed with a non-blocking main-chunk size warning.
+- Both administration alternate keys were active.
+- Solution export/unpack/repack and ZIP integrity passed.
+- Connected host rendered successfully.
+- Administrator authorization and empty configuration listing passed.
+
+The new discovery source and adapter have not yet restored this complete green baseline.
+
+## Key files
+
+- `AGENTS.md` — repository-wide constraints.
+- `CONTEXT.md` — canonical business glossary.
+- `HANDOFF.md` — this focused handoff.
+- `src/components/SidecarWizard/SidecarWizard.tsx` — administrator setup journey.
+- `src/services/real-sidecar-admin-provider.ts` — connected provider and lifecycle engine.
+- `src/services/model-driven-app-discovery.ts` — new discovery adapter under active development.
+- `src/services/model-driven-app-discovery.test.ts` — current regression tests and type failure.
+- `src/generated/services/EntitiesService.ts` — generated metadata client; read-only.
+- `src/services/dataverse-custom-api.ts` — generated operation wrappers.
+- `src/services/sidecar-admin-contracts.ts` — provider contract.
+- `src/types/sidecar-admin-models.ts` — administration domain models.
+- `dataverse/planning-payload.json` — reusable platform plan.
+- `dataverse/prototype-feedback.md` — prototype and implementation decisions; update after connected validation.
+- `docs/adr/0005-use-code-app-for-sidecar-administration.md` — administrator technology decision.
+- `docs/adr/0006-use-dedicated-sidecar-configuration-schema.md` — schema decision.
+
+## Definition of done for the immediate continuation
+
+The next session should consider its immediate task complete only when:
+
+- The partial discovery implementation typechecks.
+- Its regression tests pass.
+- The complete validation baseline is green.
+- The authenticated wizard shows HR Management with seven eligible tables and correct active main-form counts.
+- Friendly labels are shown.
+- HR Mgmt Classic resolves read-only.
+- No Code App deployment or live form mutation has occurred.
+
+After that, the project returns to the original objective’s final proof point: one controlled non-HR lifecycle test demonstrating that the administrator—not manual form editing—can safely drive Agent Sidecar behavior.

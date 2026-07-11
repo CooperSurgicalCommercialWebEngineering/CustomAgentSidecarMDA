@@ -8,6 +8,7 @@
     "targetEnvironment": "https://carremacodeapps.crm.dynamics.com"
   },
   "domains": [
+    { "name": "Agent Sidecar Administration", "description": "App-keyed sidecar configuration, target bindings, health validation, drift review, and safe lifecycle operations" },
     { "name": "Organization", "description": "Employees, reporting hierarchy, positions, and departments" },
     { "name": "Time Off", "description": "Time-off types, annual balances, requests, and manager approval" },
     { "name": "Expenses", "description": "Itemized employee reimbursement reports, receipts, and manager approval" },
@@ -38,6 +39,26 @@
     }
   ],
   "globalOptionSets": [
+    {
+      "name": "maftagsc_sidecarhealthstate",
+      "displayName": "Sidecar Health State",
+      "options": [
+        { "label": "Not Validated", "value": 100000000 },
+        { "label": "Healthy", "value": 100000001 },
+        { "label": "Warning", "value": 100000002 },
+        { "label": "Critical", "value": 100000003 }
+      ]
+    },
+    {
+      "name": "maftagsc_bindingvalidationstate",
+      "displayName": "Binding Validation State",
+      "options": [
+        { "label": "Not Validated", "value": 100000000 },
+        { "label": "Pass", "value": 100000001 },
+        { "label": "Warning", "value": 100000002 },
+        { "label": "Conflict", "value": 100000003 }
+      ]
+    },
     {
       "name": "maftagsc_employmenttype",
       "displayName": "Employment Type",
@@ -85,6 +106,69 @@
     }
   ],
   "tables": [
+    {
+      "schemaName": "maftagsc_sidecarconfiguration",
+      "displayName": "Sidecar Configuration",
+      "displayCollectionName": "Sidecar Configurations",
+      "logicalSingularName": "maftagsc_sidecarconfiguration",
+      "entitySetName": "maftagsc_sidecarconfigurations",
+      "ownershipType": "OrganizationOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Configuration Name", "maxLength": 200 },
+      "oobAlternativeConsidered": "cat_copilotconfiguration",
+      "overrideRationale": "The existing Agent Configuration table belongs to another solution and models telemetry and Direct Line settings rather than app-keyed sidecars, target bindings, drift, and rollback safety. A dedicated table avoids a cross-solution dependency and gives Agent Sidecar Core clear ownership.",
+      "overrideApprovedBy": "Marty Carreras",
+      "overrideApprovedAt": "2026-07-10",
+      "columns": [
+        { "schemaName": "maftagsc_appid", "displayName": "Model-driven App ID", "type": "String", "maxLength": 36, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_appuniquename", "displayName": "App Unique Name", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_appdisplayname", "displayName": "App Display Name", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_panetitle", "displayName": "Pane Title", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_panewidth", "displayName": "Pane Width", "type": "Integer", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_agentdisplayname", "displayName": "Agent Display Name", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_agentschemaname", "displayName": "Agent Schema Name", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_agentconnectionstring", "displayName": "Agents SDK Connection String", "type": "Memo", "maxLength": 4000, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_tenantid", "displayName": "Tenant ID", "type": "String", "maxLength": 36, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_publicclientapplicationid", "displayName": "Public Client Application ID", "type": "String", "maxLength": 36, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_environmentid", "displayName": "Environment ID", "type": "String", "maxLength": 36, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_bindingsolutionuniquename", "displayName": "Target Binding Solution", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_autoenablenewtables", "displayName": "Propose New Tables", "type": "Boolean", "requiredLevel": "ApplicationRequired", "defaultValue": true },
+        { "schemaName": "maftagsc_healthstate", "displayName": "Health State", "type": "Picklist", "globalOptionSetName": "maftagsc_sidecarhealthstate", "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_lastvalidatedat", "displayName": "Last Validated At", "type": "DateTime", "format": "DateAndTime", "requiredLevel": "None" },
+        { "schemaName": "maftagsc_lastoperationsummary", "displayName": "Last Operation Summary", "type": "Memo", "maxLength": 4000, "requiredLevel": "None" }
+      ],
+      "statusReasons": [
+        { "label": "Draft", "value": 703600000, "state": "Active" },
+        { "label": "Deployed", "value": 703600001, "state": "Active" },
+        { "label": "Drift Detected", "value": 703600002, "state": "Active" },
+        { "label": "Disabled", "value": 703600003, "state": "Inactive" }
+      ],
+      "alternateKeys": [
+        { "schemaName": "maftagsc_sidecarconfiguration_appid_key", "columns": ["maftagsc_appid"] }
+      ]
+    },
+    {
+      "schemaName": "maftagsc_targetbinding",
+      "displayName": "Target Binding",
+      "displayCollectionName": "Target Bindings",
+      "logicalSingularName": "maftagsc_targetbinding",
+      "entitySetName": "maftagsc_targetbindings",
+      "ownershipType": "OrganizationOwned",
+      "primaryName": { "schemaName": "maftagsc_name", "displayName": "Binding Name", "maxLength": 300 },
+      "columns": [
+        { "schemaName": "maftagsc_tablelogicalname", "displayName": "Table Logical Name", "type": "String", "maxLength": 128, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_tabledisplayname", "displayName": "Table Display Name", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_formid", "displayName": "Form ID", "type": "String", "maxLength": 36, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_formname", "displayName": "Form Name", "type": "String", "maxLength": 256, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_enabled", "displayName": "Enabled", "type": "Boolean", "requiredLevel": "ApplicationRequired", "defaultValue": true },
+        { "schemaName": "maftagsc_handleruniqueid", "displayName": "Handler Unique ID", "type": "String", "maxLength": 36, "requiredLevel": "ApplicationRequired" },
+        { "schemaName": "maftagsc_originalformfingerprint", "displayName": "Original Form Fingerprint", "type": "String", "maxLength": 128, "requiredLevel": "None" },
+        { "schemaName": "maftagsc_lastappliedfingerprint", "displayName": "Last Applied Fingerprint", "type": "String", "maxLength": 128, "requiredLevel": "None" },
+        { "schemaName": "maftagsc_validationstate", "displayName": "Validation State", "type": "Picklist", "globalOptionSetName": "maftagsc_bindingvalidationstate", "requiredLevel": "ApplicationRequired" }
+      ],
+      "alternateKeys": [
+        { "schemaName": "maftagsc_targetbinding_form_key", "columns": ["maftagsc_sidecarconfiguration", "maftagsc_formid"] }
+      ]
+    },
     {
       "schemaName": "maftagsc_timeofftype",
       "displayName": "Time Off Type",
@@ -223,6 +307,7 @@
     }
   ],
   "relationships": [
+    { "schemaName": "maftagsc_sidecarconfiguration_targetbinding", "fromTable": "maftagsc_targetbinding", "lookupSchemaName": "maftagsc_sidecarconfiguration", "lookupDisplayName": "Sidecar Configuration", "toTable": "maftagsc_sidecarconfiguration", "required": true, "cascadeDelete": true },
     { "schemaName": "maftagsc_systemuser_timeoffbalance", "fromTable": "maftagsc_timeoffbalance", "lookupSchemaName": "maftagsc_employee", "lookupDisplayName": "Employee", "toTable": "systemuser", "required": true },
     { "schemaName": "maftagsc_timeofftype_timeoffbalance", "fromTable": "maftagsc_timeoffbalance", "lookupSchemaName": "maftagsc_timeofftype", "lookupDisplayName": "Time Off Type", "toTable": "maftagsc_timeofftype", "required": true },
     { "schemaName": "maftagsc_systemuser_timeoffrequest", "fromTable": "maftagsc_timeoffrequest", "lookupSchemaName": "maftagsc_employee", "lookupDisplayName": "Employee", "toTable": "systemuser", "required": true },

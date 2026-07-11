@@ -14,6 +14,10 @@
   <EntityRelationship Name="lk_maftagsc_expenseline_modifiedby" />
   <EntityRelationship Name="lk_maftagsc_expensereport_createdby" />
   <EntityRelationship Name="lk_maftagsc_expensereport_modifiedby" />
+  <EntityRelationship Name="lk_maftagsc_sidecarconfiguration_createdby" />
+  <EntityRelationship Name="lk_maftagsc_sidecarconfiguration_modifiedby" />
+  <EntityRelationship Name="lk_maftagsc_targetbinding_createdby" />
+  <EntityRelationship Name="lk_maftagsc_targetbinding_modifiedby" />
   <EntityRelationship Name="lk_maftagsc_timeoffbalance_createdby" />
   <EntityRelationship Name="lk_maftagsc_timeoffbalance_modifiedby" />
   <EntityRelationship Name="lk_maftagsc_timeoffrequest_createdby" />
@@ -22,6 +26,7 @@
   <EntityRelationship Name="lk_maftagsc_timeofftype_modifiedby" />
   <EntityRelationship Name="maftagsc_benefitplan_benefitenrollment" />
   <EntityRelationship Name="maftagsc_expensereport_expenseline" />
+  <EntityRelationship Name="maftagsc_sidecarconfiguration_targetbinding" />
   <EntityRelationship Name="maftagsc_systemuser_benefitenrollment" />
   <EntityRelationship Name="maftagsc_systemuser_expenseapprover" />
   <EntityRelationship Name="maftagsc_systemuser_expensereport" />
@@ -31,6 +36,8 @@
   <EntityRelationship Name="maftagsc_timeofftype_timeoffbalance" />
   <EntityRelationship Name="maftagsc_timeofftype_timeoffrequest" />
   <EntityRelationship Name="organization_maftagsc_benefitplan" />
+  <EntityRelationship Name="organization_maftagsc_sidecarconfiguration" />
+  <EntityRelationship Name="organization_maftagsc_targetbinding" />
   <EntityRelationship Name="organization_maftagsc_timeofftype" />
   <EntityRelationship Name="owner_maftagsc_benefitenrollment" />
   <EntityRelationship Name="owner_maftagsc_expenseline" />

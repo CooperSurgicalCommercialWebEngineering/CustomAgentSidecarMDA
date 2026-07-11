@@ -14,6 +14,7 @@ The existing HR deployment remains the reference implementation and migration te
 - **Phase 1 vertical slice:** deployed to the existing HR development solution. The runtime has a generic asynchronous configuration-repository contract, resolves exactly one enabled configuration by app ID, fails closed for invalid/missing/duplicate app bindings, maps entities through configuration, sends the accepted minimal context, and keeps MSAL tokens in memory.
 - **Current compatibility bridge:** the repository is backed by a static HR bootstrap catalog until a discovered and approved Dataverse configuration model is available. This preserves one deterministic local build without treating build-time configuration as the final architecture.
 - **Environment status:** forced-overwrite import `7ccca718-9a7c-f111-ab0e-000d3a340afd` deployed the productized runtime; import `7558cacf-9c7c-f111-ab0e-000d3a340afd` activated all seven form OnLoad events. Both imports and their publish operations completed successfully, and Dataverse/browser read-back passed.
+- **Administration prototype:** the previous onboarding prototype under `src/` has been replaced by a mock-provider-backed Power Apps Code App. Portfolio, creation, drift reconciliation, health validation, disable/re-enable, rollback-failure remediation, and scoped uninstall flows are implemented and covered by unit and browser tests. No administration schema, connector, deployment, or live HR runtime mutation is part of this prototype phase.
 
 ## Accepted product contract
 
@@ -21,8 +22,8 @@ The existing HR deployment remains the reference implementation and migration te
 |---|---|
 | Packaging | Managed Agent Sidecar Core plus one Target Binding solution per Model-driven App |
 | Multiplicity | Multiple independent sidecars per Dataverse environment, keyed by Model-driven App ID |
-| Administration | Dedicated Agent Sidecar Administration Model-driven App in the core solution |
-| Access | Packaged Agent Sidecar Administrator security role |
+| Administration | Agent Sidecar Administration Power Apps Code App using React and Fluent UI v9 |
+| Access | Existing System Administrator role; enforce in Power Platform/Dataverse, not only in the client |
 | Binding lifecycle | Install, update, validate, disable, and uninstall |
 | Form strategy | Patch selected existing forms in place and preserve unrelated XML |
 | ALM | Create an unmanaged Target Binding solution in development; export managed for downstream environments |
@@ -36,7 +37,7 @@ The existing HR deployment remains the reference implementation and migration te
 
 ```mermaid
 flowchart TB
-    Admin[Agent Sidecar Administration App]
+    Admin[Agent Sidecar Administration Code App]
     Config[(Sidecar Configuration)]
     EntityBinding[(Entity and Form Binding)]
     Core[Agent Sidecar Core Runtime]
@@ -72,8 +73,8 @@ The core contains:
 - Persistent conversation and **New conversation** behavior.
 - Generic icon, styling, accessibility, and telemetry-safe error handling.
 - Sidecar Configuration and Binding configuration schema.
-- Agent Sidecar Administration Model-driven App.
-- Agent Sidecar Administrator security role.
+- Agent Sidecar Administration Code App and its generated-service adapter contract.
+- System Administrator authorization integration.
 - Validation and lifecycle operations.
 
 The core excludes:
@@ -138,19 +139,17 @@ The configuration tables store identifiers and mappings, not access tokens, clie
 
 ## Administrator experience
 
-The administration app should use a guided, resumable workflow:
+The administration Code App uses a guided, resumable workflow:
 
 1. **Select application** — discover Model-driven Apps and prevent duplicate bindings.
-2. **Select entities** — show only entities present in the selected app.
-3. **Select forms** — discover eligible active main forms and display existing sidecar status.
-4. **Configure pane** — set title, width, icon, and stable pane identity.
-5. **Configure identity** — capture the separate Entra public-client Application ID and tenant ID; show the exact redirect URI and delegated permission checklist.
-6. **Select agent** — discover or accept the schema name of an existing Copilot Studio agent and validate environment, publication, authentication, sharing, and context compatibility.
-7. **Review changes** — show the exact forms and solution components that will change.
-8. **Apply** — create/update the binding solution, patch forms, publish, and verify read-back.
-9. **Validate** — run configuration, form, agent, and runtime readiness checks.
+2. **Select tables** — enable all eligible app tables by default; the binding covers lists and active main forms.
+3. **Connect agent** — parse the Microsoft 365 Agents SDK connection string from **Channels > Web app** to resolve the case-sensitive agent schema name, and capture the Environment ID separately from **Settings > Advanced > Metadata**. The public iframe embed code is not accepted.
+4. **Configure identity and pane** — capture the separate Entra public-client Application ID, tenant ID, pane title/width, and Target Binding solution name; show the exact redirect URI and delegated permission checklist.
+5. **Review impact and deploy** — show exact owned components and rollback behavior before the explicit mutation.
 
-The user must have the packaged administrator role plus the platform privileges required to customize forms, manage solutions, and publish customizations.
+The portfolio provides current state only, not a separate lifecycle-history ledger. Opening a configuration performs health validation. Configuration Drift is read-only until a System Administrator explicitly approves reconciliation. Failed lifecycle operations automatically restore the Last Known-Good State; incomplete rollback is blocking and leaves the sidecar disabled. Uninstall performs dependency checks and removes only sidecar-owned components.
+
+The user must be a System Administrator with the platform privileges required to customize forms, manage solutions, and publish customizations. The Code App's access boundary is explanatory defense in depth; server-side authorization remains mandatory.
 
 ## Safe form mutation contract
 
@@ -267,7 +266,9 @@ Structural entity and form mappings move through the solution. Environment-speci
 
 ### Phase 3 — Administration app
 
-- Build the dedicated Model-driven App and guided configuration workflow.
+- [x] Build and validate the mock-data Code App prototype and guided configuration workflow.
+- [ ] Complete Dataverse existing-schema discovery and obtain explicit approval for any new schema.
+- [ ] Bind generated Dataverse services behind the existing provider contract.
 - Implement app/entity/form discovery.
 - Implement pane, identity, and existing-agent configuration.
 - Add review, validation, status, and remediation experiences.

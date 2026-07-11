@@ -1,6 +1,6 @@
 # Productize the agent sidecar as a reusable core with target bindings
 
-**Status:** accepted
+**Status:** accepted; administration-client and access-role sections superseded by ADR-0005
 
 The Agent Sidecar will be productized as two solution layers: a reusable managed **Agent Sidecar Core** and a dedicated **Target Binding** solution for each Model-driven App. The core will provide the delegated Microsoft authentication, Microsoft 365 Agents SDK runtime, persistent side pane, minimal page-context envelope, configuration model, administrator security role, and a dedicated Agent Sidecar Administration Model-driven App. Each target binding will identify one Model-driven App, reference an existing Copilot Studio agent, define the supported entities and forms, and safely add only the sidecar-owned form library and OnLoad handler to selected existing forms. An environment may contain multiple independent sidecars keyed by Model-driven App ID.
 

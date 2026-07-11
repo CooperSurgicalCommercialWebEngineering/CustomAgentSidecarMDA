@@ -37,9 +37,11 @@ interface MetadataServiceEntry {
 // Register each table's generated service here after pac code add-data-source.
 // Without an entry, metadata lookups for that table return null (no asterisks,
 // no maxLength, no min/max).
-export const metadataServiceRegistry: Record<string, MetadataServiceEntry> = {
-  // Example after registering msfttrp_trips:
-  // msfttrp_trips: Msfttrp_tripsService as unknown as MetadataServiceEntry,
+export const metadataServiceRegistry: Record<string, () => Promise<MetadataServiceEntry>> = {
+  maftagsc_sidecarconfiguration: () => import('@/generated/services/Maftagsc_sidecarconfigurationsService')
+    .then(({ Maftagsc_sidecarconfigurationsService }) => Maftagsc_sidecarconfigurationsService as unknown as MetadataServiceEntry),
+  maftagsc_targetbinding: () => import('@/generated/services/Maftagsc_targetbindingsService')
+    .then(({ Maftagsc_targetbindingsService }) => Maftagsc_targetbindingsService as unknown as MetadataServiceEntry),
 };
 
 const tableMetadataCache = new Map<string, Promise<Map<string, DataverseFieldMetadata>>>();
@@ -48,15 +50,15 @@ function fetchTableMetadata(tableLogicalName: string): Promise<Map<string, Datav
   const cached = tableMetadataCache.get(tableLogicalName);
   if (cached) return cached;
 
-  const service = metadataServiceRegistry[tableLogicalName];
-  if (!service) {
+  const loadService = metadataServiceRegistry[tableLogicalName];
+  if (!loadService) {
     const empty = Promise.resolve(new Map<string, DataverseFieldMetadata>());
     tableMetadataCache.set(tableLogicalName, empty);
     return empty;
   }
 
-  const promise = service
-    .getMetadata({ schema: { columns: 'all' } })
+  const promise = loadService()
+    .then((service) => service.getMetadata({ schema: { columns: 'all' } }))
     .then((result) => {
       const attributes = (result.data?.Attributes ?? []) as AttributeRecord[];
       const map = new Map<string, DataverseFieldMetadata>();
@@ -83,9 +85,12 @@ function fetchTableMetadata(tableLogicalName: string): Promise<Map<string, Datav
       }
       return map;
     })
-    .catch(() => new Map<string, DataverseFieldMetadata>());
+      .catch(() => {
+        throw new Error(`Metadata lookup failed for ${tableLogicalName}.`);
+      });
 
   tableMetadataCache.set(tableLogicalName, promise);
+    void promise.catch(() => tableMetadataCache.delete(tableLogicalName));
   return promise;
 }
 

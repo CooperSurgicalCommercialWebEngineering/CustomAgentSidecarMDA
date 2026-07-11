@@ -8,3 +8,4 @@ export function createAppDataProvider(): AppDataProvider {
     ? createMockDataProvider()
     : createRealDataProvider();
 }
+

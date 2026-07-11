@@ -1,0 +1,250 @@
+{
+  "name": "entity",
+  "title": "Entities",
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "x-ms-dataverse-entity": true,
+      "x-ms-dataverse-entityset": "entities",
+      "x-ms-dataverse-primary-id": "entityid",
+      "x-ms-dataverse-primary-name": "name",
+      "properties": {
+        "addresstablename": {
+          "type": "string",
+          "title": "Address Table Name",
+          "x-ms-dataverse-attribute": "addresstablename",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "AddressTableName",
+          "maxLength": 128
+        },
+        "basetablename": {
+          "type": "string",
+          "title": "Base Table Name",
+          "x-ms-dataverse-attribute": "basetablename",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "BaseTableName",
+          "maxLength": 128
+        },
+        "collectionname": {
+          "type": "string",
+          "title": "Collection Name",
+          "x-ms-dataverse-attribute": "collectionname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "CollectionName",
+          "maxLength": 128
+        },
+        "componentstate": {
+          "type": "string",
+          "title": "Component State",
+          "x-ms-dataverse-attribute": "componentstate",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "ComponentState",
+          "x-ms-read-only": true,
+          "required": true,
+          "enum": [
+            "Published",
+            "Unpublished",
+            "Deleted",
+            "Deleted Unpublished"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "faece09f-cefc-11de-8150-00155da18b00",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Component State",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "entityid": {
+          "type": "string",
+          "title": "Entity",
+          "x-ms-dataverse-attribute": "entityid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "EntityId",
+          "x-ms-dataverse-primary-id": true,
+          "required": true,
+          "x-ms-keyType": "primary"
+        },
+        "entitysetname": {
+          "type": "string",
+          "title": "Entity Set Name",
+          "x-ms-dataverse-attribute": "entitysetname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "EntitySetName",
+          "maxLength": 128
+        },
+        "extensiontablename": {
+          "type": "string",
+          "title": "Extension Table Name",
+          "x-ms-dataverse-attribute": "extensiontablename",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ExtensionTableName",
+          "maxLength": 128
+        },
+        "externalcollectionname": {
+          "type": "string",
+          "title": "External Collection Name",
+          "x-ms-dataverse-attribute": "externalcollectionname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ExternalCollectionName",
+          "maxLength": 128
+        },
+        "externalname": {
+          "type": "string",
+          "title": "External Name",
+          "x-ms-dataverse-attribute": "externalname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ExternalName",
+          "maxLength": 128
+        },
+        "isactivity": {
+          "type": "string",
+          "title": "Is Activity",
+          "x-ms-dataverse-attribute": "isactivity",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsActivity",
+          "x-ms-read-only": true,
+          "enum": [
+            "False",
+            "True"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "c358e46e-bc0f-f111-8342-000d3a5aab88",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Is Activity",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "isactivityname": {
+          "type": "string",
+          "title": "isactivityname",
+          "x-ms-dataverse-attribute": "isactivityname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "isactivityName",
+          "x-ms-read-only": true
+        },
+        "logicalcollectionname": {
+          "type": "string",
+          "title": "Logical Collection Name",
+          "x-ms-dataverse-attribute": "logicalcollectionname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "LogicalCollectionName",
+          "maxLength": 128
+        },
+        "logicalname": {
+          "type": "string",
+          "title": "Logical Name",
+          "x-ms-dataverse-attribute": "logicalname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "LogicalName",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "x-ms-dataverse-attribute": "name",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "Name",
+          "x-ms-dataverse-primary-name": true,
+          "maxLength": 128
+        },
+        "objecttypecode": {
+          "type": "string",
+          "title": "Object Type Code",
+          "x-ms-dataverse-attribute": "objecttypecode",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "ObjectTypeCode",
+          "x-ms-read-only": true
+        },
+        "originallocalizedcollectionname": {
+          "type": "string",
+          "title": "Original Localized Collection Name",
+          "x-ms-dataverse-attribute": "originallocalizedcollectionname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "OriginalLocalizedCollectionName",
+          "maxLength": 128
+        },
+        "originallocalizedname": {
+          "type": "string",
+          "title": "Original Localized Name",
+          "x-ms-dataverse-attribute": "originallocalizedname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "OriginalLocalizedName",
+          "maxLength": 128
+        },
+        "overwritetime": {
+          "type": "string",
+          "title": "Record Overwrite Time",
+          "x-ms-dataverse-attribute": "overwritetime",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "OverwriteTime",
+          "x-ms-read-only": true,
+          "required": true
+        },
+        "parentcontrollingattributename": {
+          "type": "string",
+          "title": "Parent Controlling Attribute Name",
+          "x-ms-dataverse-attribute": "parentcontrollingattributename",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ParentControllingAttributeName",
+          "maxLength": 128
+        },
+        "physicalname": {
+          "type": "string",
+          "title": "Physical Name",
+          "x-ms-dataverse-attribute": "physicalname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "PhysicalName",
+          "maxLength": 128
+        },
+        "reportviewname": {
+          "type": "string",
+          "title": "Report View Name",
+          "x-ms-dataverse-attribute": "reportviewname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ReportViewName",
+          "maxLength": 128
+        },
+        "solutionid": {
+          "type": "string",
+          "title": "Solution",
+          "x-ms-dataverse-attribute": "solutionid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "SolutionId",
+          "x-ms-read-only": true,
+          "required": true
+        },
+        "versionnumber": {
+          "type": "string",
+          "title": "Version Number",
+          "x-ms-dataverse-attribute": "versionnumber",
+          "x-ms-dataverse-type": "BigIntType",
+          "x-ms-schema-name": "VersionNumber",
+          "x-ms-read-only": true
+        }
+      },
+      "required": [
+        "componentstate",
+        "entityid",
+        "overwritetime",
+        "solutionid"
+      ]
+    }
+  }
+}

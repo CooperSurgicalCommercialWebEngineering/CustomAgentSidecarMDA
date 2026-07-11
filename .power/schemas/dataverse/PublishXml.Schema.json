@@ -1,0 +1,38 @@
+{
+  "name": "PublishXml",
+  "title": "PublishXml",
+  "type": "Microsoft.PowerApps/dataverseOperation",
+  "properties": {
+    "displayName": "PublishXml",
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "PublishXml",
+        "version": "1.0"
+      },
+      "basePath": "/api/data/v9.2",
+      "paths": {
+        "/PublishXml": {
+          "post": {
+            "operationId": "PublishXml",
+            "parameters": [
+              {
+                "name": "ParameterXml",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              }
+            ],
+            "responses": {
+              "204": {
+                "description": "No Content"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

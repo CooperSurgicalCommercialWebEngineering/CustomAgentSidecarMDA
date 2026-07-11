@@ -1,0 +1,550 @@
+{
+  "name": "systemform",
+  "title": "System Forms",
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "x-ms-dataverse-entity": true,
+      "x-ms-dataverse-entityset": "systemforms",
+      "x-ms-dataverse-primary-id": "formid",
+      "x-ms-dataverse-primary-name": "name",
+      "properties": {
+        "ancestorformid": {
+          "type": "string",
+          "title": "Parent Form",
+          "x-ms-dataverse-attribute": "ancestorformid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "AncestorFormId"
+        },
+        "ancestorformidname": {
+          "type": "string",
+          "title": "ancestorformidname",
+          "x-ms-dataverse-attribute": "ancestorformidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "AncestorFormIdName",
+          "x-ms-read-only": true,
+          "maxLength": 50
+        },
+        "canbedeleted": {
+          "type": "string",
+          "title": "Can Be Deleted",
+          "x-ms-dataverse-attribute": "canbedeleted",
+          "x-ms-dataverse-type": "ManagedPropertyType",
+          "x-ms-schema-name": "CanBeDeleted",
+          "required": true
+        },
+        "componentstate": {
+          "type": "string",
+          "title": "Component State",
+          "x-ms-dataverse-attribute": "componentstate",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "ComponentState",
+          "x-ms-read-only": true,
+          "required": true,
+          "enum": [
+            "Published",
+            "Unpublished",
+            "Deleted",
+            "Deleted Unpublished"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "faece09f-cefc-11de-8150-00155da18b00",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Component State",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "x-ms-dataverse-attribute": "description",
+          "x-ms-dataverse-type": "MemoType",
+          "x-ms-schema-name": "Description",
+          "maxLength": 2000
+        },
+        "formactivationstate": {
+          "type": "string",
+          "title": "Form State",
+          "x-ms-dataverse-attribute": "formactivationstate",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "FormActivationState",
+          "required": true,
+          "enum": [
+            "Inactive",
+            "Active"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "9525475f-0a70-4d40-801d-0ee0454e83d9",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Form State",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "formactivationstatename": {
+          "type": "string",
+          "title": "formactivationstatename",
+          "x-ms-dataverse-attribute": "formactivationstatename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "FormActivationStateName",
+          "x-ms-read-only": true
+        },
+        "formid": {
+          "type": "string",
+          "title": "formid",
+          "x-ms-dataverse-attribute": "formid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "FormId",
+          "x-ms-dataverse-primary-id": true,
+          "required": true,
+          "x-ms-keyType": "primary"
+        },
+        "formidunique": {
+          "type": "string",
+          "title": "formidunique",
+          "x-ms-dataverse-attribute": "formidunique",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "FormIdUnique",
+          "x-ms-read-only": true,
+          "required": true
+        },
+        "formjson": {
+          "type": "string",
+          "title": "formjson",
+          "x-ms-dataverse-attribute": "formjson",
+          "x-ms-dataverse-type": "MemoType",
+          "x-ms-schema-name": "FormJson",
+          "required": true,
+          "maxLength": 1073741823
+        },
+        "formpresentation": {
+          "type": "string",
+          "title": "AIR Refreshed",
+          "x-ms-dataverse-attribute": "formpresentation",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "FormPresentation",
+          "required": true,
+          "enum": [
+            "ClassicForm",
+            "AirForm",
+            "ConvertedICForm"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1,
+            2
+          ],
+          "Color": [
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "84bdc848-28f6-415a-8e7f-23b95f56ac29",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Refreshed Layout",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "formpresentationname": {
+          "type": "string",
+          "title": "formpresentationname",
+          "x-ms-dataverse-attribute": "formpresentationname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "FormPresentationName",
+          "x-ms-read-only": true
+        },
+        "formxml": {
+          "type": "string",
+          "title": "formxml",
+          "x-ms-dataverse-attribute": "formxml",
+          "x-ms-dataverse-type": "MemoType",
+          "x-ms-schema-name": "FormXml",
+          "required": true,
+          "maxLength": 1073741823
+        },
+        "formxmlmanaged": {
+          "type": "string",
+          "title": "formxmlmanaged",
+          "x-ms-dataverse-attribute": "formxmlmanaged",
+          "x-ms-dataverse-type": "MemoType",
+          "x-ms-schema-name": "FormXmlManaged",
+          "x-ms-read-only": true,
+          "maxLength": 1073741823
+        },
+        "introducedversion": {
+          "type": "string",
+          "title": "Introduced Version",
+          "x-ms-dataverse-attribute": "introducedversion",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "IntroducedVersion",
+          "maxLength": 48
+        },
+        "isairmerged": {
+          "type": "string",
+          "title": "Refreshed",
+          "x-ms-dataverse-attribute": "isairmerged",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsAIRMerged",
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "77bc8b76-8e17-4069-b184-b3780fbff5ac",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Refreshed Layout is Merged",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "iscustomizable": {
+          "type": "string",
+          "title": "Customizable",
+          "x-ms-dataverse-attribute": "iscustomizable",
+          "x-ms-dataverse-type": "ManagedPropertyType",
+          "x-ms-schema-name": "IsCustomizable",
+          "required": true
+        },
+        "isdefault": {
+          "type": "string",
+          "title": "Default Form",
+          "x-ms-dataverse-attribute": "isdefault",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsDefault",
+          "required": true,
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "630cef13-74d9-42fe-9fe2-926a1469040a",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Default Form",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "isdefaultname": {
+          "type": "string",
+          "title": "isdefaultname",
+          "x-ms-dataverse-attribute": "isdefaultname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "IsDefaultName",
+          "x-ms-read-only": true
+        },
+        "isdesktopenabled": {
+          "type": "string",
+          "title": "Is Desktop Enabled",
+          "x-ms-dataverse-attribute": "isdesktopenabled",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsDesktopEnabled",
+          "required": true,
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "d2de2a38-d5e3-480b-af5a-9495016b844a",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "State",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "ismanaged": {
+          "type": "string",
+          "title": "State",
+          "x-ms-dataverse-attribute": "ismanaged",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsManaged",
+          "x-ms-read-only": true,
+          "required": true,
+          "enum": [
+            "Unmanaged",
+            "Managed"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "9d04e035-5408-4c1d-a5aa-20445a02f691",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Is Component Managed",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "ismanagedname": {
+          "type": "string",
+          "title": "ismanagedname",
+          "x-ms-dataverse-attribute": "ismanagedname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "IsManagedName",
+          "x-ms-read-only": true
+        },
+        "istabletenabled": {
+          "type": "string",
+          "title": "Is Tablet Enabled",
+          "x-ms-dataverse-attribute": "istabletenabled",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsTabletEnabled",
+          "required": true,
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "8f7eb82b-7e09-4f70-973f-23bc2f2209e5",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "State",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "x-ms-dataverse-attribute": "name",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "Name",
+          "x-ms-dataverse-primary-name": true,
+          "required": true,
+          "maxLength": 100
+        },
+        "objecttypecode": {
+          "type": "string",
+          "title": "Entity Name",
+          "x-ms-dataverse-attribute": "objecttypecode",
+          "x-ms-dataverse-type": "EntityNameType",
+          "x-ms-schema-name": "ObjectTypeCode",
+          "enum": [],
+          "x-ms-enum-values": [],
+          "Color": [],
+          "x-ms-optionsetmetadataid": "690fe7c8-77a8-4894-adf3-ac5f656f928f",
+          "x-ms-isGlobal": false,
+          "x-ms-optionSetType": "Picklist"
+        },
+        "objecttypecodename": {
+          "type": "string",
+          "title": "objecttypecodename",
+          "x-ms-dataverse-attribute": "objecttypecodename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "ObjectTypeCodeName",
+          "x-ms-read-only": true
+        },
+        "organizationid": {
+          "type": "string",
+          "title": "organizationid",
+          "x-ms-dataverse-attribute": "organizationid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "OrganizationId",
+          "x-ms-read-only": true,
+          "required": true
+        },
+        "organizationidname": {
+          "type": "string",
+          "title": "organizationidname",
+          "x-ms-dataverse-attribute": "organizationidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "OrganizationIdName",
+          "x-ms-read-only": true,
+          "required": true,
+          "maxLength": 100
+        },
+        "overwritetime": {
+          "type": "string",
+          "title": "Record Overwrite Time",
+          "x-ms-dataverse-attribute": "overwritetime",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "OverwriteTime",
+          "x-ms-read-only": true,
+          "required": true
+        },
+        "publishedon": {
+          "type": "string",
+          "title": "Published On",
+          "x-ms-dataverse-attribute": "publishedon",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "PublishedOn",
+          "x-ms-read-only": true
+        },
+        "solutionid": {
+          "type": "string",
+          "title": "Solution",
+          "x-ms-dataverse-attribute": "solutionid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "SolutionId",
+          "x-ms-read-only": true,
+          "required": true
+        },
+        "supportingsolutionid": {
+          "type": "string",
+          "title": "Solution",
+          "x-ms-dataverse-attribute": "supportingsolutionid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "SupportingSolutionId",
+          "x-ms-read-only": true
+        },
+        "type": {
+          "type": "string",
+          "title": "Form Type",
+          "x-ms-dataverse-attribute": "type",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "Type",
+          "enum": [
+            "Dashboard",
+            "AppointmentBook",
+            "Main",
+            "MiniCampaignBO",
+            "Preview",
+            "Mobile - Express",
+            "Quick View Form",
+            "Quick Create",
+            "Dialog",
+            "Task Flow Form",
+            "InteractionCentricDashboard",
+            "Card",
+            "Main - Interactive experience",
+            "Contextual Dashboard",
+            "Other",
+            "MainBackup",
+            "AppointmentBookBackup",
+            "Power BI Dashboard"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            100,
+            101,
+            102,
+            103
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "310b3777-4d0c-4399-aa1a-fae9d26a6caf",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Type",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "typename": {
+          "type": "string",
+          "title": "typename",
+          "x-ms-dataverse-attribute": "typename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "TypeName",
+          "x-ms-read-only": true
+        },
+        "uniquename": {
+          "type": "string",
+          "title": "Unique Name",
+          "x-ms-dataverse-attribute": "uniquename",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "UniqueName",
+          "maxLength": 200
+        },
+        "version": {
+          "type": "string",
+          "title": "version",
+          "x-ms-dataverse-attribute": "version",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "Version"
+        },
+        "versionnumber": {
+          "type": "string",
+          "title": "versionnumber",
+          "x-ms-dataverse-attribute": "versionnumber",
+          "x-ms-dataverse-type": "BigIntType",
+          "x-ms-schema-name": "VersionNumber",
+          "x-ms-read-only": true
+        }
+      },
+      "required": [
+        "canbedeleted",
+        "componentstate",
+        "formactivationstate",
+        "formid",
+        "formidunique",
+        "formjson",
+        "formpresentation",
+        "formxml",
+        "iscustomizable",
+        "isdefault",
+        "isdesktopenabled",
+        "ismanaged",
+        "istabletenabled",
+        "name",
+        "organizationid",
+        "organizationidname",
+        "overwritetime",
+        "solutionid"
+      ]
+    }
+  }
+}

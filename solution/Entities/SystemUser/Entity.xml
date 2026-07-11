@@ -34,6 +34,7 @@
           <IsFilterable>0</IsFilterable>
           <IsRetrievable>0</IsRetrievable>
           <IsLocalizable>0</IsLocalizable>
+          <AppDefaultValue>-1</AppDefaultValue>
           <OptionSetName>maftagsc_employmenttype</OptionSetName>
           <displaynames>
             <displayname description="Employment Type" languagecode="1033" />

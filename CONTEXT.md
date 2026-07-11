@@ -1,6 +1,32 @@
-# HR Agent Sidecar
+# Agent Sidecar Platform
 
-HR Agent Sidecar provides a base human-resources data model and a contextual Copilot Studio experience embedded in a Dataverse Model-driven App side pane.
+Agent Sidecar Platform provides a reusable contextual Copilot Studio experience for Dataverse Model-driven Apps. HR Management is the reference implementation and includes the human-resources data model below.
+
+## Platform Administration
+
+**Agent Sidecar**:
+One app-keyed contextual assistant that connects a target Model-driven App to one existing Copilot Studio agent through a persistent side pane.
+_Avoid_: Embedded bot, chatbot panel, global environment agent
+
+**Sidecar Configuration**:
+The current desired state for one Agent Sidecar, including its target app, enabled tables, existing agent, pane identity, public-client identifiers, and lifecycle state.
+_Avoid_: Installation record, deployment history, bot settings
+
+**Target Binding**:
+The sidecar-owned structural customizations that attach one Sidecar Configuration to a target Model-driven App's lists and main forms.
+_Avoid_: App package, cloned form, global binding
+
+**Configuration Drift**:
+A reviewed difference between a Sidecar Configuration and current live Model-driven App metadata; drift never authorizes an automatic live mutation.
+_Avoid_: Sync error, failed deployment
+
+**Health Validation**:
+A read-only assessment that verifies configuration uniqueness, target bindings, delegated identity settings, and existing-agent readiness.
+_Avoid_: Deployment, repair, reconciliation
+
+**Last Known-Good State**:
+The verified pre-change state used to automatically roll back a failed sidecar lifecycle operation.
+_Avoid_: Version history, audit log, backup solution
 
 ## Organization
 
@@ -56,6 +82,6 @@ _Avoid_: Benefit election, plan membership
 
 ## Agent Experience
 
-**HR Copilot Side Pane**:
-A Model-driven App side pane that hosts a Copilot Studio agent through an HTML web resource and receives both the current table logical name and record ID.
-_Avoid_: Embedded bot, chatbot panel
+**HR Management App Guide**:
+The HR Management app's Agent Sidecar, connected to the existing HR Mgmt Classic Copilot Studio agent and supplied only the approved minimal page context.
+_Avoid_: HR Copilot Side Pane, HR chatbot

@@ -1,0 +1,83 @@
+{
+  "name": "AddSolutionComponent",
+  "title": "AddSolutionComponent",
+  "type": "Microsoft.PowerApps/dataverseOperation",
+  "properties": {
+    "displayName": "AddSolutionComponent",
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "AddSolutionComponent",
+        "version": "1.0"
+      },
+      "basePath": "/api/data/v9.2",
+      "paths": {
+        "/AddSolutionComponent": {
+          "post": {
+            "operationId": "AddSolutionComponent",
+            "parameters": [
+              {
+                "name": "ComponentId",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "x-ms-dataverse-type": "UniqueidentifierType",
+                "x-ms-csdl-type": "Edm.Guid"
+              },
+              {
+                "name": "ComponentType",
+                "in": "body",
+                "required": true,
+                "type": "number",
+                "x-ms-dataverse-type": "IntegerType",
+                "x-ms-csdl-type": "Edm.Int32"
+              },
+              {
+                "name": "SolutionUniqueName",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              },
+              {
+                "name": "AddRequiredComponents",
+                "in": "body",
+                "required": true,
+                "type": "boolean",
+                "x-ms-dataverse-type": "BooleanType",
+                "x-ms-csdl-type": "Edm.Boolean"
+              },
+              {
+                "name": "DoNotIncludeSubcomponents",
+                "in": "body",
+                "required": false,
+                "type": "boolean",
+                "x-ms-dataverse-type": "BooleanType",
+                "x-ms-csdl-type": "Edm.Boolean"
+              },
+              {
+                "name": "IncludedComponentSettingsValues",
+                "in": "body",
+                "required": false,
+                "type": "array",
+                "x-ms-dataverse-type": "CollectionType",
+                "x-ms-csdl-type": "Collection(Edm.String)"
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Success",
+                "schema": {
+                  "type": "object",
+                  "x-ms-dataverse-type": "LookupType",
+                  "x-ms-csdl-type": "mscrm.AddSolutionComponentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
