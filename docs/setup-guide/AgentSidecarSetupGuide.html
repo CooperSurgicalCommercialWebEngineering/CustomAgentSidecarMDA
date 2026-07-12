@@ -239,7 +239,7 @@
       <a href="#azure"><span class="n">1</span> Microsoft Entra app registration</a>
       <a href="#copilot"><span class="n">2</span> Copilot Studio agent</a>
       <a href="#import"><span class="n">3</span> Import the Core solution</a>
-      <a href="#codeapp"><span class="n">4</span> Deploy the Code App</a>
+      <a href="#codeapp"><span class="n">4</span> Code App &amp; connections</a>
       <a href="#wizard"><span class="n">5</span> Sidecar setup wizard</a>
       <a href="#lifecycle"><span class="n">6</span> Validate &amp; lifecycle</a>
       <a href="#trouble"><span class="n">?</span> Troubleshooting</a>
@@ -255,7 +255,7 @@
     <header class="hero" id="top">
       <span class="eyebrow">End-to-end deployment</span>
       <h2>Deploy the Agent Sidecar to a new environment</h2>
-      <p class="lede">A complete, click-by-click walkthrough: register the browser identity in Azure, prepare the Copilot Studio agent, import the reusable <b>AgentSidecarCore</b> solution, deploy the Code App, and drive the in-app setup wizard — with a live worksheet that fills your own values into every step.</p>
+      <p class="lede">A complete, click-by-click walkthrough: register the browser identity in Azure, prepare the Copilot Studio agent, import the reusable <b>AgentSidecarCore</b> solution (which includes the Code App), connect its data, and drive the in-app setup wizard — with a live worksheet that fills your own values into every step.</p>
       <div class="toolbar">
         <button class="btn primary" id="themeBtn">◐ Toggle theme</button>
         <button class="btn" id="resetBtn">↺ Reset checklist</button>
@@ -267,15 +267,19 @@
     <section id="overview">
       <h3>Overview</h3>
       <p class="sub">What you are deploying and in what order.</p>
-      <p>The Agent Sidecar is a persistent, context-aware chat pane that appears on Model-driven App forms and talks to a published Copilot Studio agent <b>as the signed-in user</b>. It ships as two independently deployable pieces:</p>
+      <p>The Agent Sidecar is a persistent, context-aware chat pane that appears on Model-driven App forms and talks to a published Copilot Studio agent <b>as the signed-in user</b>. It is delivered as <b>one solution</b> plus a small amount of per-environment identity you supply:</p>
       <div class="arch">
-        <div class="node"><b>AgentSidecarCore</b><small>Unmanaged solution: Dataverse tables, option sets, runtime web resources, token-broker plugin.</small></div>
-        <div class="node"><b>Code App</b><small>The administration app (React/Vite) deployed per environment with <code class="inline">pac code push</code>.</small></div>
-        <div class="node"><b>Per-environment identity</b><small>An Entra SPA app registration + a published Copilot Studio agent, wired up in the wizard.</small></div>
+        <div class="node"><b>AgentSidecarCore solution</b><small>One unmanaged solution carrying everything: Dataverse tables, option sets, runtime web resources, the token-broker plugin, <b>and the Code App itself</b>. Importing it deploys the app too &mdash; no separate <code class="inline">pac code push</code> needed.</small></div>
+        <div class="node"><b>Connections</b><small>The per-environment connection(s) the app's data references resolve to. Established/mapped in the maker portal at import time.</small></div>
+        <div class="node"><b>Per-environment identity</b><small>An Entra SPA app registration + a published Copilot Studio agent, wired up in the setup wizard.</small></div>
       </div>
       <div class="callout info">
         <div class="t">The order matters</div>
-        Do the Azure registration and Copilot Studio agent <b>first</b> — you need four values from them (client ID, tenant ID, environment ID, agent schema name) to finish the wizard. Then import the solution, deploy the Code App, and run the wizard.
+        Do the Azure registration and Copilot Studio agent <b>first</b> &mdash; you need four values from them (client ID, tenant ID, environment ID, agent schema name) to finish the wizard. Then <b>import the solution</b> (which brings the app with it), <b>map the connection(s)</b>, and run the wizard.
+      </div>
+      <div class="callout ok">
+        <div class="t">No developer tooling required to deploy</div>
+        Because the Code App travels inside the solution, an administrator can stand this up entirely from <b>make.powerapps.com</b> with just the solution <code class="inline">.zip</code> &mdash; no Node.js, no PAC CLI, no source repository, no <code class="inline">pac code push</code>.
       </div>
       <h4>The five values you will collect</h4>
       <table class="tbl">
@@ -295,8 +299,9 @@
       <p class="sub">Install the tooling, confirm your roles, then fill in your values once — they flow into every command and field below.</p>
 
       <h4>Tooling</h4>
+      <div class="callout ok" style="margin-top:6px"><div class="t">Deploying by solution import? You can skip this table.</div>The tools below are only needed by <b>developers</b> who build or update the app, or who deploy via CLI/CI. To stand up the sidecar from the solution <code class="inline">.zip</code>, you only need <b>make.powerapps.com</b> access with the roles listed under &ldquo;Roles &amp; access.&rdquo;</div>
       <table class="tbl">
-        <tr><th>Tool</th><th>Check</th></tr>
+        <tr><th>Tool (developers only)</th><th>Check</th></tr>
         <tr><td>Power Platform CLI (PAC)</td><td><code class="inline">pac help</code></td></tr>
         <tr><td>Node.js 18+ &amp; npm</td><td><code class="inline">node --version</code></td></tr>
         <tr><td>.NET SDK (for PAC)</td><td><code class="inline">dotnet --version</code></td></tr>
@@ -476,7 +481,7 @@
     <!-- IMPORT -->
     <section id="import">
       <h3><span class="badge">3</span> Import the AgentSidecarCore solution</h3>
-      <p class="sub">Bring in the Dataverse tables, option sets, runtime web resources, and token-broker plugin. This is the <b>unmanaged</b> <code class="inline">AgentSidecarCore.zip</code> produced from the source environment.</p>
+      <p class="sub">One import brings the Dataverse tables, option sets, runtime web resources, token-broker plugin, <b>and the Code App</b>. This is the <b>unmanaged</b> <code class="inline">AgentSidecarCore.zip</code> that already contains the app.</p>
 
       <h4>Option A — Maker portal (recommended)</h4>
       <ol class="steps">
@@ -501,43 +506,55 @@ pac solution import --path ./AgentSidecarCore.zip \
   --environment <span class="val" data-bind="org">https://&lt;your-org&gt;.crm.dynamics.com</span> \
   --publish-changes</code></pre></div>
 
-      <div class="callout ok"><div class="t">What lands in the environment</div>Tables <code class="inline" data-bind="t_config">maftagsc_sidecarconfiguration</code> &amp; <code class="inline" data-bind="t_binding">maftagsc_targetbinding</code>, the health/validation option sets, the runtime web resources (<code class="inline">agentSidePane.html/.js</code>, <code class="inline">agentGuideLibrary.svg</code>, <code class="inline">authRedirect.html</code>), and the token-broker plugin.</div>
+      <div class="callout ok"><div class="t">What lands in the environment</div>Tables <code class="inline" data-bind="t_config">maftagsc_sidecarconfiguration</code> &amp; <code class="inline" data-bind="t_binding">maftagsc_targetbinding</code>, the health/validation option sets, the runtime web resources (<code class="inline">agentSidePane.html/.js</code>, <code class="inline">agentGuideLibrary.svg</code>, <code class="inline">authRedirect.html</code>), the token-broker plugin, <b>and the Agent Sidecar Code App itself</b> &mdash; so no separate app deployment is needed.</div>
+      <div class="callout warn"><div class="t">Import the .zip as-is &mdash; don't unpack it</div>Code apps <b>don't support the Solution Packager</b> or Git source integration (per Microsoft's ALM guidance). Import the exported <code class="inline">.zip</code> directly through the maker portal or <code class="inline">pac solution import</code>; do <b>not</b> run <code class="inline">pac solution unpack</code>/<code class="inline">pack</code> on it, or the Code App component can be dropped.</div>
       <div class="callout warn"><div class="t">Token-broker secure configuration</div>After import, the token-broker plugin step needs its per-environment secure configuration set (tenant + client details). Run your environment's <code class="inline">set_token_broker_secure_config</code> step, or configure the plugin step's secure config, before first use.</div>
     </section>
 
     <!-- CODE APP -->
     <section id="codeapp">
-      <h3><span class="badge">4</span> Deploy the Code App</h3>
-      <p class="sub">Power Apps Code Apps deploy per environment. Build the app locally and push it to the target.</p>
+      <h3><span class="badge">4</span> Code App &amp; connections</h3>
+      <p class="sub">The app arrived with the solution in Phase 3. Confirm it, connect its data, and open it — all in the maker portal.</p>
       <ol class="steps">
-        <li><b>Authenticate PAC to the target environment</b> (skip if you did this during import).
-          <div class="code"><span class="lang">bash</span><button class="copy">Copy</button><pre><code>pac auth create --environment <span class="val" data-bind="org">https://&lt;your-org&gt;.crm.dynamics.com</span>
-pac auth select --index &lt;index-of-target&gt;
-pac org who</code></pre></div>
-        </li>
-        <li><b>Build and push.</b> From the repository root:
-          <div class="code"><span class="lang">bash</span><button class="copy">Copy</button><pre><code>npm install
-npm run build
-pac code push -s AgentSidecarCore</code></pre></div>
-          On success PAC prints a <b>play URL</b> — open it to confirm the app loads.
+        <li><b>Confirm the app imported.</b> In <a class="btn" href="https://make.powerapps.com" target="_blank" rel="noopener">make.powerapps.com ↗</a> open <b>Solutions &rsaquo; Agent Sidecar Core</b> and confirm the <b>Agent Sidecar</b> app is listed (type <i>App</i>), or find it under <b>Apps</b>.
           <figure class="shot">
-            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">terminal — pac code push</span></div>
-              <img src="img/10-code-push.png" alt="pac code push" onerror="this.closest('.shot-frame').classList.add('missing')">
-              <div class="shot-placeholder"><span class="camera">📷</span><b>"App pushed successfully" + play URL</b><div class="file">Save as <code>img/10-code-push.png</code></div></div>
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Solutions &rsaquo; Agent Sidecar Core</span></div>
+              <img src="img/10-solution-contents.png" alt="Solution contents" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Solution contents — the Agent Sidecar app listed</b><div class="file">Save as <code>img/10-solution-contents.png</code></div></div>
             </div>
-            <figcaption><b>Figure 4.1</b> — A successful <code>pac code push</code>.</figcaption>
+            <figcaption><b>Figure 4.1</b> — The imported solution showing the Code App alongside tables and web resources.</figcaption>
           </figure>
         </li>
-        <li><b>Open the app.</b> Play it from the URL (or from <b>make.powerapps.com &rsaquo; Apps</b>) and sign in. You should land on the <b>portfolio</b> screen, recognized as a System Administrator, with zero configured sidecars.
+        <li><b>Establish the app's connection(s).</b> Code apps resolve their data through <b>connection references</b> per environment. On first import (or first play) you are prompted to create/select the connection(s) the app uses (e.g. the Dataverse connection). Create them in <b>make.powerapps.com &rsaquo; Connections</b> if they don't exist, then map each <b>connection reference</b> in the solution to a connection.
+          <div class="callout info"><div class="t">Where to map</div>Open the solution &rsaquo; the <b>Connection references</b> component(s), or use the import wizard's connection step (and Power Platform <b>Pipelines</b> preflight if you promote that way). Until every connection reference is mapped, the app opens but its data calls fail.</div>
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Connection references</span></div>
+              <img src="img/11-connection-references.png" alt="Connection references" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Map each connection reference to a connection</b><div class="file">Save as <code>img/11-connection-references.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 4.2</b> — Mapping the app's connection reference(s) in the target environment.</figcaption>
+          </figure>
+        </li>
+        <li><b>Open the app.</b> Play it from <b>Apps</b> (or the solution) and sign in. You should land on the <b>portfolio</b> screen, recognized as a System Administrator, with zero configured sidecars.
           <figure class="shot">
             <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Agent Sidecar — Portfolio</span></div>
-              <img src="img/11-app-portfolio.png" alt="Portfolio" onerror="this.closest('.shot-frame').classList.add('missing')">
-              <div class="shot-placeholder"><span class="camera">📷</span><b>Portfolio screen — "New sidecar" button</b><div class="file">Save as <code>img/11-app-portfolio.png</code></div></div>
+              <img src="img/12-app-portfolio.png" alt="Portfolio" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Portfolio screen — "New sidecar" button</b><div class="file">Save as <code>img/12-app-portfolio.png</code></div></div>
             </div>
-            <figcaption><b>Figure 4.2</b> — The administration portfolio. Select <b>New sidecar</b> to start the wizard.</figcaption>
+            <figcaption><b>Figure 4.3</b> — The administration portfolio. Select <b>New sidecar</b> to start the wizard.</figcaption>
           </figure>
         </li>
       </ol>
+
+      <h4>Developer / CI alternative (optional)</h4>
+      <div class="callout info">
+        <div class="t">Only if you have the source repo</div>
+        Administrators deploying from the solution <b>do not need this</b>. Developers updating the app (or wiring a pipeline) can build and push a new version directly:
+      </div>
+      <div class="code"><span class="lang">bash</span><button class="copy">Copy</button><pre><code>pac auth create --environment <span class="val" data-bind="org">https://&lt;your-org&gt;.crm.dynamics.com</span>
+npm install
+npm run build
+pac code push -s AgentSidecarCore</code></pre></div>
     </section>
 
     <!-- WIZARD -->
@@ -641,7 +658,8 @@ pac code push -s AgentSidecarCore</code></pre></div>
         <tr><td>Agent won't resolve in Step 3</td><td>The agent must be <b>published</b>, <b>active</b>, and <b>Authenticate with Microsoft</b>. The connection string must be https, contain <code class="inline">/bots/&lt;schema&gt;/</code>, and end in <code class="inline">/conversations</code>. Confirm the Environment ID matches the app's environment.</td></tr>
         <tr><td>"Consent required" / token errors</td><td>Admin consent for <code class="inline">CopilotStudio.Copilots.Invoke</code> was not granted. Re-grant in Entra &rsaquo; API permissions.</td></tr>
         <tr><td>Pane loads but no answer / 401 from agent</td><td>Token-broker plugin secure configuration not set for this environment, or the user lacks chat access to the agent. Set the secure config and share the agent.</td></tr>
-        <tr><td>App shows no eligible apps/tables</td><td>Ensure the Code App was pushed to <b>this</b> environment and the Core solution imported. The app reads live Dataverse metadata; a stale local host must be restarted.</td></tr>
+        <tr><td>App shows no eligible apps/tables</td><td>Confirm the <b>AgentSidecarCore</b> solution imported successfully (it contains the app + tables) and that the app's <b>connection reference(s)</b> are mapped. The app reads live Dataverse metadata as the signed-in user, who needs System Administrator/Customizer rights.</td></tr>
+        <tr><td>App opens but every data call fails</td><td>A <b>connection reference</b> is unmapped. In the solution, open Connection references and map each to a connection in this environment.</td></tr>
         <tr><td>Deploy fails resolving a solution/component</td><td>Confirm the publisher prefix (<code class="inline" data-bind="prefix">maftagsc</code>) matches the imported solution and that you have System Administrator rights.</td></tr>
       </table>
     </section>
@@ -667,6 +685,7 @@ pac code push -s AgentSidecarCore</code></pre></div>
         <tr><td><code class="inline">maftagsc_sidecarhealthstate</code>, <code class="inline">maftagsc_bindingvalidationstate</code></td><td>Choice (option sets)</td></tr>
         <tr><td><code class="inline">agentSidePane.html</code>, <code class="inline">agentSidePane.js</code>, <code class="inline">agentGuideLibrary.svg</code>, <code class="inline">authRedirect.html</code></td><td>Web resources</td></tr>
         <tr><td>HRAgentSidecar.TokenBroker (+ SDK message step)</td><td>Plugin</td></tr>
+        <tr><td>Agent Sidecar (administration app)</td><td>Code app</td></tr>
       </table>
       <div class="callout info"><div class="t">Context transmitted to the agent</div>Per message the pane sends only: App ID, page type, table logical name, record ID, and primary record name — plus a derived screen name. It never transmits arbitrary form-field values.</div>
     </section>
