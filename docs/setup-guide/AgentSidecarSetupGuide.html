@@ -188,8 +188,8 @@
   .ws input:focus { outline: 2px solid var(--cp-accent); border-color: var(--cp-accent); }
   .ws .hint { font-size: 11.5px; color: var(--cp-text-muted); margin-top: 3px; }
 
-  /* Screenshot frames */
-  figure.shot { margin: 16px 0; }
+  /* Screenshot frames (hidden for this delivery) */
+  figure.shot { display: none !important; }
   .shot-frame { border: 1px solid var(--cp-border); border-radius: 12px; overflow: hidden; background: var(--cp-bg-elevated); box-shadow: var(--cp-shadow); }
   .shot-frame .chrome { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--cp-surface-soft); border-bottom: 1px solid var(--cp-border); }
   .shot-frame .chrome i { width: 11px; height: 11px; border-radius: 50%; background: var(--cp-border-strong); display: inline-block; }
@@ -690,7 +690,7 @@ pac code push -s AgentSidecarCore</code></pre></div>
       <div class="callout info"><div class="t">Context transmitted to the agent</div>Per message the pane sends only: App ID, page type, table logical name, record ID, and primary record name — plus a derived screen name. It never transmits arbitrary form-field values.</div>
     </section>
 
-    <p class="foot">Agent Sidecar — New Environment Setup Guide · Generated <span id="gendate"></span> · Copilot Studio steps reflect the GA experience as of 10 Jul 2026. Drop screenshots into an <code>img/</code> folder beside this file using the filenames shown to replace each placeholder.</p>
+    <p class="foot">Agent Sidecar — New Environment Setup Guide · Generated <span id="gendate"></span> · Copilot Studio steps reflect the GA experience as of 10 Jul 2026.</p>
   </main>
 </div>
 
