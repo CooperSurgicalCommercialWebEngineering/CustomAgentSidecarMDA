@@ -36,7 +36,7 @@ The deliverable is a reusable administration control plane, not another HR-speci
 | Preview/deploy engine | Preview validated read-only end-to-end | Wizard Review step reached; `previewDeployment` reports 7 tables / 7 active main forms with rollback protection. Deploy not performed. |
 | Lifecycle controls | Implemented, not end-to-end validated | Validation, drift detection, reconcile, disable/re-enable, rollback, and scoped uninstall exist. |
 | Solution packaging | Validated | Unmanaged export/unpack/repack and ZIP integrity passed. |
-| Code App deployment | Not performed | Requires separate explicit approval. |
+| Code App deployment | Deployed to live env | `pac code push -s HRAgentSidecar` succeeded on 2026-07-11. App ID `71d3fa20-9990-4622-9775-11b56f2ed893`. Committed + pushed to `origin/main` (`db90c37`). |
 | Live form mutation | Not performed by this administrator | First mutation test must use a controlled non-HR form. |
 
 ## Immediate work — COMPLETED this session

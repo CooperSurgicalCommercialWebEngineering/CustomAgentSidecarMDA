@@ -10,7 +10,7 @@ async function read(root, name) {
 }
 
 test("generated side pane uses the registered scope and dedicated popup redirect", async () => {
-    const html = await read(sourceRoot, "hrAgentSidePane.html");
+    const html = await read(sourceRoot, "agentSidePane.html");
 
     assert.match(html, /https:\/\/api\.powerplatform\.com\/CopilotStudio\.Copilots\.Invoke/);
     assert.doesNotMatch(html, /api\.powerplatform\.com\/CopilotStudio\.Invoke/);
@@ -37,12 +37,12 @@ test("generated side pane uses the registered scope and dedicated popup redirect
 });
 
 test("library icon is used by the persistent collapsed side pane", async () => {
-    const launcher = await read(sourceRoot, "hrAgentSidePane.js");
-    const launcherSource = await read(sourceRoot, "hrAgentSidePaneLauncher.ts");
-    const icon = await read(sourceRoot, "hrGuideLibrary.svg");
+    const launcher = await read(sourceRoot, "agentSidePane.js");
+    const launcherSource = await read(sourceRoot, "agentSidePaneLauncher.ts");
+    const icon = await read(sourceRoot, "agentGuideLibrary.svg");
 
     assert.match(launcherSource, /imageSrc: configuration\.iconWebResource/);
-    assert.match(launcher, /WebResources\/maftagsc_\/copilot\/hrGuideLibrary\.svg/);
+    assert.match(launcher, /WebResources\/maftagsc_\/copilot\/agentGuideLibrary\.svg/);
     assert.match(launcherSource, /canClose: false/);
     assert.match(launcherSource, /isSelected: false/);
     assert.match(launcherSource, /alwaysRender: true/);
@@ -79,7 +79,7 @@ test("all HR Management main forms register the collapsed guide on load", async 
 });
 
 test("live page context replaces stale record details before each message", async () => {
-    const source = await read(sourceRoot, "hrAgentSidePane.ts");
+    const source = await read(sourceRoot, "agentSidePane.ts");
 
     assert.match(source, /window\.parent\.Xrm/);
     assert.match(source, /Utility\?\.getPageContext/);
@@ -94,16 +94,16 @@ test("live page context replaces stale record details before each message", asyn
 
 test("solution projections exactly match maintained web resources", async () => {
     assert.equal(
-        await read(solutionRoot, "hrAgentSidePane.html"),
-        await read(sourceRoot, "hrAgentSidePane.html")
+        await read(solutionRoot, "agentSidePane.html"),
+        await read(sourceRoot, "agentSidePane.html")
     );
     assert.equal(
-        await read(solutionRoot, "hrAgentSidePane.js"),
-        await read(sourceRoot, "hrAgentSidePane.js")
+        await read(solutionRoot, "agentSidePane.js"),
+        await read(sourceRoot, "agentSidePane.js")
     );
     assert.equal(
-        await read(solutionRoot, "hrGuideLibrary.svg"),
-        await read(sourceRoot, "hrGuideLibrary.svg")
+        await read(solutionRoot, "agentGuideLibrary.svg"),
+        await read(sourceRoot, "agentGuideLibrary.svg")
     );
 });
 

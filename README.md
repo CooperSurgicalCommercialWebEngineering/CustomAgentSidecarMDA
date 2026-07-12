@@ -41,9 +41,9 @@ flowchart LR
 
 	subgraph Dataverse[Dataverse and Power Apps]
 		MDA --> Form[Supported HR form]
-		Form -->|OnLoad| Launcher[JavaScript launcher<br/>hrAgentSidePane.js]
+		Form -->|OnLoad| Launcher[JavaScript launcher<br/>agentSidePane.js]
 		Launcher -->|create or reuse stable pane| Pane[Persistent side pane<br/>Xrm.App.sidePanes]
-		Pane --> Host[Bundled HTML host<br/>hrAgentSidePane.html]
+		Pane --> Host[Bundled HTML host<br/>agentSidePane.html]
 		MDA -->|live page and record context| Host
 		MDA --> HRData[(HR tables and<br/>platform security)]
 	end
@@ -90,9 +90,9 @@ sequenceDiagram
 |---|---|
 | **HR Management Model-driven App** | Provides the navigation shell, Dataverse forms, authenticated Power Platform session, and current page context. The existing app is reused rather than recreated. |
 | **Supported form OnLoad handlers** | Call `HRAgentSidecar.initializeGuide` with the execution context. The handler is registered on Benefit Plan, Benefit Enrollment, Expense Line, Expense Report, Time Off Balance, Time Off Request, and Time Off Type main forms. |
-| **JavaScript launcher** | Validates the current entity and record identifier, creates or reuses one stable pane, and navigates it to the HTML web resource only on first creation. See [model-driven/webresources/maftagsc_/copilot/hrAgentSidePane.js](model-driven/webresources/maftagsc_/copilot/hrAgentSidePane.js). |
+| **JavaScript launcher** | Validates the current entity and record identifier, creates or reuses one stable pane, and navigates it to the HTML web resource only on first creation. See [model-driven/webresources/maftagsc_/copilot/agentSidePane.js](model-driven/webresources/maftagsc_/copilot/agentSidePane.js). |
 | **Persistent side pane** | Uses pane ID `maftagsc_hr_management_app_guide`, width 420, `canClose: false`, `isSelected: false`, and `alwaysRender: true`. It starts collapsed and preserves the active conversation during navigation. |
-| **HTML host and TypeScript client** | Hosts Web Chat, acquires a delegated token, creates the Agents SDK connection, refreshes context, and manages conversation reset. The maintained source is [model-driven/webresources/maftagsc_/copilot/hrAgentSidePane.ts](model-driven/webresources/maftagsc_/copilot/hrAgentSidePane.ts); the generated single-file resource is not edited directly. |
+| **HTML host and TypeScript client** | Hosts Web Chat, acquires a delegated token, creates the Agents SDK connection, refreshes context, and manages conversation reset. The maintained source is [model-driven/webresources/maftagsc_/copilot/agentSidePane.ts](model-driven/webresources/maftagsc_/copilot/agentSidePane.ts); the generated single-file resource is not edited directly. |
 | **Microsoft Entra public client** | Authenticates the signed-in employee using authorization code with PKCE and requests only `https://api.powerplatform.com/CopilotStudio.Copilots.Invoke`. No browser client secret exists. |
 | **Microsoft 365 Agents SDK** | `CopilotStudioClient` connects to Power Platform environment `f9b87f8b-0abf-e629-affb-b13195d1ed14` and agent schema `cr0b1_HRMgmtClassic`. |
 | **Copilot Studio agent** | **HR Mgmt Classic** interprets the question and uses the supplied screen context to select relevant HR guidance. |

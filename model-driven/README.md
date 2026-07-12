@@ -6,13 +6,13 @@ The deployable Dataverse copies are created as web resources in the
 
 ## Component contract
 
-- HTML web resource: `maftagsc_/copilot/hrAgentSidePane.html`
-- JavaScript web resource: `maftagsc_/copilot/hrAgentSidePane.js`
+- HTML web resource: `maftagsc_/copilot/agentSidePane.html`
+- JavaScript web resource: `maftagsc_/copilot/agentSidePane.js`
 - Stable pane ID: `maftagsc_hr_management_app_guide`
 - Authentication: Microsoft Entra delegated authorization code flow with PKCE
 - Delegated scope: `https://api.powerplatform.com/CopilotStudio.Copilots.Invoke`
 - Agent client: Microsoft 365 Agents SDK `CopilotStudioClient`
-- Form OnLoad entry point: `HRAgentSidecar.initializeGuide` with execution context
+- Form OnLoad entry point: `AgentSidecar.initializeGuide` (with a `HRAgentSidecar.initializeGuide` alias for the existing HR reference forms) with execution context
 - Supported main forms: Benefit Plan, Benefit Enrollment, Expense Line, Expense
    Report, Time Off Balance, Time Off Request, and Time Off Type
 - Initial presentation: persistent and collapsed (`canClose: false`,
@@ -28,8 +28,8 @@ created or shipped, and MSAL tokens use memory storage only.
 
 ## Build
 
-The maintained conversation source is `hrAgentSidePane.ts`, the form launcher
-source is `hrAgentSidePaneLauncher.ts`, and `hrAgentSidePane.template.html`
+The maintained conversation source is `agentSidePane.ts`, the form launcher
+source is `agentSidePaneLauncher.ts`, and `agentSidePane.template.html`
 provides the accessible shell. Both TypeScript entries use the same app-keyed
 configuration repository. Build and type-check them from the repository root:
 
@@ -39,7 +39,7 @@ pnpm run build:model-driven
 ```
 
 The build bundles MSAL Browser and the Agents SDK directly into
-`hrAgentSidePane.html`, compiles the launcher into `hrAgentSidePane.js`, then
+`agentSidePane.html`, compiles the launcher into `agentSidePane.js`, then
 synchronizes both deployable solution projections. Do not edit either generated
 web resource directly.
 

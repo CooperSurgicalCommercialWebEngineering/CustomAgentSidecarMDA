@@ -19,8 +19,7 @@ import { discoverAppForms, type DiscoveredForm } from '@/services/model-driven-a
 
 const ADMIN_ROLE_TEMPLATE = '627090ff-40a3-4053-8790-584edc5be201';
 const SIDECAR_PUBLISHER = 'agentsidecar';
-const SIDECAR_PUBLISHER_PREFIX = 'maftagsc';
-const LIBRARY = 'maftagsc_/copilot/hrAgentSidePane.js';
+const LIBRARY = 'maftagsc_/copilot/agentSidePane.js';
 const HANDLER = 'AgentSidecar.initializeGuide';
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Result<T> = { data?: T; error?: unknown };
@@ -178,29 +177,36 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       description: app.description ?? 'Model-driven App in the current environment.',
       tables: [...forms.entries()].map(([logicalName, items]) => ({ logicalName, displayName: displayNames.get(logicalName) ?? logicalName, enabled: true, formCount: items.length })) };
   }
+  async function sidecarPublisherId(): Promise<string> {
+    const publishers = data(await PublishersService.getAll({
+      select: ['publisherid'], filter: `uniquename eq '${SIDECAR_PUBLISHER}'`, top: 1,
+    }), 'Find Agent Sidecar publisher');
+    if (!publishers[0]) throw new Error('The Agent Sidecar publisher is unavailable.');
+    return publishers[0].publisherid;
+  }
   async function ensureBindingSolution(uniqueName: string, appId: string): Promise<{ id: string; created: boolean }> {
     const normalizedName = uniqueName.trim();
     if (!/^[A-Za-z][A-Za-z0-9_]{0,64}$/.test(normalizedName)) {
       throw new Error('Target Binding solution must start with a letter and contain at most 65 letters, numbers, or underscores.');
     }
     const marker = `Agent Sidecar Target Binding for app ${guid(appId, 'Model-driven App ID')}`;
+    // `publisheridprefix` is not a queryable column on the solution table; resolve
+    // ownership by comparing the solution's publisher lookup to the Agent Sidecar publisher.
+    const publisherId = await sidecarPublisherId();
     const existing = data(await SolutionsService.getAll({
-      select: ['solutionid', 'description', 'ismanaged', 'publisheridprefix'], filter: `uniquename eq '${odataString(normalizedName)}'`, top: 1,
+      select: ['solutionid', 'description', 'ismanaged', '_publisherid_value'], filter: `uniquename eq '${odataString(normalizedName)}'`, top: 1,
     }), 'Find Target Binding solution');
     if (existing[0]) {
-      if (existing[0].ismanaged || existing[0].publisheridprefix !== SIDECAR_PUBLISHER_PREFIX || existing[0].description !== marker) {
+      const ownedByPublisher = (existing[0]._publisherid_value ?? '').toLowerCase() === publisherId.toLowerCase();
+      if (existing[0].ismanaged || !ownedByPublisher || existing[0].description !== marker) {
         throw new Error(`Solution ${normalizedName} exists but is not owned by this app's Agent Sidecar binding.`);
       }
       return { id: existing[0].solutionid, created: false };
     }
-    const publishers = data(await PublishersService.getAll({
-      select: ['publisherid'], filter: `uniquename eq '${SIDECAR_PUBLISHER}'`, top: 1,
-    }), 'Find Agent Sidecar publisher');
-    if (!publishers[0]) throw new Error('The Agent Sidecar publisher is unavailable.');
     const created = data(await SolutionsService.create({
       friendlyname: normalizedName, uniquename: normalizedName, description: marker, version: '1.0.0.0',
       enabledforsourcecontrolintegration: false, sourcecontrolsyncstatus: 0,
-      'PublisherId@odata.bind': `/publishers(${publishers[0].publisherid})`,
+      'PublisherId@odata.bind': `/publishers(${publisherId})`,
     }), 'Create Target Binding solution');
     return { id: created.solutionid, created: true };
   }
@@ -382,12 +388,13 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       await Promise.all(bindings.map((binding) => Bindings.delete(binding.maftagsc_targetbindingid)));
       await Configurations.delete(configurationId);
       const ownershipMarker = `Agent Sidecar Target Binding for app ${guid(configuration.maftagsc_appid, 'Model-driven App ID')}`;
+      const publisherId = await sidecarPublisherId();
       const solutions = data(await SolutionsService.getAll({
-        select: ['solutionid', 'description', 'publisheridprefix'],
+        select: ['solutionid', 'description', '_publisherid_value'],
         filter: `uniquename eq '${odataString(configuration.maftagsc_bindingsolutionuniquename)}' and ismanaged eq false`,
         top: 1,
       }), 'Find scoped Target Binding solution');
-      if (solutions[0]?.description === ownershipMarker && solutions[0].publisheridprefix === SIDECAR_PUBLISHER_PREFIX) {
+      if (solutions[0]?.description === ownershipMarker && (solutions[0]._publisherid_value ?? '').toLowerCase() === publisherId.toLowerCase()) {
         await SolutionsService.delete(solutions[0].solutionid);
       }
     },

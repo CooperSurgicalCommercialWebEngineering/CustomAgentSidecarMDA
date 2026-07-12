@@ -10,12 +10,12 @@ const copilotRoot = path.join(
     "maftagsc_",
     "copilot"
 );
-const entryPath = path.join(copilotRoot, "hrAgentSidePane.ts");
-const launcherPath = path.join(copilotRoot, "hrAgentSidePane.js");
-const launcherEntryPath = path.join(copilotRoot, "hrAgentSidePaneLauncher.ts");
-const iconPath = path.join(copilotRoot, "hrGuideLibrary.svg");
-const templatePath = path.join(copilotRoot, "hrAgentSidePane.template.html");
-const outputPath = path.join(copilotRoot, "hrAgentSidePane.html");
+const entryPath = path.join(copilotRoot, "agentSidePane.ts");
+const launcherPath = path.join(copilotRoot, "agentSidePane.js");
+const launcherEntryPath = path.join(copilotRoot, "agentSidePaneLauncher.ts");
+const iconPath = path.join(copilotRoot, "agentGuideLibrary.svg");
+const templatePath = path.join(copilotRoot, "agentSidePane.template.html");
+const outputPath = path.join(copilotRoot, "agentSidePane.html");
 const authRedirectPath = path.join(copilotRoot, "authRedirect.html");
 const authRedirectEntryPath = path.join(copilotRoot, "authRedirect.ts");
 const solutionOutputPath = path.resolve(
@@ -25,7 +25,7 @@ const solutionOutputPath = path.resolve(
     "WebResources",
     "maftagsc_",
     "copilot",
-    "hrAgentSidePane.html"
+    "agentSidePane.html"
 );
 const solutionAuthRedirectPath = path.resolve(
     modelDrivenRoot,
@@ -43,7 +43,7 @@ const solutionLauncherPath = path.resolve(
     "WebResources",
     "maftagsc_",
     "copilot",
-    "hrAgentSidePane.js"
+    "agentSidePane.js"
 );
 const solutionIconPath = path.resolve(
     modelDrivenRoot,
@@ -52,7 +52,7 @@ const solutionIconPath = path.resolve(
     "WebResources",
     "maftagsc_",
     "copilot",
-    "hrGuideLibrary.svg"
+    "agentGuideLibrary.svg"
 );
 const marker = "<!-- HR_AGENT_SIDEPANE_BUNDLE -->";
 const authRedirectMarker = "<!-- HR_AGENT_AUTH_REDIRECT_BUNDLE -->";
