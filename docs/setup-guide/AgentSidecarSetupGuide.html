@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Sidecar — New Environment Setup Guide</title>
+<script>
+  // Clawpilot theme detection — must run first.
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("scoutTheme");
+    const stored = localStorage.getItem("cp-theme");
+    const theme =
+      param || stored ||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+  :root {
+    color-scheme: light;
+    --cp-bg: #f7f4ef;
+    --cp-bg-elevated: #fcfbf8;
+    --cp-surface: #ffffff;
+    --cp-surface-soft: #f5f5f5;
+    --cp-border: #dedede;
+    --cp-border-strong: #919191;
+    --cp-text: #242424;
+    --cp-text-muted: #5c5c5c;
+    --cp-text-soft: #6f6f6f;
+    --cp-accent: #b11f4b;
+    --cp-accent-hover: #9a1a41;
+    --cp-accent-soft: rgba(177, 31, 75, 0.08);
+    --cp-accent-fg: #ffffff;
+    --cp-success: #16a34a;
+    --cp-danger: #dc2626;
+    --cp-warning: #f59e0b;
+    --cp-link: #0078d4;
+    --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+    --cp-overlay: rgba(255, 255, 255, 0.8);
+    --cp-panel: rgba(255, 255, 255, 0.86);
+    --cp-panel-strong: rgba(255, 255, 255, 0.96);
+    --cp-sheen: rgba(255, 255, 255, 0.55);
+    --cp-highlight: rgba(177, 31, 75, 0.12);
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --cp-bg: #3d3b3a;
+    --cp-bg-elevated: #343231;
+    --cp-surface: #292929;
+    --cp-surface-soft: #2e2e2e;
+    --cp-border: #474747;
+    --cp-border-strong: #5f5f5f;
+    --cp-text: #dedede;
+    --cp-text-muted: #919191;
+    --cp-text-soft: #b0b0b0;
+    --cp-accent: #fd8ea1;
+    --cp-accent-hover: #fb7b91;
+    --cp-accent-soft: rgba(253, 142, 161, 0.14);
+    --cp-accent-fg: #1a1a1a;
+    --cp-success: #4ade80;
+    --cp-danger: #f87171;
+    --cp-warning: #fbbf24;
+    --cp-link: #4da6ff;
+    --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+    --cp-overlay: rgba(41, 41, 41, 0.88);
+    --cp-panel: rgba(41, 41, 41, 0.72);
+    --cp-panel-strong: rgba(41, 41, 41, 0.96);
+    --cp-sheen: rgba(255, 255, 255, 0.04);
+    --cp-highlight: rgba(253, 142, 161, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--cp-bg);
+    color: var(--cp-text);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  code, pre, .mono { font-family: Consolas, "Courier New", Courier, monospace; }
+
+  /* Top progress bar */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: var(--cp-accent); z-index: 100; transition: width 0.1s linear;
+  }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 288px 1fr; gap: 0; }
+  @media (max-width: 940px) { .layout { grid-template-columns: 1fr; } }
+
+  /* Sidebar */
+  aside {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    background: var(--cp-bg-elevated); border-right: 1px solid var(--cp-border);
+    padding: 22px 18px;
+  }
+  @media (max-width: 940px) { aside { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--cp-border); } }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .brand .dot { width: 30px; height: 30px; border-radius: 9px; background: var(--cp-accent); color: var(--cp-accent-fg); display: grid; place-items: center; font-weight: 700; flex: none; }
+  .brand h1 { font-size: 15px; margin: 0; line-height: 1.25; }
+  .brand span { font-size: 12px; color: var(--cp-text-muted); }
+  nav { margin-top: 16px; }
+  nav a {
+    display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px;
+    color: var(--cp-text-muted); text-decoration: none; font-size: 13.5px; margin-bottom: 2px;
+    border-left: 2px solid transparent;
+  }
+  nav a .n { width: 20px; height: 20px; border-radius: 6px; background: var(--cp-surface-soft); border: 1px solid var(--cp-border); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--cp-text-soft); flex: none; }
+  nav a:hover { background: var(--cp-accent-soft); color: var(--cp-text); }
+  nav a.active { background: var(--cp-accent-soft); color: var(--cp-accent); border-left-color: var(--cp-accent); font-weight: 600; }
+  nav a.active .n { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+  .nav-progress { margin: 14px 4px 4px; font-size: 12px; color: var(--cp-text-muted); }
+  .bar { height: 7px; background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+  .bar > i { display: block; height: 100%; width: 0%; background: var(--cp-accent); transition: width 0.25s ease; }
+
+  /* Main */
+  main { padding: 0 clamp(18px, 4vw, 56px) 120px; max-width: 1000px; }
+  header.hero { padding: 54px 0 26px; }
+  .eyebrow { display: inline-block; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cp-accent); font-weight: 700; }
+  header.hero h2 { font-size: clamp(28px, 4vw, 40px); margin: 8px 0 10px; line-height: 1.1; }
+  header.hero p.lede { font-size: 17px; color: var(--cp-text-muted); max-width: 68ch; margin: 0; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; align-items: center; }
+
+  button.btn, a.btn {
+    font-family: inherit; font-size: 13.5px; cursor: pointer; border-radius: 8px;
+    border: 1px solid var(--cp-border-strong); background: var(--cp-surface); color: var(--cp-text);
+    padding: 8px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+  }
+  button.btn:hover, a.btn:hover { background: var(--cp-accent-soft); border-color: var(--cp-accent); }
+  button.btn.primary { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+  button.btn.primary:hover { background: var(--cp-accent-hover); }
+
+  section { padding: 34px 0; border-top: 1px solid var(--cp-border); scroll-margin-top: 12px; }
+  section > h3 { font-size: 24px; margin: 0 0 4px; display: flex; align-items: center; gap: 12px; }
+  section > h3 .badge { font-size: 12px; font-weight: 700; color: var(--cp-accent-fg); background: var(--cp-accent); border-radius: 99px; padding: 3px 10px; }
+  section > p.sub { color: var(--cp-text-muted); margin: 2px 0 18px; }
+  h4 { font-size: 17px; margin: 26px 0 8px; }
+
+  .card { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; padding: 20px 22px; box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14); margin: 14px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* Steps */
+  ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 8px 0; }
+  ol.steps > li { counter-increment: s; position: relative; padding: 4px 0 18px 46px; }
+  ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--cp-accent-soft); color: var(--cp-accent); border: 1px solid var(--cp-accent); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  ol.steps > li::after { content: ""; position: absolute; left: 15px; top: 32px; bottom: 2px; width: 2px; background: var(--cp-border); }
+  ol.steps > li:last-child::after { display: none; }
+  ol.steps > li b { color: var(--cp-text); }
+  ol.steps ul { margin: 6px 0 0; padding-left: 18px; color: var(--cp-text-muted); }
+  ol.steps ul li { margin: 3px 0; }
+
+  /* Callouts */
+  .callout { border-radius: 12px; padding: 14px 16px 14px 46px; position: relative; margin: 16px 0; border: 1px solid var(--cp-border); background: var(--cp-surface-soft); }
+  .callout::before { position: absolute; left: 14px; top: 13px; font-size: 18px; }
+  .callout.info { border-color: var(--cp-link); background: color-mix(in srgb, var(--cp-link) 8%, var(--cp-surface)); }
+  .callout.info::before { content: "ℹ️"; }
+  .callout.warn { border-color: var(--cp-warning); background: color-mix(in srgb, var(--cp-warning) 12%, var(--cp-surface)); }
+  .callout.warn::before { content: "⚠️"; }
+  .callout.danger { border-color: var(--cp-danger); background: color-mix(in srgb, var(--cp-danger) 10%, var(--cp-surface)); }
+  .callout.danger::before { content: "🛑"; }
+  .callout.ok { border-color: var(--cp-success); background: color-mix(in srgb, var(--cp-success) 10%, var(--cp-surface)); }
+  .callout.ok::before { content: "✅"; }
+  .callout .t { font-weight: 700; margin-bottom: 2px; }
+
+  /* Code */
+  .code { position: relative; background: var(--cp-bg-elevated); border: 1px solid var(--cp-border); border-radius: 10px; margin: 12px 0; }
+  .code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-size: 13.5px; line-height: 1.55; }
+  .code .lang { position: absolute; top: 0; right: 44px; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cp-text-soft); padding: 4px 8px; }
+  .copy { position: absolute; top: 6px; right: 6px; border: 1px solid var(--cp-border); background: var(--cp-surface); color: var(--cp-text-muted); border-radius: 7px; padding: 4px 8px; font-size: 11.5px; cursor: pointer; }
+  .copy:hover { color: var(--cp-accent); border-color: var(--cp-accent); }
+  code.inline { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 5px; padding: 1px 6px; font-size: 90%; }
+  .val { color: var(--cp-accent); font-weight: 700; }
+
+  /* Tables */
+  table.tbl { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  table.tbl th, table.tbl td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--cp-border); vertical-align: top; }
+  table.tbl th { color: var(--cp-text-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  table.tbl code { font-size: 12.5px; }
+
+  /* Worksheet */
+  .ws label { display: block; font-size: 12.5px; color: var(--cp-text-soft); margin-bottom: 4px; font-weight: 600; }
+  .ws input { width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--cp-border-strong); background: var(--cp-bg-elevated); color: var(--cp-text); }
+  .ws input:focus { outline: 2px solid var(--cp-accent); border-color: var(--cp-accent); }
+  .ws .hint { font-size: 11.5px; color: var(--cp-text-muted); margin-top: 3px; }
+
+  /* Screenshot frames */
+  figure.shot { margin: 16px 0; }
+  .shot-frame { border: 1px solid var(--cp-border); border-radius: 12px; overflow: hidden; background: var(--cp-bg-elevated); box-shadow: var(--cp-shadow); }
+  .shot-frame .chrome { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--cp-surface-soft); border-bottom: 1px solid var(--cp-border); }
+  .shot-frame .chrome i { width: 11px; height: 11px; border-radius: 50%; background: var(--cp-border-strong); display: inline-block; }
+  .shot-frame .chrome .u { margin-left: 10px; font-size: 12px; color: var(--cp-text-muted); }
+  .shot-frame img { display: block; width: 100%; }
+  .shot-placeholder { display: none; min-height: 220px; padding: 30px; text-align: center; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--cp-text-muted); }
+  .shot-frame.missing img { display: none; }
+  .shot-frame.missing .shot-placeholder { display: flex; }
+  .shot-placeholder .camera { font-size: 34px; opacity: 0.5; }
+  .shot-placeholder b { color: var(--cp-text); }
+  .shot-placeholder .file { font-size: 12px; margin-top: 4px; }
+  figcaption { font-size: 13px; color: var(--cp-text-muted); margin-top: 8px; padding-left: 2px; }
+  figcaption b { color: var(--cp-accent); }
+
+  /* Checklist */
+  .check { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--cp-border); }
+  .check:last-child { border-bottom: none; }
+  .check input { margin-top: 4px; width: 17px; height: 17px; accent-color: var(--cp-accent); }
+  .check label { cursor: pointer; }
+  .check.done label { color: var(--cp-text-muted); text-decoration: line-through; }
+
+  .pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 99px; border: 1px solid var(--cp-border); color: var(--cp-text-muted); }
+  .pill.ga { color: var(--cp-success); border-color: var(--cp-success); background: color-mix(in srgb, var(--cp-success) 10%, transparent); }
+  .kbd { font-family: Consolas, monospace; font-size: 12px; border: 1px solid var(--cp-border-strong); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; background: var(--cp-surface); }
+  .foot { color: var(--cp-text-muted); font-size: 13px; padding: 30px 0 0; }
+  .arch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+  @media (max-width: 720px) { .arch { grid-template-columns: 1fr; } }
+  .arch .node { border: 1px solid var(--cp-border); border-radius: 12px; padding: 12px 14px; background: var(--cp-surface); font-size: 13px; }
+  .arch .node b { display: block; margin-bottom: 2px; }
+  .arch .node small { color: var(--cp-text-muted); }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="layout">
+  <aside>
+    <div class="brand">
+      <div class="dot">AS</div>
+      <div>
+        <h1>Agent Sidecar</h1>
+        <span>New Environment Setup Guide</span>
+      </div>
+    </div>
+    <nav id="nav">
+      <a href="#overview"><span class="n">•</span> Overview</a>
+      <a href="#prereq"><span class="n">0</span> Prerequisites &amp; worksheet</a>
+      <a href="#azure"><span class="n">1</span> Microsoft Entra app registration</a>
+      <a href="#copilot"><span class="n">2</span> Copilot Studio agent</a>
+      <a href="#import"><span class="n">3</span> Import the Core solution</a>
+      <a href="#codeapp"><span class="n">4</span> Deploy the Code App</a>
+      <a href="#wizard"><span class="n">5</span> Sidecar setup wizard</a>
+      <a href="#lifecycle"><span class="n">6</span> Validate &amp; lifecycle</a>
+      <a href="#trouble"><span class="n">?</span> Troubleshooting</a>
+      <a href="#reference"><span class="n">§</span> Reference</a>
+    </nav>
+    <div class="nav-progress">
+      <span id="checkcount">0 of 0</span> steps complete
+      <div class="bar"><i id="checkbar"></i></div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="hero" id="top">
+      <span class="eyebrow">End-to-end deployment</span>
+      <h2>Deploy the Agent Sidecar to a new environment</h2>
+      <p class="lede">A complete, click-by-click walkthrough: register the browser identity in Azure, prepare the Copilot Studio agent, import the reusable <b>AgentSidecarCore</b> solution, deploy the Code App, and drive the in-app setup wizard — with a live worksheet that fills your own values into every step.</p>
+      <div class="toolbar">
+        <button class="btn primary" id="themeBtn">◐ Toggle theme</button>
+        <button class="btn" id="resetBtn">↺ Reset checklist</button>
+        <span class="pill ga">Copilot Studio steps: GA as of 10 Jul 2026</span>
+      </div>
+    </header>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <h3>Overview</h3>
+      <p class="sub">What you are deploying and in what order.</p>
+      <p>The Agent Sidecar is a persistent, context-aware chat pane that appears on Model-driven App forms and talks to a published Copilot Studio agent <b>as the signed-in user</b>. It ships as two independently deployable pieces:</p>
+      <div class="arch">
+        <div class="node"><b>AgentSidecarCore</b><small>Unmanaged solution: Dataverse tables, option sets, runtime web resources, token-broker plugin.</small></div>
+        <div class="node"><b>Code App</b><small>The administration app (React/Vite) deployed per environment with <code class="inline">pac code push</code>.</small></div>
+        <div class="node"><b>Per-environment identity</b><small>An Entra SPA app registration + a published Copilot Studio agent, wired up in the wizard.</small></div>
+      </div>
+      <div class="callout info">
+        <div class="t">The order matters</div>
+        Do the Azure registration and Copilot Studio agent <b>first</b> — you need four values from them (client ID, tenant ID, environment ID, agent schema name) to finish the wizard. Then import the solution, deploy the Code App, and run the wizard.
+      </div>
+      <h4>The five values you will collect</h4>
+      <table class="tbl">
+        <tr><th>Value</th><th>Where it comes from</th><th>Secret?</th></tr>
+        <tr><td>Application (client) ID</td><td>Entra app registration (Phase 1)</td><td>No</td></tr>
+        <tr><td>Directory (tenant) ID</td><td>Entra app registration (Phase 1)</td><td>No</td></tr>
+        <tr><td>Environment ID</td><td>Copilot Studio agent metadata (Phase 2)</td><td>No</td></tr>
+        <tr><td>Agent schema name</td><td>Copilot Studio agent metadata (Phase 2)</td><td>No</td></tr>
+        <tr><td>Agents SDK connection string</td><td>Copilot Studio channel (Phase 2)</td><td>No</td></tr>
+      </table>
+      <div class="callout ok"><div class="t">No secrets, ever</div>The browser client uses delegated authentication with PKCE. <b>Never</b> create a client secret or certificate for this registration.</div>
+    </section>
+
+    <!-- PREREQ + WORKSHEET -->
+    <section id="prereq">
+      <h3><span class="badge">0</span> Prerequisites &amp; values worksheet</h3>
+      <p class="sub">Install the tooling, confirm your roles, then fill in your values once — they flow into every command and field below.</p>
+
+      <h4>Tooling</h4>
+      <table class="tbl">
+        <tr><th>Tool</th><th>Check</th></tr>
+        <tr><td>Power Platform CLI (PAC)</td><td><code class="inline">pac help</code></td></tr>
+        <tr><td>Node.js 18+ &amp; npm</td><td><code class="inline">node --version</code></td></tr>
+        <tr><td>.NET SDK (for PAC)</td><td><code class="inline">dotnet --version</code></td></tr>
+      </table>
+
+      <h4>Roles &amp; access</h4>
+      <ul>
+        <li>Permission to create <b>Microsoft Entra app registrations</b> (or an admin who can).</li>
+        <li>A tenant administrator available to <b>grant admin consent</b> for the API permission.</li>
+        <li><b>System Administrator</b> (or System Customizer) in the target Power Platform environment.</li>
+        <li>Access to <b>Copilot Studio</b> in the target environment, with rights to publish an agent.</li>
+      </ul>
+
+      <div class="card ws">
+        <h4 style="margin-top:0">🧮 Your values — fill these in</h4>
+        <p style="color:var(--cp-text-muted);font-size:13.5px;margin-top:0">Stored only in this browser (localStorage). These auto-populate the redirect URI, commands, and wizard fields throughout the guide.</p>
+        <div class="grid2">
+          <div>
+            <label>Target environment (org) URL</label>
+            <input id="w-org" data-key="org" placeholder="https://contoso.crm.dynamics.com" />
+            <div class="hint">From Power Platform Admin Center &rsaquo; your environment.</div>
+          </div>
+          <div>
+            <label>Directory (tenant) ID</label>
+            <input id="w-tenant" data-key="tenant" placeholder="00000000-0000-0000-0000-000000000000" />
+            <div class="hint">Entra &rsaquo; app registration Overview (Phase 1).</div>
+          </div>
+          <div>
+            <label>Application (client) ID</label>
+            <input id="w-client" data-key="client" placeholder="00000000-0000-0000-0000-000000000000" />
+            <div class="hint">Entra &rsaquo; app registration Overview (Phase 1).</div>
+          </div>
+          <div>
+            <label>Environment ID</label>
+            <input id="w-env" data-key="env" placeholder="00000000-0000-0000-0000-000000000000" />
+            <div class="hint">Copilot Studio agent metadata (Phase 2).</div>
+          </div>
+          <div>
+            <label>Agent schema name</label>
+            <input id="w-agent" data-key="agent" placeholder="cr123_myAgent" />
+            <div class="hint">Copilot Studio agent metadata (Phase 2).</div>
+          </div>
+          <div>
+            <label>Publisher prefix</label>
+            <input id="w-prefix" data-key="prefix" value="maftagsc" />
+            <div class="hint">The Core solution ships with <code class="inline">maftagsc</code>. Leave as-is unless you re-published.</div>
+          </div>
+        </div>
+        <div class="callout info" style="margin-bottom:0">
+          <div class="t">Computed SPA redirect URI</div>
+          Register exactly this in Azure (Phase 1) and confirm it in the wizard (Phase 5):
+          <div class="code" style="margin:8px 0 0"><span class="lang">redirect uri</span><button class="copy">Copy</button><pre><code data-bind="redirect">https://&lt;your-org&gt;.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html</code></pre></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AZURE -->
+    <section id="azure">
+      <h3><span class="badge">1</span> Microsoft Entra app registration</h3>
+      <p class="sub">Create a single-tenant, browser (SPA) client so the side pane can call Copilot Studio on behalf of the signed-in user.</p>
+
+      <ol class="steps">
+        <li><b>Open the Entra admin center.</b> Go to <a class="btn" href="https://entra.microsoft.com" target="_blank" rel="noopener">entra.microsoft.com ↗</a>, confirm the correct tenant, then open <b>Identity &rsaquo; Applications &rsaquo; App registrations</b> and choose <b>New registration</b>.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">entra.microsoft.com &rsaquo; App registrations</span></div>
+              <img src="img/01-entra-new-registration.png" alt="Entra new registration" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>App registrations &rsaquo; New registration</b><div class="file">Save as <code>img/01-entra-new-registration.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 1.1</b> — The App registrations list with the New registration button.</figcaption>
+          </figure>
+        </li>
+        <li><b>Register the browser client.</b>
+          <ul>
+            <li>Name: <code class="inline">Agent Sidecar Side Pane</code> (add an environment suffix like <code class="inline">- Prod</code>).</li>
+            <li>Supported account types: <b>Accounts in this organizational directory only (single tenant)</b>.</li>
+            <li>Redirect URI: choose platform <b>Single-page application (SPA)</b> and paste your computed URI: <br><code class="inline val" data-bind="redirect">…</code></li>
+            <li>Select <b>Register</b>.</li>
+          </ul>
+          <div class="callout info"><div class="t">Why SPA?</div>The pane is browser-hosted, so it uses authorization-code flow with PKCE. Do <b>not</b> register it as a confidential "Web" application.</div>
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Register an application</span></div>
+              <img src="img/02-entra-register-spa.png" alt="Register SPA" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Register — single tenant + SPA redirect URI</b><div class="file">Save as <code>img/02-entra-register-spa.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 1.2</b> — Single-tenant selection and the SPA redirect URI field.</figcaption>
+          </figure>
+        </li>
+        <li><b>Record the two IDs.</b> On <b>Overview</b>, copy the <b>Application (client) ID</b> and <b>Directory (tenant) ID</b> into the <a href="#prereq">worksheet</a>. Treat them as configuration identifiers, not passwords.</li>
+        <li><b>Confirm authentication settings.</b> Open <b>Manage &rsaquo; Authentication</b>.
+          <ul>
+            <li>Confirm the <b>SPA</b> platform exists with your redirect URI.</li>
+            <li>Leave <b>Access tokens</b> and <b>ID tokens</b> (implicit grant) <b>cleared</b>.</li>
+            <li>Under <b>Advanced settings</b>, set <b>Allow public client flows</b> = <b>Yes</b>.</li>
+            <li><b>Save</b>.</li>
+          </ul>
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Manage &rsaquo; Authentication</span></div>
+              <img src="img/03-entra-authentication.png" alt="Authentication" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Authentication — SPA platform + Allow public client flows = Yes</b><div class="file">Save as <code>img/03-entra-authentication.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 1.3</b> — SPA platform and the "Allow public client flows" toggle set to Yes.</figcaption>
+          </figure>
+        </li>
+        <li><b>Add the delegated Copilot Studio permission.</b> Open <b>Manage &rsaquo; API permissions &rsaquo; Add a permission</b>.
+          <ul>
+            <li>Choose <b>APIs my organization uses</b> and search <b>Power Platform API</b>.</li>
+            <li>Select <b>Delegated permissions</b>.</li>
+            <li>Expand <b>CopilotStudio</b> and check <b>CopilotStudio.Copilots.Invoke</b>.</li>
+            <li>Select <b>Add permissions</b>.</li>
+          </ul>
+          <div class="callout warn"><div class="t">Can't find "Power Platform API"?</div>It may not be provisioned in your tenant yet. An admin can add the <b>Power Platform API</b> service principal by running <code class="inline">az ad sp create --id 8578e004-a5c6-46e7-913e-12f58912df43</code> once, then retry.</div>
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">API permissions</span></div>
+              <img src="img/04-entra-api-permission.png" alt="API permission" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Power Platform API &rsaquo; Delegated &rsaquo; CopilotStudio.Copilots.Invoke</b><div class="file">Save as <code>img/04-entra-api-permission.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 1.4</b> — The delegated <code>CopilotStudio.Copilots.Invoke</code> permission selected.</figcaption>
+          </figure>
+        </li>
+        <li><b>Grant admin consent.</b> On <b>API permissions</b>, select <b>Grant admin consent for &lt;tenant&gt;</b> and confirm. The permission status must read <b>Granted</b>.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">API permissions &rsaquo; consent</span></div>
+              <img src="img/05-entra-admin-consent.png" alt="Admin consent" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Status: Granted for &lt;tenant&gt;</b><div class="file">Save as <code>img/05-entra-admin-consent.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 1.5</b> — Consent granted (green check) on the delegated permission.</figcaption>
+          </figure>
+        </li>
+      </ol>
+      <div class="callout danger"><div class="t">Do not create a client secret</div>Leave <b>Certificates &amp; secrets</b> empty. A browser cannot safely hold a secret; this client relies on PKCE and short-lived delegated tokens only.</div>
+    </section>
+
+    <!-- COPILOT STUDIO -->
+    <section id="copilot">
+      <h3><span class="badge">2</span> Copilot Studio agent</h3>
+      <p class="sub">Prepare a published agent and collect its environment ID, schema name, and Agents SDK connection string.</p>
+      <div class="callout warn">
+        <div class="t">Version note — GA as of 10 July 2026</div>
+        These steps target the <b>generally available</b> Copilot Studio experience as of <b>10 Jul 2026</b>. Microsoft updates this product frequently; if a menu label or channel name differs, look for the equivalent under the agent's <b>Settings</b> and <b>Channels</b> areas.
+      </div>
+
+      <ol class="steps">
+        <li><b>Open or create the agent.</b> Go to <a class="btn" href="https://copilotstudio.microsoft.com" target="_blank" rel="noopener">copilotstudio.microsoft.com ↗</a>, confirm you are in the <b>target environment</b> (top-right environment picker), and open (or create) the agent the sidecar will surface.</li>
+        <li><b>Require Microsoft authentication.</b> Open <b>Settings &rsaquo; Security &rsaquo; Authentication</b> and select <b>Authenticate with Microsoft</b> (Entra ID). This is what makes the agent honor the signed-in user's permissions.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Copilot Studio &rsaquo; Settings &rsaquo; Security</span></div>
+              <img src="img/06-cps-authentication.png" alt="CPS authentication" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Authentication = "Authenticate with Microsoft"</b><div class="file">Save as <code>img/06-cps-authentication.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 2.1</b> — Agent authentication set to Microsoft (Entra ID).</figcaption>
+          </figure>
+        </li>
+        <li><b>Read the metadata.</b> Open <b>Settings &rsaquo; Advanced &rsaquo; Metadata</b> and copy the <b>Environment ID</b> and <b>Schema name</b> into the <a href="#prereq">worksheet</a>.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Settings &rsaquo; Advanced &rsaquo; Metadata</span></div>
+              <img src="img/07-cps-metadata.png" alt="CPS metadata" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Environment ID &amp; Schema name</b><div class="file">Save as <code>img/07-cps-metadata.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 2.2</b> — The agent's Environment ID and Schema name.</figcaption>
+          </figure>
+        </li>
+        <li><b>Publish the agent.</b> Select <b>Publish</b> (top-right). The sidecar only binds to a <b>published</b> agent.</li>
+        <li><b>Get the Agents SDK connection string.</b> Open <b>Channels</b> and select the <b>Web app</b> / <b>Microsoft 365 Agents SDK</b> channel. Copy the <b>connection string</b> (a URL). You will paste it in wizard Step 3.
+          <div class="callout info"><div class="t">What a valid connection string looks like</div>It must be an <b>https</b> URL, contain a <code class="inline">/bots/&lt;schema&gt;/</code> segment (or <code class="inline">?agentName=&lt;schema&gt;</code>), and end in <code class="inline">/conversations</code>. Copy the <b>Agents SDK connection string</b>, <b>not</b> the public iframe embed code.</div>
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Channels &rsaquo; Web app / Agents SDK</span></div>
+              <img src="img/08-cps-connection-string.png" alt="CPS connection string" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Channels &rsaquo; Web app — Microsoft 365 Agents SDK connection string</b><div class="file">Save as <code>img/08-cps-connection-string.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 2.3</b> — The Agents SDK connection string in the Web app channel.</figcaption>
+          </figure>
+        </li>
+        <li><b>Share the agent.</b> From the agent overview, share chat access with the intended users (or an Entra security group). Grounding (e.g. SharePoint knowledge) stays scoped to each signed-in user.</li>
+      </ol>
+    </section>
+
+    <!-- IMPORT -->
+    <section id="import">
+      <h3><span class="badge">3</span> Import the AgentSidecarCore solution</h3>
+      <p class="sub">Bring in the Dataverse tables, option sets, runtime web resources, and token-broker plugin. This is the <b>unmanaged</b> <code class="inline">AgentSidecarCore.zip</code> produced from the source environment.</p>
+
+      <h4>Option A — Maker portal (recommended)</h4>
+      <ol class="steps">
+        <li><b>Open Solutions.</b> Go to <a class="btn" href="https://make.powerapps.com" target="_blank" rel="noopener">make.powerapps.com ↗</a>, select the <b>target environment</b> (top-right), then <b>Solutions</b> in the left nav.</li>
+        <li><b>Import.</b> Choose <b>Import solution</b> &rsaquo; <b>Browse</b>, select <code class="inline">AgentSidecarCore.zip</code>, then <b>Next</b> and <b>Import</b>. Wait for the success banner.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">make.powerapps.com &rsaquo; Solutions &rsaquo; Import</span></div>
+              <img src="img/09-solution-import.png" alt="Solution import" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Import solution — AgentSidecarCore.zip</b><div class="file">Save as <code>img/09-solution-import.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 3.1</b> — Importing the unmanaged Core solution.</figcaption>
+          </figure>
+        </li>
+      </ol>
+
+      <h4>Option B — PAC CLI</h4>
+      <div class="code"><span class="lang">bash</span><button class="copy">Copy</button><pre><code># Authenticate to the target environment
+pac auth create --environment <span class="val" data-bind="org">https://&lt;your-org&gt;.crm.dynamics.com</span>
+
+# Import the unmanaged Core solution
+pac solution import --path ./AgentSidecarCore.zip \
+  --environment <span class="val" data-bind="org">https://&lt;your-org&gt;.crm.dynamics.com</span> \
+  --publish-changes</code></pre></div>
+
+      <div class="callout ok"><div class="t">What lands in the environment</div>Tables <code class="inline" data-bind="t_config">maftagsc_sidecarconfiguration</code> &amp; <code class="inline" data-bind="t_binding">maftagsc_targetbinding</code>, the health/validation option sets, the runtime web resources (<code class="inline">agentSidePane.html/.js</code>, <code class="inline">agentGuideLibrary.svg</code>, <code class="inline">authRedirect.html</code>), and the token-broker plugin.</div>
+      <div class="callout warn"><div class="t">Token-broker secure configuration</div>After import, the token-broker plugin step needs its per-environment secure configuration set (tenant + client details). Run your environment's <code class="inline">set_token_broker_secure_config</code> step, or configure the plugin step's secure config, before first use.</div>
+    </section>
+
+    <!-- CODE APP -->
+    <section id="codeapp">
+      <h3><span class="badge">4</span> Deploy the Code App</h3>
+      <p class="sub">Power Apps Code Apps deploy per environment. Build the app locally and push it to the target.</p>
+      <ol class="steps">
+        <li><b>Authenticate PAC to the target environment</b> (skip if you did this during import).
+          <div class="code"><span class="lang">bash</span><button class="copy">Copy</button><pre><code>pac auth create --environment <span class="val" data-bind="org">https://&lt;your-org&gt;.crm.dynamics.com</span>
+pac auth select --index &lt;index-of-target&gt;
+pac org who</code></pre></div>
+        </li>
+        <li><b>Build and push.</b> From the repository root:
+          <div class="code"><span class="lang">bash</span><button class="copy">Copy</button><pre><code>npm install
+npm run build
+pac code push -s AgentSidecarCore</code></pre></div>
+          On success PAC prints a <b>play URL</b> — open it to confirm the app loads.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">terminal — pac code push</span></div>
+              <img src="img/10-code-push.png" alt="pac code push" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>"App pushed successfully" + play URL</b><div class="file">Save as <code>img/10-code-push.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 4.1</b> — A successful <code>pac code push</code>.</figcaption>
+          </figure>
+        </li>
+        <li><b>Open the app.</b> Play it from the URL (or from <b>make.powerapps.com &rsaquo; Apps</b>) and sign in. You should land on the <b>portfolio</b> screen, recognized as a System Administrator, with zero configured sidecars.
+          <figure class="shot">
+            <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Agent Sidecar — Portfolio</span></div>
+              <img src="img/11-app-portfolio.png" alt="Portfolio" onerror="this.closest('.shot-frame').classList.add('missing')">
+              <div class="shot-placeholder"><span class="camera">📷</span><b>Portfolio screen — "New sidecar" button</b><div class="file">Save as <code>img/11-app-portfolio.png</code></div></div>
+            </div>
+            <figcaption><b>Figure 4.2</b> — The administration portfolio. Select <b>New sidecar</b> to start the wizard.</figcaption>
+          </figure>
+        </li>
+      </ol>
+    </section>
+
+    <!-- WIZARD -->
+    <section id="wizard">
+      <h3><span class="badge">5</span> Sidecar setup wizard</h3>
+      <p class="sub">Five steps: Application &rarr; Tables &rarr; Agent &rarr; Identity &rarr; Review. Select <b>New sidecar</b> on the portfolio to begin.</p>
+
+      <h4>Step 1 — Application</h4>
+      <p>Pick the Model-driven App that will host the sidecar. Eligible apps in the environment are discovered automatically; each card shows the count of eligible tables. If an app is missing, paste its <b>App ID</b> in the manual fallback and select <b>Resolve App ID</b>.</p>
+      <figure class="shot">
+        <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Wizard — Step 1 · Application</span></div>
+          <img src="img/12-wizard-application.png" alt="Wizard application" onerror="this.closest('.shot-frame').classList.add('missing')">
+          <div class="shot-placeholder"><span class="camera">📷</span><b>Step 1 — Select application (app cards + table counts)</b><div class="file">Save as <code>img/12-wizard-application.png</code></div></div>
+        </div>
+        <figcaption><b>Figure 5.1</b> — Selecting the target Model-driven App.</figcaption>
+      </figure>
+
+      <h4>Step 2 — Tables</h4>
+      <p>The wizard lists the app's eligible tables with their <b>friendly names</b> and the number of <b>active main forms</b> each has. Enable the tables the sidecar should appear on. The configuration summary on the right tracks your choices.</p>
+      <figure class="shot">
+        <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Wizard — Step 2 · Tables</span></div>
+          <img src="img/13-wizard-tables.png" alt="Wizard tables" onerror="this.closest('.shot-frame').classList.add('missing')">
+          <div class="shot-placeholder"><span class="camera">📷</span><b>Step 2 — Table list with friendly names &amp; "1 main form"</b><div class="file">Save as <code>img/13-wizard-tables.png</code></div></div>
+        </div>
+        <figcaption><b>Figure 5.2</b> — Enabling tables (each shows its active main-form count).</figcaption>
+      </figure>
+
+      <h4>Step 3 — Agent</h4>
+      <p>Connect the published Copilot Studio agent from Phase 2:</p>
+      <ul>
+        <li>Paste the <b>Agents SDK connection string</b> (from Copilot Studio &rsaquo; Channels).</li>
+        <li>Enter the <b>Environment ID</b>: <code class="inline val" data-bind="env">…</code></li>
+        <li>Select <b>Resolve</b>. The agent's display name appears when resolution succeeds (it must be active and published).</li>
+      </ul>
+      <figure class="shot">
+        <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Wizard — Step 3 · Agent</span></div>
+          <img src="img/14-wizard-agent.png" alt="Wizard agent" onerror="this.closest('.shot-frame').classList.add('missing')">
+          <div class="shot-placeholder"><span class="camera">📷</span><b>Step 3 — Connection string + Environment ID + Resolve</b><div class="file">Save as <code>img/14-wizard-agent.png</code></div></div>
+        </div>
+        <figcaption><b>Figure 5.3</b> — Resolving the existing Copilot Studio agent (read-only lookup).</figcaption>
+      </figure>
+
+      <h4>Step 4 — Identity &amp; pane</h4>
+      <p>Configure delegated identity and pane behavior. All required fields must be valid GUIDs where noted:</p>
+      <table class="tbl">
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Configuration name</td><td>e.g. <code class="inline">Sales Assistant</code> (defaults from the app name)</td></tr>
+        <tr><td>Pane title</td><td>Shown at the top of the side pane</td></tr>
+        <tr><td>Tenant ID</td><td><code class="inline val" data-bind="tenant">…</code></td></tr>
+        <tr><td>Public Client Application ID</td><td><code class="inline val" data-bind="client">…</code> (from Phase 1)</td></tr>
+        <tr><td>Pane width</td><td>e.g. <code class="inline">420</code></td></tr>
+        <tr><td>Target Binding solution</td><td>Auto-suggested, e.g. <code class="inline">&lt;App&gt;SidecarBinding</code></td></tr>
+        <tr><td>Redirect URI (read-only)</td><td><code class="inline val" data-bind="redirect">…</code> — must match the one registered in Azure</td></tr>
+      </table>
+      <div class="callout warn"><div class="t">Redirect URI must match exactly</div>The wizard displays the redirect URI it expects. It must be identical to the SPA redirect URI you registered in Phase 1, or sign-in will fail with a redirect mismatch.</div>
+      <figure class="shot">
+        <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Wizard — Step 4 · Identity</span></div>
+          <img src="img/15-wizard-identity.png" alt="Wizard identity" onerror="this.closest('.shot-frame').classList.add('missing')">
+          <div class="shot-placeholder"><span class="camera">📷</span><b>Step 4 — Identity &amp; pane (tenant, client ID, redirect URI)</b><div class="file">Save as <code>img/15-wizard-identity.png</code></div></div>
+        </div>
+        <figcaption><b>Figure 5.4</b> — Delegated identity and pane settings. Selecting Continue previews the impact (read-only).</figcaption>
+      </figure>
+
+      <h4>Step 5 — Review &amp; deploy</h4>
+      <p>The review screen previews the exact impact — it creates/reuses the Target Binding solution and lists how many tables and active main forms will be bound, references the existing agent (no agent is created), and notes automatic rollback. <b>Nothing changes until you select "Deploy sidecar."</b></p>
+      <div class="callout danger"><div class="t">Deploy performs live form changes</div>Selecting <b>Deploy sidecar</b> adds the sidecar's OnLoad handler to the selected forms in the live environment. Review the impact first. Rollback removes only the sidecar-owned handlers and preserves unrelated form XML.</div>
+      <figure class="shot">
+        <div class="shot-frame"><div class="chrome"><i></i><i></i><i></i><span class="u">Wizard — Step 5 · Review</span></div>
+          <img src="img/16-wizard-review.png" alt="Wizard review" onerror="this.closest('.shot-frame').classList.add('missing')">
+          <div class="shot-placeholder"><span class="camera">📷</span><b>Step 5 — Review deployment impact + "Deploy sidecar"</b><div class="file">Save as <code>img/16-wizard-review.png</code></div></div>
+        </div>
+        <figcaption><b>Figure 5.5</b> — The impact preview. Select <b>Deploy sidecar</b> to apply the bindings.</figcaption>
+      </figure>
+    </section>
+
+    <!-- LIFECYCLE -->
+    <section id="lifecycle">
+      <h3><span class="badge">6</span> Validate &amp; lifecycle</h3>
+      <p class="sub">After deploying, use the portfolio controls to keep the sidecar healthy.</p>
+      <div class="grid2">
+        <div class="card"><b>Validate / health</b><p style="color:var(--cp-text-muted);margin:6px 0 0">Checks configuration, that each bound form still carries the sidecar handler, delegated identity presence, and the agent reference.</p></div>
+        <div class="card"><b>Drift &amp; reconcile</b><p style="color:var(--cp-text-muted);margin:6px 0 0">Detects when a live form's metadata diverges from the approved binding and re-applies the owned handler.</p></div>
+        <div class="card"><b>Disable / re-enable</b><p style="color:var(--cp-text-muted);margin:6px 0 0">Turns the sidecar off without removing configuration, then back on.</p></div>
+        <div class="card"><b>Uninstall</b><p style="color:var(--cp-text-muted);margin:6px 0 0">Removes only the sidecar-owned handlers, deletes the bindings/configuration, and removes the scoped Target Binding solution it created.</p></div>
+      </div>
+      <h4>Verify end-to-end</h4>
+      <ol class="steps">
+        <li>Open the host Model-driven App and a bound record form. The collapsed sidecar icon appears in the side pane.</li>
+        <li>Open it, sign in when prompted, and send a message. The agent responds with context for the current screen and record.</li>
+        <li>Navigate to another bound record — the context updates automatically on the next message.</li>
+      </ol>
+    </section>
+
+    <!-- TROUBLESHOOTING -->
+    <section id="trouble">
+      <h3><span class="badge">?</span> Troubleshooting</h3>
+      <p class="sub">The most common setup snags and their fixes.</p>
+      <table class="tbl">
+        <tr><th>Symptom</th><th>Cause &amp; fix</th></tr>
+        <tr><td>Sign-in fails with a <b>redirect URI mismatch</b></td><td>The Azure SPA redirect URI doesn't exactly match the wizard's. Re-copy the computed URI (<code class="inline" data-bind="redirect">…</code>) into Entra &rsaquo; Authentication.</td></tr>
+        <tr><td>Agent won't resolve in Step 3</td><td>The agent must be <b>published</b>, <b>active</b>, and <b>Authenticate with Microsoft</b>. The connection string must be https, contain <code class="inline">/bots/&lt;schema&gt;/</code>, and end in <code class="inline">/conversations</code>. Confirm the Environment ID matches the app's environment.</td></tr>
+        <tr><td>"Consent required" / token errors</td><td>Admin consent for <code class="inline">CopilotStudio.Copilots.Invoke</code> was not granted. Re-grant in Entra &rsaquo; API permissions.</td></tr>
+        <tr><td>Pane loads but no answer / 401 from agent</td><td>Token-broker plugin secure configuration not set for this environment, or the user lacks chat access to the agent. Set the secure config and share the agent.</td></tr>
+        <tr><td>App shows no eligible apps/tables</td><td>Ensure the Code App was pushed to <b>this</b> environment and the Core solution imported. The app reads live Dataverse metadata; a stale local host must be restarted.</td></tr>
+        <tr><td>Deploy fails resolving a solution/component</td><td>Confirm the publisher prefix (<code class="inline" data-bind="prefix">maftagsc</code>) matches the imported solution and that you have System Administrator rights.</td></tr>
+      </table>
+    </section>
+
+    <!-- REFERENCE -->
+    <section id="reference">
+      <h3><span class="badge">§</span> Reference</h3>
+      <p class="sub">Fixed values and the Core solution contents.</p>
+      <h4>Fixed runtime values</h4>
+      <table class="tbl">
+        <tr><th>Setting</th><th>Value</th></tr>
+        <tr><td>Delegated scope</td><td><code class="inline">https://api.powerplatform.com/CopilotStudio.Copilots.Invoke</code></td></tr>
+        <tr><td>MSAL authority</td><td><code class="inline">https://login.microsoftonline.com/&lt;tenant&gt;</code></td></tr>
+        <tr><td>Redirect page (web resource)</td><td><code class="inline">/WebResources/maftagsc_/copilot/authRedirect.html</code></td></tr>
+        <tr><td>Runtime library</td><td><code class="inline">maftagsc_/copilot/agentSidePane.js</code></td></tr>
+        <tr><td>Form OnLoad handler</td><td><code class="inline">AgentSidecar.initializeGuide</code></td></tr>
+        <tr><td>Token storage</td><td>In-memory only (no localStorage), no client secret</td></tr>
+      </table>
+      <h4>AgentSidecarCore solution (unmanaged)</h4>
+      <table class="tbl">
+        <tr><th>Component</th><th>Type</th></tr>
+        <tr><td><code class="inline">maftagsc_sidecarconfiguration</code>, <code class="inline">maftagsc_targetbinding</code></td><td>Tables</td></tr>
+        <tr><td><code class="inline">maftagsc_sidecarhealthstate</code>, <code class="inline">maftagsc_bindingvalidationstate</code></td><td>Choice (option sets)</td></tr>
+        <tr><td><code class="inline">agentSidePane.html</code>, <code class="inline">agentSidePane.js</code>, <code class="inline">agentGuideLibrary.svg</code>, <code class="inline">authRedirect.html</code></td><td>Web resources</td></tr>
+        <tr><td>HRAgentSidecar.TokenBroker (+ SDK message step)</td><td>Plugin</td></tr>
+      </table>
+      <div class="callout info"><div class="t">Context transmitted to the agent</div>Per message the pane sends only: App ID, page type, table logical name, record ID, and primary record name — plus a derived screen name. It never transmits arbitrary form-field values.</div>
+    </section>
+
+    <p class="foot">Agent Sidecar — New Environment Setup Guide · Generated <span id="gendate"></span> · Copilot Studio steps reflect the GA experience as of 10 Jul 2026. Drop screenshots into an <code>img/</code> folder beside this file using the filenames shown to replace each placeholder.</p>
+  </main>
+</div>
+
+<script>
+  // ---- Theme toggle ----
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("cp-theme", next);
+  });
+
+  // ---- Generated date ----
+  document.getElementById("gendate").textContent = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+
+  // ---- Copy buttons ----
+  document.querySelectorAll(".copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pre = btn.parentElement.querySelector("pre");
+      const text = pre ? pre.innerText : "";
+      navigator.clipboard.writeText(text).then(() => {
+        const old = btn.textContent; btn.textContent = "Copied ✓";
+        setTimeout(() => (btn.textContent = old), 1400);
+      });
+    });
+  });
+
+  // ---- Values worksheet binding ----
+  const KEYS = ["org", "tenant", "client", "env", "agent", "prefix"];
+  const store = JSON.parse(localStorage.getItem("cp-ws") || "{}");
+  function computeRedirect() {
+    const org = (store.org || "").trim().replace(/\/+$/, "");
+    const prefix = (store.prefix || "maftagsc").trim();
+    const base = org || "https://<your-org>.crm.dynamics.com";
+    return base + "/WebResources/" + prefix + "_/copilot/authRedirect.html";
+  }
+  function render() {
+    document.querySelectorAll("[data-bind]").forEach(el => {
+      const k = el.getAttribute("data-bind");
+      if (k === "redirect") { el.textContent = computeRedirect(); return; }
+      if (k === "t_config") { el.textContent = (store.prefix || "maftagsc") + "_sidecarconfiguration"; return; }
+      if (k === "t_binding") { el.textContent = (store.prefix || "maftagsc") + "_targetbinding"; return; }
+      const placeholders = {
+        org: "https://<your-org>.crm.dynamics.com",
+        tenant: "<tenant-id>", client: "<client-id>",
+        env: "<environment-id>", agent: "<agent-schema>", prefix: "maftagsc"
+      };
+      el.textContent = (store[k] && store[k].trim()) ? store[k].trim() : (placeholders[k] || "");
+    });
+  }
+  KEYS.forEach(k => {
+    const input = document.querySelector('[data-key="' + k + '"]');
+    if (!input) return;
+    if (store[k] != null) input.value = store[k];
+    input.addEventListener("input", () => { store[k] = input.value; localStorage.setItem("cp-ws", JSON.stringify(store)); render(); });
+  });
+  render();
+
+  // ---- Auto-build a checklist from step <li> and section headers ----
+  // Persist checkbox state; drive the progress bars.
+  const checkState = JSON.parse(localStorage.getItem("cp-checks") || "{}");
+  let cid = 0;
+  document.querySelectorAll("ol.steps > li").forEach(li => {
+    const id = "chk-" + (cid++);
+    const wrap = document.createElement("span");
+    wrap.className = "chkbox";
+    wrap.style.cssText = "display:inline-flex;align-items:center;gap:6px;margin-left:8px;vertical-align:middle";
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.style.cssText = "width:16px;height:16px;accent-color:var(--cp-accent);cursor:pointer";
+    cb.checked = !!checkState[id];
+    cb.addEventListener("change", () => { checkState[id] = cb.checked; localStorage.setItem("cp-checks", JSON.stringify(checkState)); updateProgress(); });
+    // place a small "done" marker at the start of the step
+    const b = li.querySelector("b");
+    if (b) b.parentElement.insertBefore(cb, b), b.parentElement.insertBefore(document.createTextNode(" "), b);
+    li.dataset.chk = id;
+  });
+  function updateProgress() {
+    const boxes = document.querySelectorAll('ol.steps > li input[type="checkbox"]');
+    const total = boxes.length;
+    let done = 0; boxes.forEach(b => { if (b.checked) { done++; b.closest("li").style.opacity = "0.62"; } else { b.closest("li").style.opacity = "1"; } });
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    document.getElementById("checkbar").style.width = pct + "%";
+    document.getElementById("checkcount").textContent = done + " of " + total;
+  }
+  updateProgress();
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    localStorage.removeItem("cp-checks");
+    document.querySelectorAll('ol.steps > li input[type="checkbox"]').forEach(b => (b.checked = false));
+    for (const k in checkState) delete checkState[k];
+    updateProgress();
+  });
+
+  // ---- Scroll progress + nav scrollspy ----
+  const prog = document.getElementById("progress");
+  const sections = [...document.querySelectorAll("section[id]")];
+  const links = [...document.querySelectorAll("#nav a")];
+  function onScroll() {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    prog.style.width = pct + "%";
+    let current = sections[0]?.id;
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s.id; }
+    links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + current));
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+</script>
+</body>
+</html>
