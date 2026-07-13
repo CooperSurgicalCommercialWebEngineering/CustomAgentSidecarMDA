@@ -229,6 +229,15 @@ function showSignIn(): void {
     getRequiredElement<HTMLButtonElement>("sign-in").hidden = false;
 }
 
+function applyPaneTitle(title: string): void {
+    const safeTitle = (title ?? "").trim() || "Agent Sidecar";
+    document.title = safeTitle;
+    const heading = document.getElementById("guide-title");
+    if (heading) heading.textContent = safeTitle;
+    const chat = document.getElementById("chat");
+    if (chat) chat.setAttribute("aria-label", `${safeTitle} conversation`);
+}
+
 function getSafeErrorCode(error: unknown): string {
     if (!error || typeof error !== "object") {
         return "unknown_error";
@@ -624,6 +633,7 @@ async function start(interactive: boolean): Promise<void> {
 
     try {
         const { configuration, context } = await parseLaunchRequest();
+        applyPaneTitle(configuration.paneTitle);
         const token = await acquireToken(interactive, configuration);
         if (!token) {
             showSignIn();
