@@ -101,6 +101,7 @@ const useStyles = makeStyles({
   summaryItem: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXXS },
   impact: { padding: tokens.spacingHorizontalM, gap: tokens.spacingVerticalXS },
   surface: { display: 'flex', gap: tokens.spacingHorizontalS, flexWrap: 'wrap' },
+  deployBanner: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalS, padding: tokens.spacingHorizontalL, borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground2, border: `1px solid ${tokens.colorBrandStroke1}` },
 });
 
 interface SidecarWizardProps {
@@ -142,8 +143,10 @@ export function SidecarWizard({
   const [solutionName, setSolutionName] = useState('');
   const [impacts, setImpacts] = useState<DeploymentImpact[]>([]);
   const [localError, setLocalError] = useState<string>();
+  const [deploying, setDeploying] = useState(false);
 
   const enabledTableCount = tables.filter((table) => table.enabled).length;
+  const enabledFormCount = tables.filter((table) => table.enabled).reduce((total, table) => total + (table.formCount ?? 0), 0);
   const draft = useMemo<SidecarDraft | undefined>(() => {
     if (!targetApp || !agent) return undefined;
     return {
@@ -212,8 +215,11 @@ export function SidecarWizard({
 
   const deploy = async () => {
     if (!draft) return;
+    setLocalError(undefined);
+    setDeploying(true);
     try { await onDeploy(draft); }
     catch (caught) { setLocalError(caught instanceof Error ? caught.message : 'Deployment failed.'); }
+    finally { setDeploying(false); }
   };
 
   return (
@@ -313,7 +319,14 @@ export function SidecarWizard({
             <div className={styles.stack}>
               <div><Title2 as="h2">Review deployment impact</Title2><Text className={styles.muted}>Nothing changes until a System Administrator selects Deploy sidecar.</Text></div>
               {impacts.map((impact) => <Card className={styles.impact} key={impact.title}><Text weight="semibold">{impact.title}</Text><Text>{impact.detail}</Text></Card>)}
-              <MessageBar intent="success"><MessageBarBody><MessageBarTitle>Ready to deploy</MessageBarTitle>{enabledTableCount} tables · active main forms · one existing agent · automatic rollback protection</MessageBarBody></MessageBar>
+              {deploying ? (
+                <div className={styles.deployBanner} role="status" aria-live="assertive">
+                  <Spinner size="small" labelPosition="after" label={`Deploying — updating ${enabledFormCount} active main form${enabledFormCount === 1 ? '' : 's'} across ${enabledTableCount} table${enabledTableCount === 1 ? '' : 's'}…`} />
+                  <Text size={200} className={styles.muted}>This can take a minute or two for larger apps. Keep this tab open — when it finishes you&rsquo;ll be taken to the new sidecar&rsquo;s page automatically. If anything fails, the changes roll back and the error appears above.</Text>
+                </div>
+              ) : (
+                <MessageBar intent="success"><MessageBarBody><MessageBarTitle>Ready to deploy</MessageBarTitle>{enabledTableCount} tables · {enabledFormCount} active main form{enabledFormCount === 1 ? '' : 's'} · one existing agent · automatic rollback protection</MessageBarBody></MessageBar>
+              )}
             </div>
           )}
 
