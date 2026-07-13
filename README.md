@@ -4,6 +4,16 @@ Agent Sidecar Platform adds app-keyed contextual Copilot Studio assistants to Da
 
 The accepted product architecture uses a managed **Agent Sidecar Core**, one **Target Binding** solution per Model-driven App, and multiple sidecars keyed by app ID in one environment. Administration is a Power Apps Code App restricted to System Administrators. The administration schema and generated Dataverse clients are now connected; the Code App itself has not been deployed.
 
+## 🚀 Deploy to a new environment — start here
+
+Everything you need to stand up the sidecar in your own environment is in two places:
+
+1. **📖 Interactive setup guide** — open [`docs/setup-guide/AgentSidecarSetupGuide.html`](docs/setup-guide/AgentSidecarSetupGuide.html) in your browser. It is a complete, click-by-click walkthrough (Azure app registration → Copilot Studio agent → solution import → connections → in-app wizard) with a live values worksheet that fills your own IDs into every command and field, each with a one-click **Copy** button.
+
+   > Tip: after cloning, double-click the file or run `open docs/setup-guide/AgentSidecarSetupGuide.html` (macOS) / `start docs/setup-guide/AgentSidecarSetupGuide.html` (Windows).
+
+2. **📦 Unmanaged solution package** — import [`solution-core/AgentSidecarCore.zip`](solution-core/AgentSidecarCore.zip). This is the reusable, HR-free **Agent Sidecar Core** solution and includes the Code App, tables, option sets, web resources, Token Broker plugin, and the Direct Line token Custom API.
+
 ## Sidecar administration
 
 The Code App provides:
