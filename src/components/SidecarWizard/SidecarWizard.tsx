@@ -27,6 +27,7 @@ import {
   CheckmarkCircleFilled,
   CheckmarkCircleRegular,
   DatabaseRegular,
+  SearchRegular,
   ShieldKeyholeRegular,
 } from '@fluentui/react-icons';
 import type {
@@ -101,6 +102,8 @@ const useStyles = makeStyles({
   summaryItem: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXXS },
   impact: { padding: tokens.spacingHorizontalM, gap: tokens.spacingVerticalXS },
   surface: { display: 'flex', gap: tokens.spacingHorizontalS, flexWrap: 'wrap' },
+  tableToolbar: { display: 'flex', gap: tokens.spacingHorizontalS, alignItems: 'center', flexWrap: 'wrap' },
+  tableSearch: { flexGrow: 1, minWidth: '220px' },
   deployBanner: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalS, padding: tokens.spacingHorizontalL, borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground2, border: `1px solid ${tokens.colorBrandStroke1}` },
 });
 
@@ -144,9 +147,21 @@ export function SidecarWizard({
   const [impacts, setImpacts] = useState<DeploymentImpact[]>([]);
   const [localError, setLocalError] = useState<string>();
   const [deploying, setDeploying] = useState(false);
+  const [tableSearch, setTableSearch] = useState('');
 
   const enabledTableCount = tables.filter((table) => table.enabled).length;
   const enabledFormCount = tables.filter((table) => table.enabled).reduce((total, table) => total + (table.formCount ?? 0), 0);
+  const visibleTables = useMemo(() => {
+    const queryText = tableSearch.trim().toLowerCase();
+    if (!queryText) return tables;
+    return tables.filter((table) =>
+      table.displayName.toLowerCase().includes(queryText) || table.logicalName.toLowerCase().includes(queryText),
+    );
+  }, [tables, tableSearch]);
+  const setVisibleTablesEnabled = (enabled: boolean) => {
+    const names = new Set(visibleTables.map((table) => table.logicalName));
+    setTables((current) => current.map((table) => (names.has(table.logicalName) ? { ...table, enabled } : table)));
+  };
   const draft = useMemo<SidecarDraft | undefined>(() => {
     if (!targetApp || !agent) return undefined;
     return {
@@ -165,7 +180,8 @@ export function SidecarWizard({
 
   const selectApp = (app: TargetModelDrivenApp) => {
     setTargetApp(app);
-    setTables(app.tables.map((table) => ({ ...table, enabled: true })));
+    setTables(app.tables.map((table) => ({ ...table, enabled: false })));
+    setTableSearch('');
     setName(`${app.displayName} Assistant`);
     setPaneTitle(`${app.displayName} Assistant`);
     setSolutionName(`${app.uniqueName.replace(/[^A-Za-z0-9]/g, '')}SidecarBinding`);
@@ -272,9 +288,23 @@ export function SidecarWizard({
 
           {step === 1 && (
             <div className={styles.stack}>
-              <div><Title2 as="h2">Select tables</Title2><Text className={styles.muted}>All eligible tables are enabled by default. Sidecars appear on active main forms.</Text></div>
+              <div><Title2 as="h2">Select tables</Title2><Text className={styles.muted}>Choose the tables that should show the sidecar. All tables start off &mdash; enable only what you need. Sidecars appear on active main forms.</Text></div>
               <MessageBar intent="info"><MessageBarBody><MessageBarTitle>New tables require approval</MessageBarTitle>If the app gains a table, it appears in drift review as selected. Nothing changes until you approve.</MessageBarBody></MessageBar>
-              {tables.map((table) => (
+              <div className={styles.tableToolbar}>
+                <Input
+                  className={styles.tableSearch}
+                  value={tableSearch}
+                  onChange={(_, data) => setTableSearch(data.value)}
+                  placeholder="Search tables by name…"
+                  contentBefore={<SearchRegular />}
+                />
+                <Button appearance="secondary" onClick={() => setVisibleTablesEnabled(true)}>Select all{tableSearch.trim() ? ' shown' : ''}</Button>
+                <Button appearance="secondary" onClick={() => setVisibleTablesEnabled(false)}>Select none{tableSearch.trim() ? ' shown' : ''}</Button>
+                <Text size={200} className={styles.muted}>{enabledTableCount} of {tables.length} selected</Text>
+              </div>
+              {visibleTables.length === 0 ? (
+                <Text className={styles.muted}>No tables match &ldquo;{tableSearch.trim()}&rdquo;.</Text>
+              ) : visibleTables.map((table) => (
                 <div className={styles.tableRow} key={table.logicalName}>
                   <div><Text weight="semibold">{table.displayName}</Text><br /><Text size={200} className={styles.muted}>{table.logicalName} · {table.formCount} main form{table.formCount === 1 ? '' : 's'}</Text></div>
                   <Checkbox checked={table.enabled} label="Enable" onChange={(_, data) => setTables((current) => current.map((item) => item.logicalName === table.logicalName ? { ...item, enabled: Boolean(data.checked) } : item))} />

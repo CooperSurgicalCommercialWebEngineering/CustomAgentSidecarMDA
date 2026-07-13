@@ -33,6 +33,7 @@ describe('Agent Sidecar Administration', () => {
     render(<App />, { initialRoute: '/new' });
     fireEvent.click(await screen.findByRole('button', { name: /Sales Workspace/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     fireEvent.change(screen.getByRole('textbox', { name: /Microsoft 365 Agents SDK connection string/ }), {
