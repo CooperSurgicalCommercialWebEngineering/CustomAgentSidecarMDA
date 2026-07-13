@@ -130,6 +130,16 @@ function removeHandler(value: string, id: string): string {
   if (![...document.querySelectorAll('Handler')].some((item) => item.getAttribute('libraryName') === LIBRARY)) {
     for (const library of document.querySelectorAll('Library')) if (library.getAttribute('name') === LIBRARY) library.remove();
   }
+  // Drop containers we may have emptied. Dataverse form-XML schema rejects an empty
+  // <formLibraries>, <Handlers>, onload <event>, or <events> element
+  // ("The element 'formLibraries' has incomplete content ... expected: 'Library'").
+  // Remove inner-to-outer so a container emptied by a child removal is also cleaned up.
+  for (const handlers of [...document.querySelectorAll('Handlers')]) if (!handlers.children.length) handlers.remove();
+  for (const event of [...document.querySelectorAll('event')]) {
+    if (event.getAttribute('name')?.toLowerCase() === 'onload' && !event.children.length) event.remove();
+  }
+  for (const events of [...document.querySelectorAll('events')]) if (!events.children.length) events.remove();
+  for (const libraries of [...document.querySelectorAll('formLibraries')]) if (!libraries.children.length) libraries.remove();
   return new XMLSerializer().serializeToString(document);
 }
 function includesHandler(value: string, id: string): boolean {
