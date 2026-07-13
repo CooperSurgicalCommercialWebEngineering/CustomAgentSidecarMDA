@@ -336,17 +336,11 @@ async function runInteractiveSignIn(configuration: SidecarConfiguration): Promis
                     reject(new Error(value.slice("error:".length) || "Sign-in failed."));
                     return;
                 }
-                let closed = false;
-                try {
-                    closed = popup.closed;
-                } catch {
-                    closed = false;
-                }
-                if (closed) {
-                    window.clearInterval(timer);
-                    reject(new Error("Sign-in was canceled before it completed."));
-                    return;
-                }
+                // Note: we deliberately do not treat popup.closed as cancellation.
+                // Dynamics serves web resources with a Cross-Origin-Opener-Policy
+                // that severs the opener link, so the returned popup handle can
+                // report closed === true while the window is still open. Relying on
+                // it produced a false "canceled" error the moment the popup opened.
                 if (Date.now() > deadline) {
                     window.clearInterval(timer);
                     reject(new Error("Sign-in timed out. Please try again."));
