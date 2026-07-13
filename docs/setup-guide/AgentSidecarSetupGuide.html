@@ -184,8 +184,12 @@
 
   /* Worksheet */
   .ws label { display: block; font-size: 12.5px; color: var(--cp-text-soft); margin-bottom: 4px; font-weight: 600; }
-  .ws input { width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--cp-border-strong); background: var(--cp-bg-elevated); color: var(--cp-text); }
+  .ws .finput { position: relative; }
+  .ws input { width: 100%; font-family: inherit; font-size: 14px; padding: 9px 56px 9px 11px; border-radius: 8px; border: 1px solid var(--cp-border-strong); background: var(--cp-bg-elevated); color: var(--cp-text); }
   .ws input:focus { outline: 2px solid var(--cp-accent); border-color: var(--cp-accent); }
+  .ws .fcopy { position: absolute; top: 50%; transform: translateY(-50%); right: 6px; border: 1px solid var(--cp-border); background: var(--cp-surface); color: var(--cp-text-muted); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; line-height: 1.4; }
+  .ws .fcopy:hover { color: var(--cp-accent); border-color: var(--cp-accent); }
+  .ws .fcopy:disabled { opacity: 0.45; cursor: default; }
   .ws .hint { font-size: 11.5px; color: var(--cp-text-muted); margin-top: 3px; }
 
   /* Screenshot frames (hidden for this delivery) */
@@ -321,32 +325,32 @@
         <div class="grid2">
           <div>
             <label>Target environment (org) URL</label>
-            <input id="w-org" data-key="org" placeholder="https://contoso.crm.dynamics.com" />
+            <div class="finput"><input id="w-org" data-key="org" placeholder="https://contoso.crm.dynamics.com" /><button type="button" class="fcopy" data-copy="org">Copy</button></div>
             <div class="hint">From Power Platform Admin Center &rsaquo; your environment.</div>
           </div>
           <div>
             <label>Directory (tenant) ID</label>
-            <input id="w-tenant" data-key="tenant" placeholder="00000000-0000-0000-0000-000000000000" />
+            <div class="finput"><input id="w-tenant" data-key="tenant" placeholder="00000000-0000-0000-0000-000000000000" /><button type="button" class="fcopy" data-copy="tenant">Copy</button></div>
             <div class="hint">Entra &rsaquo; app registration Overview (Phase 1).</div>
           </div>
           <div>
             <label>Application (client) ID</label>
-            <input id="w-client" data-key="client" placeholder="00000000-0000-0000-0000-000000000000" />
+            <div class="finput"><input id="w-client" data-key="client" placeholder="00000000-0000-0000-0000-000000000000" /><button type="button" class="fcopy" data-copy="client">Copy</button></div>
             <div class="hint">Entra &rsaquo; app registration Overview (Phase 1).</div>
           </div>
           <div>
             <label>Environment ID</label>
-            <input id="w-env" data-key="env" placeholder="00000000-0000-0000-0000-000000000000" />
+            <div class="finput"><input id="w-env" data-key="env" placeholder="00000000-0000-0000-0000-000000000000" /><button type="button" class="fcopy" data-copy="env">Copy</button></div>
             <div class="hint">Copilot Studio agent metadata (Phase 2).</div>
           </div>
           <div>
             <label>Agent schema name</label>
-            <input id="w-agent" data-key="agent" placeholder="cr123_myAgent" />
+            <div class="finput"><input id="w-agent" data-key="agent" placeholder="cr123_myAgent" /><button type="button" class="fcopy" data-copy="agent">Copy</button></div>
             <div class="hint">Copilot Studio agent metadata (Phase 2).</div>
           </div>
           <div>
             <label>Publisher prefix</label>
-            <input id="w-prefix" data-key="prefix" value="maftagsc" />
+            <div class="finput"><input id="w-prefix" data-key="prefix" value="maftagsc" /><button type="button" class="fcopy" data-copy="prefix">Copy</button></div>
             <div class="hint">The Core solution ships with <code class="inline">maftagsc</code>. Leave as-is unless you re-published.</div>
           </div>
         </div>
@@ -744,9 +748,29 @@ pac code push -s AgentSidecarCore</code></pre></div>
     const input = document.querySelector('[data-key="' + k + '"]');
     if (!input) return;
     if (store[k] != null) input.value = store[k];
-    input.addEventListener("input", () => { store[k] = input.value; localStorage.setItem("cp-ws", JSON.stringify(store)); render(); });
+    input.addEventListener("input", () => { store[k] = input.value; localStorage.setItem("cp-ws", JSON.stringify(store)); render(); syncFieldCopies(); });
   });
   render();
+
+  // ---- Worksheet field copy buttons ----
+  function syncFieldCopies() {
+    document.querySelectorAll(".ws .fcopy").forEach(btn => {
+      const input = document.querySelector('[data-key="' + btn.getAttribute("data-copy") + '"]');
+      btn.disabled = !(input && input.value.trim());
+    });
+  }
+  document.querySelectorAll(".ws .fcopy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.querySelector('[data-key="' + btn.getAttribute("data-copy") + '"]');
+      const text = input ? input.value.trim() : "";
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const old = btn.textContent; btn.textContent = "Copied ✓";
+        setTimeout(() => (btn.textContent = old), 1400);
+      });
+    });
+  });
+  syncFieldCopies();
 
   // ---- Auto-build a checklist from step <li> and section headers ----
   // Persist checkbox state; drive the progress bars.
