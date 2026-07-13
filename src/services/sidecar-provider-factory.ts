@@ -17,10 +17,10 @@ export function createSidecarAdministrationProvider(): SidecarAdministrationProv
     resolveManualTargetApp: (appId) => provider.then((value) => value.resolveManualTargetApp(appId)),
     resolveAgentLink: (connectionString, environmentId) => provider.then((value) => value.resolveAgentLink(connectionString, environmentId)),
     previewDeployment: (draft) => provider.then((value) => value.previewDeployment(draft)),
-    deploy: (draft) => provider.then((value) => value.deploy(draft)),
+    deploy: (draft, onProgress) => provider.then((value) => value.deploy(draft, onProgress)),
     validate: (id) => provider.then((value) => value.validate(id)),
-    reconcile: (id) => provider.then((value) => value.reconcile(id)),
-    setEnabled: (id, enabled) => provider.then((value) => value.setEnabled(id, enabled)),
-    uninstall: (id) => provider.then((value) => value.uninstall(id)),
+    reconcile: (id, onProgress) => provider.then((value) => value.reconcile(id, onProgress)),
+    setEnabled: (id, enabled, onProgress) => provider.then((value) => value.setEnabled(id, enabled, onProgress)),
+    uninstall: (id, onProgress) => provider.then((value) => value.uninstall(id, onProgress)),
   };
 }

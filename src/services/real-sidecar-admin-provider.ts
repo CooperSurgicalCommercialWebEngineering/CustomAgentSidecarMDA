@@ -13,7 +13,7 @@ import { Maftagsc_sidecarconfigurationsmaftagsc_healthstate as HealthOptions, Ma
 import { Maftagsc_targetbindingsmaftagsc_validationstate as ValidationOptions, type Maftagsc_targetbindings } from '@/generated/models/Maftagsc_targetbindingsModel';
 import type { SidecarAdministrationProvider } from '@/services/sidecar-admin-contracts';
 import { addSolutionComponent, assertSidecarActionsAvailable, publishTables } from '@/services/dataverse-custom-api';
-import type { SidecarConfiguration, SidecarDraft, SidecarHealthCheck, SidecarHealthState, SidecarLifecycleState, TargetModelDrivenApp, TargetTable } from '@/types/sidecar-admin-models';
+import type { SidecarConfiguration, SidecarDraft, SidecarHealthCheck, SidecarHealthState, SidecarLifecycleState, SidecarProgressCallback, TargetModelDrivenApp, TargetTable } from '@/types/sidecar-admin-models';
 import { parseCopilotStudioConnectionString } from '@/utils/agent-link';
 import { discoverAppForms, type DiscoveredForm } from '@/services/model-driven-app-discovery';
 
@@ -253,11 +253,13 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
     ];
     return map(updated, bindings, checks);
   }
-  async function mutate(id: string, mode: 'apply' | 'remove'): Promise<Maftagsc_targetbindings[]> {
+  async function mutate(id: string, mode: 'apply' | 'remove', onProgress?: SidecarProgressCallback): Promise<Maftagsc_targetbindings[]> {
     assertSidecarActionsAvailable();
     const bindings = await bindingsFor(guid(id, 'Configuration ID')); const tables: string[] = [];
     const changedBindings: Array<{ binding: Maftagsc_targetbindings; formId: string; handlerId: string }> = [];
+    let processed = 0;
     for (const binding of bindings) {
+      onProgress?.({ phase: 'forms', current: processed, total: bindings.length, label: `${binding.maftagsc_tabledisplayname} — ${binding.maftagsc_formname}` });
       const formId = guid(binding.maftagsc_formid, 'Form ID');
       const form = data(await SystemformsService.get(formId, { select: ['formid', 'formxml', 'objecttypecode'] }), 'Read bound form');
       const mutation = mode === 'apply' ? addHandler(form.formxml, binding.maftagsc_handleruniqueid) : undefined;
@@ -265,8 +267,10 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       if (next !== form.formxml) data(await SystemformsService.update(form.formid, { formxml: next }), 'Update bound form');
       changedBindings.push({ binding, formId, handlerId: mutation?.handlerId ?? binding.maftagsc_handleruniqueid });
       if (form.objecttypecode) tables.push(form.objecttypecode);
+      processed += 1;
+      onProgress?.({ phase: 'forms', current: processed, total: bindings.length, label: `${binding.maftagsc_tabledisplayname} — ${binding.maftagsc_formname}` });
     }
-    if (tables.length) await publishTables(tables);
+    if (tables.length) { onProgress?.({ phase: 'publish', current: bindings.length, total: bindings.length, label: 'Publishing form changes' }); await publishTables(tables); }
     for (const { binding, formId, handlerId } of changedBindings) {
       if (mode === 'apply') {
         const readBack = data(await SystemformsService.get(formId, { select: ['formxml'] }), 'Read back bound form');
@@ -321,7 +325,7 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
         { title: 'Automatic rollback', detail: 'Failure removes only newly-added sidecar handlers and preserves unrelated form XML.', intent: 'safety' },
       ];
     },
-    async deploy(draft: SidecarDraft) {
+    async deploy(draft: SidecarDraft, onProgress?: SidecarProgressCallback) {
       assertSidecarActionsAvailable();
       const appId = guid(draft.targetApp.appId, 'Model-driven App ID');
       const tenantId = guid(draft.tenantId, 'Tenant ID');
@@ -354,7 +358,9 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       const createdBindings: Array<{ bindingId: string; formId: string }> = [];
       const tables: string[] = [];
       try {
+        let processed = 0;
         for (const { table, form } of selectedForms) {
+          onProgress?.({ phase: 'forms', current: processed, total: selectedForms.length, label: `${table.displayName} — ${form.name}` });
           const formId = guid(form.formid, 'Form ID');
           const mutation = addHandler(form.formxml, crypto.randomUUID());
           if (mutation.value !== form.formxml) data(await SystemformsService.update(formId, { formxml: mutation.value }), 'Update target form');
@@ -367,12 +373,19 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
             maftagsc_lastappliedfingerprint: await hash(mutation.value), maftagsc_validationstate: VALIDATION.pass,
             'maftagsc_sidecarconfiguration@odata.bind': `/maftagsc_sidecarconfigurations(${created.maftagsc_sidecarconfigurationid})`, statecode: 0, statuscode: 1,
           }), 'Create binding'); createdBindings.push({ bindingId: binding.maftagsc_targetbindingid, formId }); tables.push(table.logicalName);
+          processed += 1;
+          onProgress?.({ phase: 'forms', current: processed, total: selectedForms.length, label: `${table.displayName} — ${form.name}` });
         }
-        if (tables.length) await publishTables(tables);
+        if (tables.length) { onProgress?.({ phase: 'publish', current: selectedForms.length, total: selectedForms.length, label: 'Publishing form changes' }); await publishTables(tables); }
+        let readBackDone = 0;
         for (const { bindingId, formId } of createdBindings) {
+          onProgress?.({ phase: 'readback', current: readBackDone, total: createdBindings.length, label: 'Verifying deployed forms' });
           const readBack = data(await SystemformsService.get(formId, { select: ['formxml'] }), 'Read back deployed form');
           data(await Bindings.update(bindingId, { maftagsc_lastappliedfingerprint: await hash(readBack.formxml) }), 'Save deployed form fingerprint');
+          readBackDone += 1;
+          onProgress?.({ phase: 'readback', current: readBackDone, total: createdBindings.length, label: 'Verifying deployed forms' });
         }
+        onProgress?.({ phase: 'finalize', current: 1, total: 1, label: 'Finalizing configuration' });
         data(await Configurations.update(created.maftagsc_sidecarconfigurationid, { maftagsc_healthstate: HEALTH.healthy, maftagsc_lastvalidatedat: new Date().toISOString(), maftagsc_lastoperationsummary: 'Deployment completed and read-back passed.', statuscode: STATUS.deployed }), 'Complete deployment');
         return validate(created.maftagsc_sidecarconfigurationid);
       } catch (error) {
@@ -390,17 +403,18 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       }
     },
     validate,
-    async reconcile(id) { const configurationId = guid(id, 'Configuration ID'); await mutate(configurationId, 'apply'); data(await Configurations.update(configurationId, { statecode: 0, statuscode: STATUS.deployed, maftagsc_healthstate: HEALTH.healthy, maftagsc_lastoperationsummary: 'Approved reconciliation completed.' }), 'Complete reconciliation'); return validate(configurationId); },
-    async setEnabled(id, enabled) {
+    async reconcile(id, onProgress) { const configurationId = guid(id, 'Configuration ID'); await mutate(configurationId, 'apply', onProgress); data(await Configurations.update(configurationId, { statecode: 0, statuscode: STATUS.deployed, maftagsc_healthstate: HEALTH.healthy, maftagsc_lastoperationsummary: 'Approved reconciliation completed.' }), 'Complete reconciliation'); return validate(configurationId); },
+    async setEnabled(id, enabled, onProgress) {
       const configurationId = guid(id, 'Configuration ID');
-      await mutate(configurationId, enabled ? 'apply' : 'remove');
+      await mutate(configurationId, enabled ? 'apply' : 'remove', onProgress);
       data(await Configurations.update(configurationId, { statecode: enabled ? 0 : 1, statuscode: enabled ? STATUS.deployed : STATUS.disabled, maftagsc_healthstate: enabled ? HEALTH.healthy : HEALTH.none, maftagsc_lastvalidatedat: new Date().toISOString(), maftagsc_lastoperationsummary: enabled ? 'Sidecar enabled.' : 'Sidecar disabled; configuration retained.' }), enabled ? 'Enable sidecar' : 'Disable sidecar');
       return enabled ? validate(configurationId) : map(data(await Configurations.get(configurationId), 'Read configuration'), await bindingsFor(configurationId));
     },
-    async uninstall(id) {
+    async uninstall(id, onProgress) {
       const configurationId = guid(id, 'Configuration ID');
       const configuration = data(await Configurations.get(configurationId), 'Read configuration');
-      const bindings = await mutate(configurationId, 'remove');
+      const bindings = await mutate(configurationId, 'remove', onProgress);
+      onProgress?.({ phase: 'cleanup', current: 0, total: 1, label: 'Removing bindings and configuration' });
       await Promise.all(bindings.map((binding) => Bindings.delete(binding.maftagsc_targetbindingid)));
       await Configurations.delete(configurationId);
       const ownershipMarker = `Agent Sidecar Target Binding for app ${guid(configuration.maftagsc_appid, 'Model-driven App ID')}`;
@@ -413,6 +427,7 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       if (solutions[0]?.description === ownershipMarker && (solutions[0]._publisherid_value ?? '').toLowerCase() === publisherId.toLowerCase()) {
         await SolutionsService.delete(solutions[0].solutionid);
       }
+      onProgress?.({ phase: 'cleanup', current: 1, total: 1, label: 'Removing bindings and configuration' });
     },
   };
 }

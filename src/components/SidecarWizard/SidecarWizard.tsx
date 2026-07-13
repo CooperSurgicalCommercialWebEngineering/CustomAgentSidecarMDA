@@ -34,11 +34,14 @@ import type {
   AgentResolution,
   DeploymentImpact,
   SidecarDraft,
+  SidecarProgressCallback,
   TargetModelDrivenApp,
   TargetTable,
 } from '@/types/sidecar-admin-models';
 import { isGuid } from '@/utils/agent-link';
 import { DataverseFieldLabel } from '@/components/DataverseFieldLabel';
+import { OperationProgress } from '@/components/OperationProgress/OperationProgress';
+import { useOperationReport } from '@/hooks/useOperationReport';
 import { useDataverseFieldMetadata } from '@/hooks/use-dataverse-field-metadata';
 import { toDataverseFieldName } from '@/lib/dataverse-field-name';
 
@@ -104,7 +107,6 @@ const useStyles = makeStyles({
   surface: { display: 'flex', gap: tokens.spacingHorizontalS, flexWrap: 'wrap' },
   tableToolbar: { display: 'flex', gap: tokens.spacingHorizontalS, alignItems: 'center', flexWrap: 'wrap' },
   tableSearch: { flexGrow: 1, minWidth: '220px' },
-  deployBanner: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalS, padding: tokens.spacingHorizontalL, borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground2, border: `1px solid ${tokens.colorBrandStroke1}` },
 });
 
 interface SidecarWizardProps {
@@ -116,7 +118,7 @@ interface SidecarWizardProps {
   onResolveManualApp: (appId: string) => Promise<TargetModelDrivenApp>;
   onResolveAgent: (connectionString: string, environmentId: string) => Promise<AgentResolution>;
   onPreview: (draft: SidecarDraft) => Promise<DeploymentImpact[]>;
-  onDeploy: (draft: SidecarDraft) => Promise<void>;
+  onDeploy: (draft: SidecarDraft, onProgress: SidecarProgressCallback) => Promise<void>;
 }
 
 export function SidecarWizard({
@@ -131,6 +133,7 @@ export function SidecarWizard({
   onDeploy,
 }: SidecarWizardProps) {
   const styles = useStyles();
+  const report = useOperationReport();
   const [step, setStep] = useState(0);
   const [targetApp, setTargetApp] = useState<TargetModelDrivenApp>();
   const [tables, setTables] = useState<TargetTable[]>([]);
@@ -233,9 +236,23 @@ export function SidecarWizard({
     if (!draft) return;
     setLocalError(undefined);
     setDeploying(true);
-    try { await onDeploy(draft); }
-    catch (caught) { setLocalError(caught instanceof Error ? caught.message : 'Deployment failed.'); }
-    finally { setDeploying(false); }
+    report.begin('Deploy sidecar', {
+      app: draft.targetApp.displayName,
+      appId: draft.targetApp.appId,
+      tablesEnabled: enabledTableCount,
+      formsTargeted: enabledFormCount,
+      bindingSolution: draft.bindingSolutionUniqueName,
+    });
+    try {
+      await onDeploy(draft, report.onProgress);
+      report.recordSuccess('Deployment completed and read-back passed.');
+    } catch (caught) {
+      const messageText = caught instanceof Error ? caught.message : 'Deployment failed.';
+      report.recordError(messageText);
+      setLocalError(messageText);
+    } finally {
+      setDeploying(false);
+    }
   };
 
   return (
@@ -349,11 +366,16 @@ export function SidecarWizard({
             <div className={styles.stack}>
               <div><Title2 as="h2">Review deployment impact</Title2><Text className={styles.muted}>Nothing changes until a System Administrator selects Deploy sidecar.</Text></div>
               {impacts.map((impact) => <Card className={styles.impact} key={impact.title}><Text weight="semibold">{impact.title}</Text><Text>{impact.detail}</Text></Card>)}
-              {deploying ? (
-                <div className={styles.deployBanner} role="status" aria-live="assertive">
-                  <Spinner size="small" labelPosition="after" label={`Deploying — updating ${enabledFormCount} active main form${enabledFormCount === 1 ? '' : 's'} across ${enabledTableCount} table${enabledTableCount === 1 ? '' : 's'}…`} />
-                  <Text size={200} className={styles.muted}>This can take a minute or two for larger apps. Keep this tab open — when it finishes you&rsquo;ll be taken to the new sidecar&rsquo;s page automatically. If anything fails, the changes roll back and the error appears above.</Text>
-                </div>
+              {deploying || report.hasEntries ? (
+                <OperationProgress
+                  active={deploying}
+                  progress={report.progress}
+                  errorCount={report.errorCount}
+                  downloadable={report.hasEntries}
+                  onDownload={report.download}
+                  activeNote="This can take a minute or two for larger apps. Keep this tab open — you’ll be taken to the new sidecar’s page automatically when it finishes. If anything fails, the changes roll back and the error appears above."
+                  idleNote={report.errorCount > 0 ? 'Deployment did not complete. Download the report for details, then retry once the issue is resolved.' : undefined}
+                />
               ) : (
                 <MessageBar intent="success"><MessageBarBody><MessageBarTitle>Ready to deploy</MessageBarTitle>{enabledTableCount} tables · {enabledFormCount} active main form{enabledFormCount === 1 ? '' : 's'} · one existing agent · automatic rollback protection</MessageBarBody></MessageBar>
               )}

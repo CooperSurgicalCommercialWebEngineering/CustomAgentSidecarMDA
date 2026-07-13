@@ -28,8 +28,8 @@ export function CreateSidecarPage() {
       onResolveManualApp={(appId) => resolveManual.mutateAsync(appId)}
       onResolveAgent={(connectionString, environmentId) => resolveAgent.mutateAsync({ connectionString, environmentId })}
       onPreview={(draft) => preview.mutateAsync(draft)}
-      onDeploy={async (draft) => {
-        const configuration = await deploy.mutateAsync(draft);
+      onDeploy={async (draft, onProgress) => {
+        const configuration = await deploy.mutateAsync({ draft, onProgress });
         navigate(`/sidecars/${configuration.id}`);
       }}
     />

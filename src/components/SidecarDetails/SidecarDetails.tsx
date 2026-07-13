@@ -31,7 +31,8 @@ import {
   ShieldCheckmarkRegular,
 } from '@fluentui/react-icons';
 import { HealthBadge, LifecycleBadge } from '@/components/SidecarStatusBadge/SidecarStatusBadge';
-import type { SidecarConfiguration } from '@/types/sidecar-admin-models';
+import { OperationProgress } from '@/components/OperationProgress/OperationProgress';
+import type { SidecarConfiguration, SidecarProgress } from '@/types/sidecar-admin-models';
 
 const useStyles = makeStyles({
   page: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXL, paddingBlock: tokens.spacingVerticalXXL },
@@ -58,6 +59,13 @@ interface SidecarDetailsProps {
   loading: boolean;
   busy: boolean;
   error?: string;
+  report?: {
+    active: boolean;
+    progress?: SidecarProgress;
+    errorCount: number;
+    hasEntries: boolean;
+    onDownload: () => void;
+  };
   onBack: () => void;
   onValidate: () => Promise<void>;
   onReconcile: () => Promise<void>;
@@ -65,7 +73,7 @@ interface SidecarDetailsProps {
   onUninstall: () => Promise<void>;
 }
 
-export function SidecarDetails({ configuration, loading, busy, error, onBack, onValidate, onReconcile, onSetEnabled, onUninstall }: SidecarDetailsProps) {
+export function SidecarDetails({ configuration, loading, busy, error, report, onBack, onValidate, onReconcile, onSetEnabled, onUninstall }: SidecarDetailsProps) {
   const styles = useStyles();
   const [uninstallOpen, setUninstallOpen] = useState(false);
 
@@ -99,6 +107,16 @@ export function SidecarDetails({ configuration, loading, busy, error, onBack, on
       </section>
 
       {error && <MessageBar intent="error"><MessageBarBody><MessageBarTitle>Operation failed</MessageBarTitle>{error}</MessageBarBody></MessageBar>}
+      {report && (report.active || report.hasEntries) && (
+        <OperationProgress
+          active={report.active}
+          progress={report.progress}
+          errorCount={report.errorCount}
+          downloadable={report.hasEntries}
+          onDownload={report.onDownload}
+          activeNote="Working through the bound forms. Keep this tab open until it finishes."
+        />
+      )}
       {configuration.healthState === 'critical' && <MessageBar intent="error"><MessageBarBody><MessageBarTitle>Rollback incomplete</MessageBarTitle>The sidecar remains disabled. Resolve the failed health check before enabling it.</MessageBarBody></MessageBar>}
 
       <div className={styles.grid}>

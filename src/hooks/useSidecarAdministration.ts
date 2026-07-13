@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSidecarAdministrationProvider } from '@/services/sidecar-provider-factory';
-import type { SidecarConfiguration, SidecarDraft } from '@/types/sidecar-admin-models';
+import type { SidecarConfiguration, SidecarDraft, SidecarProgressCallback } from '@/types/sidecar-admin-models';
 
 const provider = createSidecarAdministrationProvider();
 
@@ -69,7 +69,7 @@ export function useDeploymentPreview() {
 }
 
 export function useDeploySidecar() {
-  return useConfigurationMutation((draft: SidecarDraft) => provider.deploy(draft));
+  return useConfigurationMutation((input: { draft: SidecarDraft; onProgress?: SidecarProgressCallback }) => provider.deploy(input.draft, input.onProgress));
 }
 
 export function useValidateSidecar() {
@@ -77,20 +77,21 @@ export function useValidateSidecar() {
 }
 
 export function useReconcileSidecar() {
-  return useConfigurationMutation((id: string) => provider.reconcile(id));
+  return useConfigurationMutation((input: { id: string; onProgress?: SidecarProgressCallback }) => provider.reconcile(input.id, input.onProgress));
 }
 
 export function useSetSidecarEnabled() {
-  return useConfigurationMutation(({ id, enabled }: { id: string; enabled: boolean }) =>
-    provider.setEnabled(id, enabled),
+  return useConfigurationMutation((input: { id: string; enabled: boolean; onProgress?: SidecarProgressCallback }) =>
+    provider.setEnabled(input.id, input.enabled, input.onProgress),
   );
 }
 
 export function useUninstallSidecar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => provider.uninstall(id),
-    onSuccess: (_, id) => {
+    mutationFn: (input: { id: string; onProgress?: SidecarProgressCallback }) => provider.uninstall(input.id, input.onProgress),
+    onSuccess: (_, input) => {
+      const id = input.id;
       queryClient.removeQueries({ queryKey: sidecarQueryKeys.configuration(id) });
       const current = queryClient.getQueryData<SidecarConfiguration[]>(sidecarQueryKeys.configurations);
       if (current) {

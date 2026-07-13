@@ -8,6 +8,7 @@ import type {
   DeploymentImpact,
   SidecarConfiguration,
   SidecarDraft,
+  SidecarProgressCallback,
   TargetModelDrivenApp,
 } from '@/types/sidecar-admin-models';
 import { isGuid, parseCopilotStudioConnectionString } from '@/utils/agent-link';
@@ -93,10 +94,16 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
       ];
       return clone(impacts);
     },
-    async deploy(draft: SidecarDraft) {
+    async deploy(draft: SidecarDraft, onProgress?: SidecarProgressCallback) {
       if (configurations.some((item) => item.appId.toLowerCase() === draft.targetApp.appId.toLowerCase())) {
         throw new Error('This Model-driven App already has a sidecar configuration.');
       }
+      const forms = draft.tables.filter((table) => table.enabled).flatMap((table) => Array.from({ length: Math.max(1, table.formCount) }, (_, index) => `${table.displayName} — form ${index + 1}`));
+      for (let index = 0; index < forms.length; index += 1) {
+        onProgress?.({ phase: 'forms', current: index + 1, total: forms.length, label: forms[index] });
+      }
+      onProgress?.({ phase: 'publish', current: forms.length, total: forms.length, label: 'Publishing form changes' });
+      onProgress?.({ phase: 'finalize', current: 1, total: 1, label: 'Finalizing configuration' });
       const deployed: SidecarConfiguration = {
         id: crypto.randomUUID(),
         name: draft.name,
@@ -138,8 +145,9 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
         : 'Manual health validation completed.';
       return clone(configuration);
     },
-    async reconcile(id) {
+    async reconcile(id, onProgress?: SidecarProgressCallback) {
       const configuration = requireConfiguration(configurations, id);
+      onProgress?.({ phase: 'forms', current: 1, total: 1, label: 'Reapplying handlers' });
       const target = targetApps.find((item) => item.appId === configuration.appId);
       configuration.tables = target ? target.tables.filter((table) => table.enabled) : configuration.tables;
       configuration.driftItems = [];
@@ -154,11 +162,12 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
       }));
       return clone(configuration);
     },
-    async setEnabled(id, enabled) {
+    async setEnabled(id, enabled, onProgress?: SidecarProgressCallback) {
       const configuration = requireConfiguration(configurations, id);
       if (enabled && configuration.healthState === 'critical') {
         throw new Error('Resolve blocking health failures before enabling this sidecar.');
       }
+      onProgress?.({ phase: 'forms', current: 1, total: 1, label: enabled ? 'Enabling bindings' : 'Disabling bindings' });
       configuration.lifecycleState = enabled ? 'deployed' : 'disabled';
       configuration.healthState = enabled ? 'healthy' : configuration.healthState;
       configuration.lastValidatedAt = now();
@@ -167,9 +176,10 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
         : 'Sidecar disabled; configuration and owned bindings were retained.';
       return clone(configuration);
     },
-    async uninstall(id) {
+    async uninstall(id, onProgress?: SidecarProgressCallback) {
       const index = configurations.findIndex((item) => item.id === id);
       if (index < 0) throw new Error('The sidecar configuration could not be found.');
+      onProgress?.({ phase: 'cleanup', current: 1, total: 1, label: 'Removing bindings and configuration' });
       configurations.splice(index, 1);
     },
   };

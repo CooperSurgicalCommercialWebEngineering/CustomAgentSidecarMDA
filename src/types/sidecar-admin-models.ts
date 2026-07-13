@@ -76,6 +76,17 @@ export interface DeploymentImpact {
   intent: 'info' | 'change' | 'safety';
 }
 
+export type SidecarOperationPhase = 'forms' | 'publish' | 'readback' | 'finalize' | 'cleanup' | 'rollback';
+
+export interface SidecarProgress {
+  phase: SidecarOperationPhase;
+  current: number;
+  total: number;
+  label: string;
+}
+
+export type SidecarProgressCallback = (progress: SidecarProgress) => void;
+
 export interface SidecarDraft {
   name: string;
   targetApp: TargetModelDrivenApp;

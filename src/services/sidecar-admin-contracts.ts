@@ -4,6 +4,7 @@ import type {
   DeploymentImpact,
   SidecarConfiguration,
   SidecarDraft,
+  SidecarProgressCallback,
   TargetModelDrivenApp,
 } from '@/types/sidecar-admin-models';
 
@@ -15,9 +16,9 @@ export interface SidecarAdministrationProvider {
   resolveManualTargetApp(appId: string): Promise<TargetModelDrivenApp>;
   resolveAgentLink(connectionString: string, environmentId: string): Promise<AgentResolution>;
   previewDeployment(draft: SidecarDraft): Promise<DeploymentImpact[]>;
-  deploy(draft: SidecarDraft): Promise<SidecarConfiguration>;
+  deploy(draft: SidecarDraft, onProgress?: SidecarProgressCallback): Promise<SidecarConfiguration>;
   validate(id: string): Promise<SidecarConfiguration>;
-  reconcile(id: string): Promise<SidecarConfiguration>;
-  setEnabled(id: string, enabled: boolean): Promise<SidecarConfiguration>;
-  uninstall(id: string): Promise<void>;
+  reconcile(id: string, onProgress?: SidecarProgressCallback): Promise<SidecarConfiguration>;
+  setEnabled(id: string, enabled: boolean, onProgress?: SidecarProgressCallback): Promise<SidecarConfiguration>;
+  uninstall(id: string, onProgress?: SidecarProgressCallback): Promise<void>;
 }
