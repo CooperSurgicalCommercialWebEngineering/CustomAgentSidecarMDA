@@ -2,11 +2,18 @@ export type SidecarLifecycleState = 'draft' | 'deployed' | 'disabled' | 'drift';
 export type SidecarHealthState = 'healthy' | 'warning' | 'critical' | 'notValidated';
 export type SidecarSurface = 'forms' | 'lists';
 
+export interface TargetForm {
+  formId: string;
+  name: string;
+  enabled: boolean;
+}
+
 export interface TargetTable {
   logicalName: string;
   displayName: string;
   enabled: boolean;
   formCount: number;
+  forms: TargetForm[];
 }
 
 export interface TargetModelDrivenApp {

@@ -354,6 +354,11 @@
             <div class="hint">The Core solution ships with <code class="inline">maftagsc</code>. Leave as-is unless you re-published.</div>
           </div>
         </div>
+        <div style="margin-top:12px">
+          <label>Agents SDK connection string</label>
+          <div class="finput"><input id="w-connstr" data-key="connstr" placeholder="https://…/copilotstudio/…/bots/&lt;schema&gt;/conversations?api-version=…" /><button type="button" class="fcopy" data-copy="connstr">Copy</button></div>
+          <div class="hint">Copilot Studio &rsaquo; your agent &rsaquo; <b>Channels &rsaquo; Web app / Microsoft 365 Agents SDK</b>. Copy the connection string (not the iframe embed). Paste it in wizard Step 3.</div>
+        </div>
         <div class="callout info" style="margin-bottom:0">
           <div class="t">Computed SPA redirect URI</div>
           Register exactly this in Azure (Phase 1) and confirm it in the wizard (Phase 5):
@@ -722,7 +727,7 @@ pac code push -s AgentSidecarCore</code></pre></div>
   });
 
   // ---- Values worksheet binding ----
-  const KEYS = ["org", "tenant", "client", "env", "agent", "prefix"];
+  const KEYS = ["org", "tenant", "client", "env", "agent", "prefix", "connstr"];
   const store = JSON.parse(localStorage.getItem("cp-ws") || "{}");
   function computeRedirect() {
     const org = (store.org || "").trim().replace(/\/+$/, "");
@@ -739,7 +744,7 @@ pac code push -s AgentSidecarCore</code></pre></div>
       const placeholders = {
         org: "https://<your-org>.crm.dynamics.com",
         tenant: "<tenant-id>", client: "<client-id>",
-        env: "<environment-id>", agent: "<agent-schema>", prefix: "maftagsc"
+        env: "<environment-id>", agent: "<agent-schema>", prefix: "maftagsc", connstr: "<agents-sdk-connection-string>"
       };
       el.textContent = (store[k] && store[k].trim()) ? store[k].trim() : (placeholders[k] || "");
     });

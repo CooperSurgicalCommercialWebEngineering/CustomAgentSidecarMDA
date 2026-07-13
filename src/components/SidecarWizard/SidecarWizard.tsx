@@ -26,6 +26,8 @@ import {
   BotRegular,
   CheckmarkCircleFilled,
   CheckmarkCircleRegular,
+  ChevronDownRegular,
+  ChevronRightRegular,
   DatabaseRegular,
   SearchRegular,
   ShieldKeyholeRegular,
@@ -39,6 +41,7 @@ import type {
   TargetTable,
 } from '@/types/sidecar-admin-models';
 import { isGuid } from '@/utils/agent-link';
+import { defaultFormId } from '@/lib/target-forms';
 import { DataverseFieldLabel } from '@/components/DataverseFieldLabel';
 import { OperationProgress } from '@/components/OperationProgress/OperationProgress';
 import { useOperationReport } from '@/hooks/useOperationReport';
@@ -99,6 +102,10 @@ const useStyles = makeStyles({
   selectedIcon: { color: tokens.colorBrandForeground1, position: 'absolute', top: tokens.spacingVerticalS, right: tokens.spacingHorizontalS },
   tableRow: { display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: tokens.spacingHorizontalM, paddingBlock: tokens.spacingVerticalS, borderBottom: `1px solid ${tokens.colorNeutralStroke2}` },
   fields: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: tokens.spacingHorizontalM, '@media (max-width: 650px)': { gridTemplateColumns: '1fr' } },
+  tableHeadRow: { display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: tokens.spacingHorizontalS, paddingBlock: tokens.spacingVerticalS, borderBottom: `1px solid ${tokens.colorNeutralStroke2}` },
+  expandButton: { minWidth: '28px', padding: '0' },
+  formList: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXS, paddingLeft: tokens.spacingHorizontalXXL, paddingBottom: tokens.spacingVerticalS },
+  formRow: { display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalS },
   full: { gridColumnStart: 1, gridColumnEnd: 3, '@media (max-width: 650px)': { gridColumnEnd: 2 } },
   actions: { display: 'flex', justifyContent: 'space-between', gap: tokens.spacingHorizontalM },
   summary: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalM, position: 'sticky', top: '80px', '@media (max-width: 900px)': { position: 'static' } },
@@ -151,9 +158,10 @@ export function SidecarWizard({
   const [localError, setLocalError] = useState<string>();
   const [deploying, setDeploying] = useState(false);
   const [tableSearch, setTableSearch] = useState('');
+  const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
 
   const enabledTableCount = tables.filter((table) => table.enabled).length;
-  const enabledFormCount = tables.filter((table) => table.enabled).reduce((total, table) => total + (table.formCount ?? 0), 0);
+  const enabledFormCount = tables.filter((table) => table.enabled).reduce((total, table) => total + table.forms.filter((form) => form.enabled).length, 0);
   const visibleTables = useMemo(() => {
     const queryText = tableSearch.trim().toLowerCase();
     if (!queryText) return tables;
@@ -161,9 +169,38 @@ export function SidecarWizard({
       table.displayName.toLowerCase().includes(queryText) || table.logicalName.toLowerCase().includes(queryText),
     );
   }, [tables, tableSearch]);
+  // Enabling a table guarantees at least one selected form (Information, else the first).
+  const withEnsuredForm = (table: TargetTable): TargetTable => {
+    if (table.forms.some((form) => form.enabled)) return table;
+    const preferred = defaultFormId(table.forms);
+    return { ...table, forms: table.forms.map((form) => (form.formId === preferred ? { ...form, enabled: true } : form)) };
+  };
+  const setTableEnabled = (logicalName: string, enabled: boolean) => {
+    setTables((current) => current.map((table) => {
+      if (table.logicalName !== logicalName) return table;
+      return enabled ? withEnsuredForm({ ...table, enabled: true }) : { ...table, enabled: false };
+    }));
+  };
+  const setFormEnabled = (logicalName: string, formId: string, enabled: boolean) => {
+    setTables((current) => current.map((table) => {
+      if (table.logicalName !== logicalName) return table;
+      const forms = table.forms.map((form) => (form.formId === formId ? { ...form, enabled } : form));
+      return { ...table, forms, enabled: enabled ? true : table.enabled };
+    }));
+  };
   const setVisibleTablesEnabled = (enabled: boolean) => {
     const names = new Set(visibleTables.map((table) => table.logicalName));
-    setTables((current) => current.map((table) => (names.has(table.logicalName) ? { ...table, enabled } : table)));
+    setTables((current) => current.map((table) => {
+      if (!names.has(table.logicalName)) return table;
+      return enabled ? withEnsuredForm({ ...table, enabled: true }) : { ...table, enabled: false };
+    }));
+  };
+  const toggleExpanded = (logicalName: string) => {
+    setExpandedTables((current) => {
+      const next = new Set(current);
+      if (next.has(logicalName)) next.delete(logicalName); else next.add(logicalName);
+      return next;
+    });
   };
   const draft = useMemo<SidecarDraft | undefined>(() => {
     if (!targetApp || !agent) return undefined;
@@ -183,8 +220,9 @@ export function SidecarWizard({
 
   const selectApp = (app: TargetModelDrivenApp) => {
     setTargetApp(app);
-    setTables(app.tables.map((table) => ({ ...table, enabled: false })));
+    setTables(app.tables.map((table) => ({ ...table, enabled: false, forms: table.forms.map((form) => ({ ...form })) })));
     setTableSearch('');
+    setExpandedTables(new Set());
     setName(`${app.displayName} Assistant`);
     setPaneTitle(`${app.displayName} Assistant`);
     setSolutionName(`${app.uniqueName.replace(/[^A-Za-z0-9]/g, '')}SidecarBinding`);
@@ -305,7 +343,7 @@ export function SidecarWizard({
 
           {step === 1 && (
             <div className={styles.stack}>
-              <div><Title2 as="h2">Select tables</Title2><Text className={styles.muted}>Choose the tables that should show the sidecar. All tables start off &mdash; enable only what you need. Sidecars appear on active main forms.</Text></div>
+              <div><Title2 as="h2">Select tables &amp; forms</Title2><Text className={styles.muted}>Choose the tables that should show the sidecar. All tables start off &mdash; enable only what you need. Each enabled table uses its <strong>Information</strong> form by default; expand a table to pick other forms.</Text></div>
               <MessageBar intent="info"><MessageBarBody><MessageBarTitle>New tables require approval</MessageBarTitle>If the app gains a table, it appears in drift review as selected. Nothing changes until you approve.</MessageBarBody></MessageBar>
               <div className={styles.tableToolbar}>
                 <Input
@@ -321,12 +359,42 @@ export function SidecarWizard({
               </div>
               {visibleTables.length === 0 ? (
                 <Text className={styles.muted}>No tables match &ldquo;{tableSearch.trim()}&rdquo;.</Text>
-              ) : visibleTables.map((table) => (
-                <div className={styles.tableRow} key={table.logicalName}>
-                  <div><Text weight="semibold">{table.displayName}</Text><br /><Text size={200} className={styles.muted}>{table.logicalName} · {table.formCount} main form{table.formCount === 1 ? '' : 's'}</Text></div>
-                  <Checkbox checked={table.enabled} label="Enable" onChange={(_, data) => setTables((current) => current.map((item) => item.logicalName === table.logicalName ? { ...item, enabled: Boolean(data.checked) } : item))} />
-                </div>
-              ))}
+              ) : visibleTables.map((table) => {
+                const expanded = expandedTables.has(table.logicalName);
+                const selectedForms = table.forms.filter((form) => form.enabled).length;
+                return (
+                  <div key={table.logicalName}>
+                    <div className={styles.tableHeadRow}>
+                      <Button
+                        className={styles.expandButton}
+                        appearance="subtle"
+                        aria-label={expanded ? `Collapse ${table.displayName} forms` : `Expand ${table.displayName} forms`}
+                        aria-expanded={expanded}
+                        icon={expanded ? <ChevronDownRegular /> : <ChevronRightRegular />}
+                        onClick={() => toggleExpanded(table.logicalName)}
+                      />
+                      <div>
+                        <Text weight="semibold">{table.displayName}</Text><br />
+                        <Text size={200} className={styles.muted}>{table.logicalName} · {table.enabled ? `${selectedForms} of ${table.formCount}` : table.formCount} form{table.formCount === 1 ? '' : 's'}{table.enabled ? ' selected' : ''}</Text>
+                      </div>
+                      <Checkbox checked={table.enabled} label="Enable" onChange={(_, data) => setTableEnabled(table.logicalName, Boolean(data.checked))} />
+                    </div>
+                    {expanded && (
+                      <div className={styles.formList}>
+                        {table.forms.map((form) => (
+                          <div className={styles.formRow} key={form.formId}>
+                            <Checkbox
+                              checked={form.enabled}
+                              label={form.name}
+                              onChange={(_, data) => setFormEnabled(table.logicalName, form.formId, Boolean(data.checked))}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 

@@ -16,6 +16,7 @@ import { addSolutionComponent, assertSidecarActionsAvailable, publishTables } fr
 import type { SidecarConfiguration, SidecarDraft, SidecarHealthCheck, SidecarHealthState, SidecarLifecycleState, SidecarProgressCallback, TargetModelDrivenApp, TargetTable } from '@/types/sidecar-admin-models';
 import { parseCopilotStudioConnectionString } from '@/utils/agent-link';
 import { discoverAppForms, type DiscoveredForm } from '@/services/model-driven-app-discovery';
+import { isInformationFormName } from '@/lib/target-forms';
 
 const ADMIN_ROLE_TEMPLATE = '627090ff-40a3-4053-8790-584edc5be201';
 const SIDECAR_PUBLISHER = 'agentsidecar';
@@ -153,9 +154,10 @@ function includesHandler(value: string, id: string): boolean {
 function map(record: Maftagsc_sidecarconfigurations, bindings: Maftagsc_targetbindings[], checks: SidecarHealthCheck[] = []): SidecarConfiguration {
   const tables = new Map<string, TargetTable>();
   for (const binding of bindings) {
+    const form = { formId: binding.maftagsc_formid, name: binding.maftagsc_formname ?? binding.maftagsc_formid, enabled: binding.maftagsc_enabled };
     const current = tables.get(binding.maftagsc_tablelogicalname);
-    if (current) current.formCount += 1;
-    else tables.set(binding.maftagsc_tablelogicalname, { logicalName: binding.maftagsc_tablelogicalname, displayName: binding.maftagsc_tabledisplayname, enabled: binding.maftagsc_enabled, formCount: 1 });
+    if (current) { current.formCount += 1; current.forms.push(form); current.enabled = current.enabled || binding.maftagsc_enabled; }
+    else tables.set(binding.maftagsc_tablelogicalname, { logicalName: binding.maftagsc_tablelogicalname, displayName: binding.maftagsc_tabledisplayname, enabled: binding.maftagsc_enabled, formCount: 1, forms: [form] });
   }
   const healthState = health(record.maftagsc_healthstate);
   return {
@@ -191,7 +193,13 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
     const displayNames = appTableDisplayNames.get(app.appmoduleidunique) ?? new Map<string, string>();
     return { id: app.appmoduleid, appId: app.appmoduleid, uniqueName: app.uniquename, displayName: app.name,
       description: app.description ?? 'Model-driven App in the current environment.',
-      tables: [...forms.entries()].map(([logicalName, items]) => ({ logicalName, displayName: displayNames.get(logicalName) ?? logicalName, enabled: true, formCount: items.length })) };
+      tables: [...forms.entries()].map(([logicalName, items]) => ({
+        logicalName,
+        displayName: displayNames.get(logicalName) ?? logicalName,
+        enabled: true,
+        formCount: items.length,
+        forms: items.map((item) => ({ formId: item.formid, name: item.name ?? item.formid, enabled: isInformationFormName(item.name) })),
+      })) };
   }
   async function sidecarPublisherId(): Promise<string> {
     const publishers = data(await PublishersService.getAll({
@@ -316,8 +324,8 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       return { ...parsed, displayName: agents[0].name || parsed.displayName, published: true };
     },
     async previewDeployment(draft) {
-      const forms = appForms.get(draft.targetApp.appId) ?? await formsFor(draft.targetApp.id); const selected = draft.tables.filter((item) => item.enabled);
-      const count = selected.reduce((total, item) => total + (forms.get(item.logicalName)?.length ?? 0), 0);
+      const selected = draft.tables.filter((item) => item.enabled);
+      const count = selected.reduce((total, item) => total + item.forms.filter((form) => form.enabled).length, 0);
       return [
         { title: 'Create or reuse the Target Binding solution', detail: `${draft.bindingSolutionUniqueName} will own selected form components.`, intent: 'change' },
         { title: `Bind ${selected.length} tables and ${count} active main forms`, detail: 'The launcher is added idempotently with an owned handler identifier.', intent: 'change' },
@@ -336,8 +344,13 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
       const forms = appForms.get(draft.targetApp.appId) ?? await formsFor(draft.targetApp.id);
       const selectedForms = draft.tables
         .filter((item) => item.enabled)
-        .flatMap((table) => (forms.get(table.logicalName) ?? []).map((form) => ({ table, form })));
-      if (!selectedForms.length) throw new Error('The selected tables do not contain any active main forms.');
+        .flatMap((table) => {
+          const enabledFormIds = new Set(table.forms.filter((form) => form.enabled).map((form) => form.formId));
+          return (forms.get(table.logicalName) ?? [])
+            .filter((form) => enabledFormIds.has(form.formid))
+            .map((form) => ({ table, form }));
+        });
+      if (!selectedForms.length) throw new Error('Select at least one form under an enabled table.');
       const bindingSolution = await ensureBindingSolution(draft.bindingSolutionUniqueName, appId);
       let created: Maftagsc_sidecarconfigurations;
       try {

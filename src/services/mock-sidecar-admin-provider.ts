@@ -1,6 +1,7 @@
 import {
   mockAdminAccess,
   mockSidecarConfigurations,
+  mockTable,
   mockTargetApps,
 } from '@/mockData/sidecarAdministration';
 import type { SidecarAdministrationProvider } from '@/services/sidecar-admin-contracts';
@@ -58,8 +59,8 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
         displayName: 'Manually entered app',
         description: 'Metadata will be discovered before deployment.',
         tables: [
-          { logicalName: 'account', displayName: 'Account', formCount: 1, enabled: true },
-          { logicalName: 'contact', displayName: 'Contact', formCount: 1, enabled: true },
+          mockTable('account', 'Account', 1),
+          mockTable('contact', 'Contact', 1),
         ],
       };
       targetApps.push(manual);
@@ -98,7 +99,7 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
       if (configurations.some((item) => item.appId.toLowerCase() === draft.targetApp.appId.toLowerCase())) {
         throw new Error('This Model-driven App already has a sidecar configuration.');
       }
-      const forms = draft.tables.filter((table) => table.enabled).flatMap((table) => Array.from({ length: Math.max(1, table.formCount) }, (_, index) => `${table.displayName} — form ${index + 1}`));
+      const forms = draft.tables.filter((table) => table.enabled).flatMap((table) => table.forms.filter((form) => form.enabled).map((form) => `${table.displayName} — ${form.name}`));
       for (let index = 0; index < forms.length; index += 1) {
         onProgress?.({ phase: 'forms', current: index + 1, total: forms.length, label: forms[index] });
       }

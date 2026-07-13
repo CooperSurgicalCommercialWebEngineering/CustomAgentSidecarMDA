@@ -1,7 +1,9 @@
 import type {
   AdminAccessContext,
   SidecarConfiguration,
+  TargetForm,
   TargetModelDrivenApp,
+  TargetTable,
 } from '@/types/sidecar-admin-models';
 
 const hrTables = [
@@ -13,6 +15,22 @@ const hrTables = [
   ['maftagsc_benefitplan', 'Benefit Plan', 1],
   ['maftagsc_benefitenrollment', 'Benefit Enrollment', 1],
 ] as const;
+
+// Generate a plausible set of active main forms for a table. The first is always
+// the "Information" form (selected by default); the rest start unselected.
+function mockForms(logicalName: string, count: number): TargetForm[] {
+  const names = ['Information', 'Details', 'Quick View', 'Multisession'];
+  return Array.from({ length: Math.max(1, count) }, (_, index) => ({
+    formId: `${logicalName}-form-${index + 1}`,
+    name: names[index] ?? `Form ${index + 1}`,
+    enabled: index === 0,
+  }));
+}
+
+export function mockTable(logicalName: string, displayName: string, formCount: number): TargetTable {
+  const forms = mockForms(logicalName, formCount);
+  return { logicalName, displayName, formCount: forms.length, enabled: true, forms };
+}
 
 export const mockAdminAccess: AdminAccessContext = {
   displayName: 'Marty Carreras',
@@ -26,12 +44,7 @@ export const mockTargetApps: TargetModelDrivenApp[] = [
     uniqueName: 'maftagsc_HRManagement',
     displayName: 'HR Management',
     description: 'Benefits, time off, expenses, and organization administration.',
-    tables: hrTables.map(([logicalName, displayName, formCount]) => ({
-      logicalName,
-      displayName,
-      formCount,
-      enabled: true,
-    })),
+    tables: hrTables.map(([logicalName, displayName, formCount]) => mockTable(logicalName, displayName, formCount)),
   },
   {
     id: 'target-field-service',
@@ -40,10 +53,10 @@ export const mockTargetApps: TargetModelDrivenApp[] = [
     displayName: 'Field Operations',
     description: 'Work orders, assets, inspections, and customer service history.',
     tables: [
-      { logicalName: 'msdyn_workorder', displayName: 'Work Order', formCount: 2, enabled: true },
-      { logicalName: 'msdyn_customerasset', displayName: 'Customer Asset', formCount: 1, enabled: true },
-      { logicalName: 'msdyn_workorderservicetask', displayName: 'Service Task', formCount: 1, enabled: true },
-      { logicalName: 'account', displayName: 'Account', formCount: 2, enabled: true },
+      mockTable('msdyn_workorder', 'Work Order', 2),
+      mockTable('msdyn_customerasset', 'Customer Asset', 1),
+      mockTable('msdyn_workorderservicetask', 'Service Task', 1),
+      mockTable('account', 'Account', 2),
     ],
   },
   {
@@ -53,9 +66,9 @@ export const mockTargetApps: TargetModelDrivenApp[] = [
     displayName: 'Finance Operations',
     description: 'Invoice exceptions, approvals, and close coordination.',
     tables: [
-      { logicalName: 'invoice', displayName: 'Invoice', formCount: 2, enabled: true },
-      { logicalName: 'transactioncurrency', displayName: 'Currency', formCount: 1, enabled: true },
-      { logicalName: 'contoso_closeitem', displayName: 'Close Item', formCount: 1, enabled: true },
+      mockTable('invoice', 'Invoice', 2),
+      mockTable('transactioncurrency', 'Currency', 1),
+      mockTable('contoso_closeitem', 'Close Item', 1),
     ],
   },
   {
@@ -65,10 +78,10 @@ export const mockTargetApps: TargetModelDrivenApp[] = [
     displayName: 'Sales Workspace',
     description: 'Accounts, opportunities, contacts, and sales activities.',
     tables: [
-      { logicalName: 'account', displayName: 'Account', formCount: 2, enabled: true },
-      { logicalName: 'contact', displayName: 'Contact', formCount: 2, enabled: true },
-      { logicalName: 'opportunity', displayName: 'Opportunity', formCount: 1, enabled: true },
-      { logicalName: 'activitypointer', displayName: 'Activity', formCount: 1, enabled: true },
+      mockTable('account', 'Account', 2),
+      mockTable('contact', 'Contact', 2),
+      mockTable('opportunity', 'Opportunity', 1),
+      mockTable('activitypointer', 'Activity', 1),
     ],
   },
 ];
