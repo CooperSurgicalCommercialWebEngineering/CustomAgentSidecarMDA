@@ -30,8 +30,7 @@ test("generated side pane uses the registered scope and dedicated popup redirect
     assert.match(html, /entitylist/);
     assert.match(html, /New conversation/);
     assert.match(html, /The current chat history will be cleared/);
-    assert.match(html, /memoryStorage/);
-    assert.doesNotMatch(html, /cacheLocation:"localStorage"/);
+    assert.match(html, /cacheLocation:"localStorage"/);
     assert.doesNotMatch(html, /hrAgentContext/);
     assert.equal((html.match(/<!doctype html>/gi) ?? []).length, 1);
 });
@@ -107,12 +106,15 @@ test("solution projections exactly match maintained web resources", async () => 
     );
 });
 
-test("authentication redirect runs the MSAL 5 broadcast bridge without loading the host app", async () => {
+test("authentication redirect completes sign-in via a same-origin localStorage handshake", async () => {
     const html = await read(solutionRoot, "authRedirect.html");
 
     assert.equal((html.match(/<!doctype html>/gi) ?? []).length, 1);
     assert.doesNotMatch(html, /main\.aspx|window\.open/i);
     assert.match(html, /Completing sign-in/);
-    assert.match(html, /BroadcastChannel/);
+    assert.match(html, /handleRedirectPromise/);
+    assert.match(html, /acquireTokenRedirect/);
+    assert.match(html, /maftagsc\.sidecar\.authResult/);
+    assert.doesNotMatch(html, /broadcastResponseToMainFrame/);
     assert.doesNotMatch(html, /HR_AGENT_AUTH_REDIRECT_BUNDLE/);
 });

@@ -108,7 +108,7 @@ const authRedirectHtml = authRedirectTemplate.replace(
 if (
     (authRedirectHtml.match(/<!doctype html>/gi) ?? []).length !== 1 ||
     authRedirectHtml.includes(authRedirectMarker) ||
-    !authRedirectHtml.includes("BroadcastChannel")
+    !authRedirectHtml.includes("handleRedirectPromise")
 ) {
     throw new Error("The generated authentication redirect page failed structural validation.");
 }

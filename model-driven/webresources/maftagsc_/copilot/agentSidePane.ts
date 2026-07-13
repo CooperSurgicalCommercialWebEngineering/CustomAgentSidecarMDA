@@ -19,6 +19,8 @@ import {
 } from "./sidecarConfiguration";
 
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
+const AUTH_REQUEST_KEY = "maftagsc.sidecar.authRequest";
+const AUTH_RESULT_PREFIX = "maftagsc.sidecar.authResult.";
 
 interface LaunchContext {
     pageType: "entityrecord" | "entitylist";
@@ -253,7 +255,7 @@ function getMsalClient(configuration: SidecarConfiguration): PublicClientApplica
                 redirectUri: `${window.location.origin}${configuration.redirectPath}`
             },
             cache: {
-                cacheLocation: "memoryStorage"
+                cacheLocation: "localStorage"
             }
         });
     }
@@ -284,6 +286,81 @@ function getCachedAccount(client: PublicClientApplication): AccountInfo | undefi
     return client.getActiveAccount() ?? client.getAllAccounts()[0];
 }
 
+/**
+ * Completes an interactive sign-in without relying on MSAL's popup broadcast
+ * bridge. Dynamics serves web resources with a Cross-Origin-Opener-Policy that
+ * severs the BroadcastChannel/opener link the bridge needs, which leaves the
+ * popup stuck on "Completing sign-in". Instead we open the dedicated redirect
+ * page as a self-contained MSAL redirect client and hand the result back through
+ * same-origin localStorage, which COOP and storage partitioning do not break for
+ * a first-party context.
+ */
+async function runInteractiveSignIn(configuration: SidecarConfiguration): Promise<void> {
+    const redirectUri = `${window.location.origin}${configuration.redirectPath}`;
+    const nonce = crypto.randomUUID();
+    const resultKey = `${AUTH_RESULT_PREFIX}${nonce}`;
+    window.localStorage.setItem(AUTH_REQUEST_KEY, JSON.stringify({
+        clientId: configuration.clientId,
+        authority: `https://login.microsoftonline.com/${configuration.tenantId}`,
+        redirectUri,
+        scope: configuration.scope,
+        nonce
+    }));
+    window.localStorage.removeItem(resultKey);
+
+    const popup = window.open(
+        `${redirectUri}?sidecarAuth=start&nonce=${encodeURIComponent(nonce)}`,
+        "maftagsc-sidecar-auth",
+        "width=520,height=680"
+    );
+    if (!popup) {
+        throw new Error("The sign-in window was blocked. Allow pop-ups for this site and try again.");
+    }
+
+    try {
+        await new Promise<void>((resolve, reject) => {
+            const deadline = Date.now() + 5 * 60 * 1000;
+            const timer = window.setInterval(() => {
+                const value = window.localStorage.getItem(resultKey);
+                if (value === "ok") {
+                    window.clearInterval(timer);
+                    resolve();
+                    return;
+                }
+                if (value && value.startsWith("error:")) {
+                    window.clearInterval(timer);
+                    reject(new Error(value.slice("error:".length) || "Sign-in failed."));
+                    return;
+                }
+                let closed = false;
+                try {
+                    closed = popup.closed;
+                } catch {
+                    closed = false;
+                }
+                if (closed) {
+                    window.clearInterval(timer);
+                    reject(new Error("Sign-in was canceled before it completed."));
+                    return;
+                }
+                if (Date.now() > deadline) {
+                    window.clearInterval(timer);
+                    reject(new Error("Sign-in timed out. Please try again."));
+                }
+            }, 300);
+        });
+    } finally {
+        window.localStorage.removeItem(resultKey);
+        try {
+            if (!popup.closed) {
+                popup.close();
+            }
+        } catch {
+            /* handle may be severed by COOP; the popup closes itself on success */
+        }
+    }
+}
+
 async function acquireToken(
     interactive: boolean,
     configuration: SidecarConfiguration
@@ -311,12 +388,17 @@ async function acquireToken(
         return null;
     }
 
-    const result: AuthenticationResult = await client.acquireTokenPopup({
+    await runInteractiveSignIn(configuration);
+
+    const signedInAccount = getCachedAccount(client);
+    if (!signedInAccount) {
+        throw new Error("Sign-in did not complete. Please try again.");
+    }
+    client.setActiveAccount(signedInAccount);
+    const result: AuthenticationResult = await client.acquireTokenSilent({
         scopes: [configuration.scope],
-        account,
-        prompt: account ? undefined : "select_account"
+        account: signedInAccount
     });
-    client.setActiveAccount(result.account);
     return result.accessToken;
 }
 
