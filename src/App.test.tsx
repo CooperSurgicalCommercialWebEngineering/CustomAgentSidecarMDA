@@ -45,8 +45,6 @@ describe('Agent Sidecar Administration', () => {
     expect((await screen.findAllByText('Field Guide')).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
-    const redirectUri = screen.getByRole('textbox', { name: /Redirect URI/ }) as HTMLInputElement;
-    expect(redirectUri.value).toBe('https://carremacodeapps.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html');
     fireEvent.change(screen.getByRole('textbox', { name: /Tenant ID/ }), { target: { value: 'not-a-guid' } });
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(await screen.findByText('Tenant ID must be a valid GUID.')).toBeTruthy();

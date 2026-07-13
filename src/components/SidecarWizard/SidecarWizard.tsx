@@ -301,8 +301,8 @@ export function SidecarWizard({
                 <ConfigField field="publicClientApplicationId" label="Public-client Application ID" required><Input value={clientId} onChange={(_, data) => setClientId(data.value)} placeholder="Create a separate Entra registration" /></ConfigField>
                 <ConfigField field="paneWidth" label="Pane width"><SpinButton min={320} max={600} value={paneWidth} onChange={(_, data) => setPaneWidth(data.value ?? 420)} /></ConfigField>
                 <ConfigField field="bindingSolutionUniqueName" label="Target Binding solution" required><Input value={solutionName} onChange={(_, data) => setSolutionName(data.value.replace(/[^A-Za-z0-9_]/g, ''))} /></ConfigField>
-                <ConfigField className={styles.full} label="Redirect URI" hint="Add this exact URI to the Entra SPA platform configuration.">
-                  <Input readOnly value="https://carremacodeapps.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html" />
+                <ConfigField className={styles.full} label="Redirect URI" hint="Use the redirect URI you registered in your Entra SPA app registration.">
+                  <Text className={styles.muted}>Register the redirect URI you recorded in your setup worksheet on the Entra SPA app registration &mdash; this environment&rsquo;s organization URL followed by <code>/WebResources/maftagsc_/copilot/authRedirect.html</code>. It must match exactly. The sidecar resolves it automatically at runtime from the current environment, so it is not stored here.</Text>
                 </ConfigField>
               </div>
               <MessageBar intent="warning"><MessageBarBody><MessageBarTitle>Administrator action required</MessageBarTitle>Add the delegated Power Platform API permission, grant tenant admin consent, and leave Certificates & secrets empty.</MessageBarBody></MessageBar>

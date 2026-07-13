@@ -26,7 +26,13 @@ type Result<T> = { data?: T; error?: unknown };
 type Form = DiscoveredForm;
 
 function message(error: unknown): string {
-  return error instanceof Error ? error.message : String(error ?? 'Unknown Dataverse error');
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object') {
+    const record = error as { message?: unknown };
+    if (typeof record.message === 'string') return record.message;
+    try { return JSON.stringify(error); } catch { return String(error); }
+  }
+  return String(error ?? 'Unknown Dataverse error');
 }
 function data<T>(result: Result<T>, operation: string): T {
   if (result.error) throw new Error(`${operation} failed: ${message(result.error)}`);
@@ -206,8 +212,8 @@ export function createRealSidecarAdministrationProvider(): SidecarAdministration
     const created = data(await SolutionsService.create({
       friendlyname: normalizedName, uniquename: normalizedName, description: marker, version: '1.0.0.0',
       enabledforsourcecontrolintegration: false, sourcecontrolsyncstatus: 0,
-      'PublisherId@odata.bind': `/publishers(${publisherId})`,
-    }), 'Create Target Binding solution');
+      'publisherid@odata.bind': `/publishers(${publisherId})`,
+    } as unknown as Parameters<typeof SolutionsService.create>[0]), 'Create Target Binding solution');
     return { id: created.solutionid, created: true };
   }
   async function validate(id: string): Promise<SidecarConfiguration> {
