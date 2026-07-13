@@ -5,6 +5,11 @@ import {
     type SidecarConfiguration
 } from "./sidecarConfiguration";
 
+// The launcher runs on every form OnLoad and writes the current record context
+// here; the already-open side pane watches this key so navigation updates the
+// live conversation without recreating the pane (which would reset the chat).
+const SIDECAR_CONTEXT_KEY_PREFIX = "maftagsc.sidecar.context.";
+
 interface FormEntity {
     getEntityName(): unknown;
     getId(): unknown;
@@ -113,9 +118,18 @@ function createPageInput(
     };
 }
 
+function writeSharedContext(paneId: string, context: LaunchContext): void {
+    try {
+        window.localStorage.setItem(`${SIDECAR_CONTEXT_KEY_PREFIX}${paneId}`, JSON.stringify(context));
+    } catch {
+        // localStorage may be unavailable; the pane falls back to its live host read.
+    }
+}
+
 async function ensurePane(formContext: FormContext): Promise<SidePane> {
     const configuration = await getConfiguration();
     const context = getLaunchContext(formContext, configuration);
+    writeSharedContext(configuration.paneId, context);
     let pane = Xrm.App.sidePanes.getPane(configuration.paneId);
 
     if (!pane) {

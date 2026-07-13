@@ -87,7 +87,9 @@ test("live page context replaces stale record details before each message", asyn
     assert.match(source, /action\.type === "WEB_CHAT\/SEND_MESSAGE"/);
     assert.match(source, /recordName: currentRecordName \?\? \(isSameRecord \? fallback\.recordName : ""\)/);
     assert.match(source, /createContextEnvelope\(currentContext, originalText, configuration\)/);
-    assert.match(source, /getCurrentContext\(activeContext, activeConfiguration\)/);
+    assert.match(source, /resolveContext\(activeContext, activeConfiguration\)/);
+    assert.match(source, /readSharedContext\(configuration, fallback\)/);
+    assert.match(source, /startNavigationWatcher\(store, configuration, context\)/);
     assert.match(source, /await sidecarConfigurationRepository\.getByAppId\(appId\)/);
 });
 

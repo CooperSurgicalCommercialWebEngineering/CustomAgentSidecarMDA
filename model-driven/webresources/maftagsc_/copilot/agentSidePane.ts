@@ -98,6 +98,7 @@ let activeToken: string | null = null;
 let activeContext: LaunchContext | null = null;
 let activeConfiguration: SidecarConfiguration | null = null;
 let resetInProgress = false;
+let navigationWatcher: number | null = null;
 
 function getRequiredElement<T extends HTMLElement>(id: string): T {
     const element = document.getElementById(id);
@@ -215,6 +216,45 @@ function getCurrentContext(
     } catch {
         return fallback;
     }
+}
+
+// The launcher writes the authoritative current-form context here on every
+// navigation. Prefer it (COOP- and partition-safe, same origin) over reading the
+// host Xrm from inside the pane, which is unreliable across frames.
+function readSharedContext(
+    configuration: SidecarConfiguration,
+    fallback: LaunchContext
+): LaunchContext | null {
+    try {
+        const raw = window.localStorage.getItem(`maftagsc.sidecar.context.${configuration.paneId}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as Partial<LaunchContext>;
+        const entityName = String(parsed.entityName ?? "").trim().toLowerCase();
+        if (!entityName || !getEntityBinding(configuration, entityName)) return null;
+        const pageType = parsed.pageType === "entitylist" || parsed.pageType === "entityrecord"
+            ? parsed.pageType
+            : "entityrecord";
+        return {
+            pageType,
+            entityName,
+            recordId: parsed.recordId ? normalizeGuid(parsed.recordId) : null,
+            recordName: typeof parsed.recordName === "string" ? parsed.recordName.slice(0, 200) : "",
+            appId: parsed.appId ?? fallback.appId
+        };
+    } catch {
+        return null;
+    }
+}
+
+function resolveContext(
+    fallback: LaunchContext,
+    configuration: SidecarConfiguration
+): LaunchContext {
+    return readSharedContext(configuration, fallback) ?? getCurrentContext(fallback, configuration);
+}
+
+function contextSignature(context: LaunchContext): string {
+    return [context.pageType, context.entityName, context.recordId ?? "", context.recordName].join("|");
 }
 
 function setStatus(message: string, isError = false): void {
@@ -508,6 +548,48 @@ function createContextStore(
     });
 }
 
+function startNavigationWatcher(
+    store: unknown,
+    configuration: SidecarConfiguration,
+    initial: LaunchContext
+): void {
+    if (navigationWatcher !== null) {
+        window.clearInterval(navigationWatcher);
+    }
+    let lastSignature = contextSignature(activeContext ?? initial);
+    navigationWatcher = window.setInterval(() => {
+        const next = resolveContext(activeContext ?? initial, configuration);
+        const signature = contextSignature(next);
+        if (signature === lastSignature) {
+            return;
+        }
+        lastSignature = signature;
+        activeContext = next;
+        const dispatch = (store as { dispatch?: (action: WebChatAction) => void }).dispatch;
+        if (typeof dispatch !== "function") {
+            return;
+        }
+        try {
+            dispatch({
+                type: "WEB_CHAT/SEND_EVENT",
+                payload: {
+                    name: "pvaSetContext",
+                    value: {
+                        CurrentAppId: next.appId,
+                        CurrentPageType: next.pageType,
+                        CurrentScreen: getScreenName(next, configuration),
+                        CurrentTable: next.entityName,
+                        CurrentRecordId: next.recordId,
+                        CurrentRecordName: next.recordName
+                    }
+                }
+            });
+        } catch {
+            // A dropped context event is recovered by the per-message envelope.
+        }
+    }, 1000);
+}
+
 function resetWebChatHost(): HTMLElement {
     const current = getRequiredElement<HTMLElement>("webchat");
     const replacement = document.createElement("div");
@@ -546,7 +628,7 @@ function renderConversation(
             return originalPostActivity(activity);
         }
 
-        const currentContext = getCurrentContext(activeContext ?? context, configuration);
+        const currentContext = resolveContext(activeContext ?? context, configuration);
         activeContext = currentContext;
 
         return originalPostActivity({
@@ -559,7 +641,7 @@ function renderConversation(
         } as Activity);
     };
     const store = createContextStore(window.WebChat, () => {
-        const currentContext = getCurrentContext(activeContext ?? context, configuration);
+        const currentContext = resolveContext(activeContext ?? context, configuration);
         activeContext = currentContext;
         return currentContext;
     }, configuration);
@@ -568,6 +650,8 @@ function renderConversation(
     const webChat = getRequiredElement<HTMLElement>("webchat");
     getRequiredElement<HTMLElement>("status").hidden = true;
     chat.hidden = false;
+
+    startNavigationWatcher(store, configuration, context);
 
     window.WebChat.renderWebChat({
         directLine: connection,
@@ -607,7 +691,7 @@ async function startNewConversation(): Promise<void> {
         resetWebChatHost();
         renderConversation(
             activeToken,
-            getCurrentContext(activeContext, activeConfiguration),
+            resolveContext(activeContext, activeConfiguration),
             activeConfiguration
         );
     } catch (error) {
