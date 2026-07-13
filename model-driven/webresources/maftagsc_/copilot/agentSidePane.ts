@@ -107,6 +107,10 @@ function getRequiredElement<T extends HTMLElement>(id: string): T {
     return element as T;
 }
 
+function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 async function parseLaunchRequest(): Promise<LaunchRequest> {
     const encoded = new URLSearchParams(window.location.search).get("data");
     if (!encoded || encoded.length > 2000) {
@@ -390,16 +394,31 @@ async function acquireToken(
 
     await runInteractiveSignIn(configuration);
 
-    const signedInAccount = getCachedAccount(client);
-    if (!signedInAccount) {
-        throw new Error("Sign-in did not complete. Please try again.");
+    // The popup completed the authorization-code exchange in its own MSAL
+    // instance that shares this origin's localStorage. This instance may not
+    // observe the newly cached account the instant the handshake resolves, so
+    // poll acquireTokenSilent briefly before giving up. (The manual "try again"
+    // only worked because the account had become visible by the second click.)
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 25; attempt += 1) {
+        const signedInAccount = getCachedAccount(client);
+        if (signedInAccount) {
+            client.setActiveAccount(signedInAccount);
+            try {
+                const result = await client.acquireTokenSilent({
+                    scopes: [configuration.scope],
+                    account: signedInAccount
+                });
+                return result.accessToken;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        await delay(120);
     }
-    client.setActiveAccount(signedInAccount);
-    const result: AuthenticationResult = await client.acquireTokenSilent({
-        scopes: [configuration.scope],
-        account: signedInAccount
-    });
-    return result.accessToken;
+    throw lastError instanceof Error
+        ? lastError
+        : new Error("Sign-in did not complete. Please try again.");
 }
 
 function getScreenName(
