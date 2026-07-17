@@ -1,180 +1,87 @@
-# Agent Sidecar Administration — Session Handoff
+# Agent Sidecar — Session Handoff
 
-## Original objective — keep this as the north star
+## What this project is now
 
-Create an administrator experience that drives the behavior of the Agent Sidecar for Model-driven Apps.
+Agent Sidecar is a **reusable capability** that adds a persistent, context-aware Copilot Studio assistant to any Dataverse model-driven app. It is deployed by importing one solution (`solution-core/AgentSidecarCore.zip`) and configured through an in-app admin wizard. **HR Management is the optional reference implementation only.** See `README.md` for the product framing.
 
-A System Administrator must be able to:
-
-1. Open the Agent Sidecar Administration Power Apps Code App.
-2. Select a Model-driven App.
-3. Select eligible tables and active main forms from that app.
-4. Select an existing published Copilot Studio agent.
-5. Configure pane behavior and delegated Microsoft identity settings.
-6. Preview the exact impact.
-7. Deploy the sidecar bindings.
-8. Validate health, detect/reconcile drift, disable, re-enable, and uninstall safely.
-
-The deliverable is a reusable administration control plane, not another HR-specific launcher. The existing HR sidecar is the compatibility/reference implementation and must remain safe.
+The core capability is **complete and working end to end** in two environments. This handoff sets up a new session to build **new features**.
 
 ## Start the next session with this request
 
-> Continue from HANDOFF.md. Keep the original objective as the north star: finish and validate the administrator experience that controls Agent Sidecar behavior. First repair the current discovery-test type error, then prove that HR Management exposes its seven app tables and active main forms in the authenticated local Power Apps host. Stay read-only in the environment. Do not mutate HR forms and do not deploy the Code App.
+> Continue from HANDOFF.md. The core Agent Sidecar capability is complete and deployed to dev and Sales CS. I want to add new features — <describe the feature>. Preserve the architecture constraints (delegated auth via the localStorage handshake, per-form binding model, deploy through the admin app, no CLI in the user-facing path). Validate with the full baseline and ship via the standard deployment pipeline below.
 
-## Current position against the objective
+## Current status — all working and deployed
 
-| Capability | Status | Notes |
+- **Admin app** (Power Apps Code App, System Administrator only): 5-step wizard — Application → Tables & forms → Agent → Identity → Review/Deploy. Deploy, disable, reconcile, and uninstall all work with **live per-form progress** and a **downloadable JSON report**.
+- **Per-form selection**: tables default off; expand a table to pick individual forms; the **Information** form is selected by default. Deploy binds only selected forms.
+- **Sign-in**: delegated MSAL PKCE completed via a same-origin **localStorage handshake** (COOP-proof); succeeds on the first attempt; loading splash title comes from the configured pane title.
+- **Navigation context**: the launcher writes the current form context to localStorage on every OnLoad; the sidecar watches it and proactively pushes a fresh `pvaSetContext` into the live conversation, plus a trusted per-message envelope.
+- **Deployed** to dev (`carremacodeapps`) and destination (`carrema Sales CS` / `org862d1967`). README repositioned as a reusable product.
+- **Green baseline**: `npm run typecheck`, `npm test` (26), `npm run lint`, `npm run build`; model-driven `node model-driven/build.mjs` + `node --test model-driven/build.test.mjs` (6).
+
+## Environments and identity
+
+| Item | Dev (source) | Destination |
 |---|---|---|
-| Administration portfolio | Implemented and connected | Authenticated host loads; zero configured apps is currently expected. |
-| Administrator authorization | Validated | Current user is recognized as System Administrator. |
-| Five-step setup wizard | Implemented | Includes selected-app state, forms-only targeting, validation, review, and exact redirect URI. |
-| Model-driven App discovery | Validated (connected) | Apps load; HR Management shows its 7 eligible tables. Root cause of the earlier empty list was the `entity` Retrieve failure below, which rejected the `Promise.all` in `discoverTargetApps`. |
-| Table/form discovery | Validated (connected) | Maps app entity components (`componenttype eq 1`) to table metadata via **RetrieveMultiple** on `entity`, then active main forms. HR Management = 7 tables, friendly names, 1 active main form each. |
-| Copilot Studio agent resolution | Validated (connected) | **HR Mgmt Classic** (`cr0b1_HRMgmtClassic`, published) resolves read-only in the wizard. |
-| Dataverse configuration storage | Provisioned | Organization-owned Sidecar Configuration and Target Binding tables exist with active alternate keys. |
-| Dataverse-backed sidecar runtime | Implemented | Existing HR static configuration remains as compatibility fallback. |
-| Preview/deploy engine | Preview validated read-only end-to-end | Wizard Review step reached; `previewDeployment` reports 7 tables / 7 active main forms with rollback protection. Deploy not performed. |
-| Lifecycle controls | Implemented, not end-to-end validated | Validation, drift detection, reconcile, disable/re-enable, rollback, and scoped uninstall exist. |
-| Solution packaging | Validated | Unmanaged export/unpack/repack and ZIP integrity passed. |
-| Code App deployment | Deployed to live env | `pac code push -s HRAgentSidecar` succeeded on 2026-07-11. App ID `71d3fa20-9990-4622-9775-11b56f2ed893`. Committed + pushed to `origin/main` (`db90c37`). |
-| Live form mutation | Not performed by this administrator | First mutation test must use a controlled non-HR form. |
+| Name | carremacodeapps | carrema Sales CS |
+| URL | `https://carremacodeapps.crm.dynamics.com` | `https://org862d1967.crm.dynamics.com` |
+| Env ID | `f9b87f8b-0abf-e629-affb-b13195d1ed14` | `7d8dcd87-2e21-e805-b9be-678794ecc80b` |
+| SPA app reg | `9d03cd77-5246-4c9c-8e9d-262bff547a25` | `51733b88-b854-441d-a253-57156285344d` |
 
-## Immediate work — COMPLETED this session
+- Tenant `d92190b9-98e7-46da-8b11-580e06c7d15d`; user `macarrer@msftbapb2bcommercial.onmicrosoft.com`.
+- Publisher `agentsidecar`, prefix `maftagsc`.
+- Solutions: **`AgentSidecarCore`** (reusable — the deliverable), `HRAgentSidecar` (HR reference).
+- Code App id `71d3fa20-9990-4622-9775-11b56f2ed893` (canvasapp `maftagsc_agentsidecar_4b928`).
+- Both SPA app regs are single-tenant SPA with delegated `CopilotStudio.Copilots.Invoke` + admin consent; redirect URI is `<org>/WebResources/maftagsc_/copilot/authRedirect.html`.
+- GitHub: `https://github.com/martycarreras-psnl/CustomAgentMDA` (branch `main`, latest `f90ada3`).
 
-The discovery defect is fixed and the read-only connected wizard journey is validated end-to-end (Application → Tables → Agent → Identity → Review). No deploy, no live form mutation.
+## Deployment pipeline
 
-### Root cause (found via the Dataverse-skills `dv-query` skill, read-only)
+**Code App changes** (wizard/admin UI in `src/`):
+1. `npm run build && pac code push -s AgentSidecarCore` (dev)
+2. `pac solution export --name AgentSidecarCore --path ./solution-core/AgentSidecarCore.zip --managed false --overwrite`
+3. `pac solution import --path ./solution-core/AgentSidecarCore.zip --environment 7d8dcd87-2e21-e805-b9be-678794ecc80b --publish-changes --force-overwrite`
+4. Commit the refreshed zip and push.
 
-- HR Management app ID: `62e8fdf6-e77b-f111-ab0e-000d3a34048c`; app metadata id (`appmoduleidunique`): `9c9d3b51-b988-4d16-9a75-9c2046dc301a`.
-- The app has seven `appmodulecomponent` records of component type `1` (entities), no type `60` form components.
-- The adapter resolved each entity metadata id with **`EntitiesService.get(id)` (Retrieve)**, but the OOB `entity` table **does not support Retrieve-by-id**: `"The 'Retrieve' method does not support entities of type 'entity'."` That threw during resolution, surfaced as *"Resolve app table metadata failed: [object Object]"*, and — because `discoverTargetApps` runs `Promise.all(targetApp per app)` — rejected the whole list, so **no apps appeared** either.
+**Web-resource changes** (side-pane runtime in `model-driven/`):
+1. `node model-driven/build.mjs` (rebuilds `solution/WebResources/maftagsc_/copilot/*`)
+2. PATCH each changed web resource's `content` (base64) via the Web API in dev, then `PublishXml`. Use `scripts/auth.py` `get_token(scope=<URL>/.default)`; URL-encode `$filter` with `urllib.parse.quote(...)`.
+3. Export from dev and import to destination as above.
 
-### Fix (in `src/services/model-driven-app-discovery.ts` + test)
+## Architecture facts to preserve
 
-1. Replaced the data-source method `getEntity(metadataId)` with **`listEntities(metadataIds[])`** using **`EntitiesService.getAll`** (RetrieveMultiple) with an `entityid eq … or …` filter — RetrieveMultiple **is** supported on `entity`.
-2. `discoverAppForms` chunks metadata ids (`ENTITY_CHUNK_SIZE = 20`) and resolves per chunk.
-3. Friendly display name now comes from **`originallocalizedname`** (e.g. "Benefit Plan"), not `name` (which returns the logical name).
-4. `componentstate eq 0` on `systemform` was confirmed queryable in-environment — **kept**.
-
-Do not manually edit generated files (`src/generated/**`). The OOB `entity` data source (`EntitiesService`, `EntitiesModel`, `.power/schemas`) and its `power.config.json` `databaseReferences` entry are already registered; the PAC host must be **restarted** after any data-source change so it reloads `power.config.json`.
-
-### Authoritative live result (read-only)
-
-HR Management → 7 tables, each 1 active main form: Benefit Enrollment, Benefit Plan, Expense Line, Expense Report, Time Off Balance, Time Off Request, Time Off Type.
-
-### Baseline
-
-`npm run typecheck`, full `npm test` (26/26), `npm run lint` (0 warnings), and `npm run build` all pass. Only the pre-existing non-blocking main-chunk size warning remains.
-
-## Next session
-
-The immediate discovery objective is complete. The next step in the original objective is the final proof point: **one controlled non-HR lifecycle test** (deploy → validate → drift/reconcile → disable/re-enable → uninstall) against a controlled non-HR form, to demonstrate the administrator — not manual form editing — safely drives sidecar behavior. Requires explicit deploy approval first.
-
-## Active local host
-
-- Vite runs on port `3001` (`npx vite --port 3001`); PAC connection host runs on port `3000` (`pac code run --port 3000 --appUrl http://localhost:3001`).
-- Play URL: `https://apps.powerapps.com/play/e/f9b87f8b-0abf-e629-affb-b13195d1ed14/app/local?_localAppUrl=http://localhost:3001&_localConnectionUrl=http://localhost:3000`.
-- Browser gotcha: a full URL navigation to the play URL drops the MSAL session; reload the top frame instead. The browser-automation page handles were unreliable this session (they resolve to the hidden MSAL login iframe) — `screenshot_page` is trustworthy; automated clicks are not, so the user drove the wizard clicks.
-- Read-only connected validation was done via the Dataverse-skills `dv-query` skill (Python SDK) — the supported path for Dataverse reads.
-
-A new session may not inherit browser-page access or server processes. Verify before assuming they remain available.
-
-## Environment and solution identity
-
-| Item | Value |
-|---|---|
-| Environment URL | `https://carremacodeapps.crm.dynamics.com` |
-| Environment ID | `f9b87f8b-0abf-e629-affb-b13195d1ed14` |
-| Organization ID | `a5550e24-4411-f111-afbe-6045bd053d21` |
-| Solution unique name | `HRAgentSidecar` |
-| Solution display name | `HR Agent Sidecar` |
-| Publisher unique name | `agentsidecar` |
-| Publisher prefix | `maftagsc` |
-| Publisher choice prefix | `70360` |
-| PAC auth profile | `pp-custo99c-d-u-6ae3eeaf` |
-| Delegated user | `macarrer@msftbapb2bcommercial.onmicrosoft.com` |
-
-Reverify environment identity before any Dataverse write, publish, solution operation, or deployment.
-
-## Safety and scope guardrails
-
-- Do not deploy the Code App without separate explicit confirmation.
-- Before deployment ask exactly: **“Ready to deploy to `https://carremacodeapps.crm.dynamics.com`? This will update the live app.”**
-- Do not use an HR form for the first metadata mutation test.
-- Do not edit `src/generated/`.
-- Do not edit solution XML while fixing app discovery.
-- Some solution XML files changed externally during the prior work; reread current contents before any later solution edit.
-- Keep generated services behind adapters; components must not call them directly.
-- Preserve delegated Microsoft identity and user-scoped authorization.
-- Do not add secrets, direct database clients, a custom backend, or non-Power-Platform hosting.
-- Avoid renewed MCP/token-broker investigation unless it directly blocks the administration journey.
-- Do not broaden scope into further packaging or lifecycle hardening until discovery and the read-only wizard journey pass.
-
-## Implemented administration architecture
-
-- React 18, TypeScript, Vite, Fluent UI v9, TanStack Query.
-- `HashRouter`, Power Apps host port 3000, production `base: './'`.
-- Components render; hooks orchestrate; provider/services abstract data; generated services stay behind adapters.
-- Mock and connected providers implement the same contract.
-- `src/services/real-sidecar-admin-provider.ts` handles connected discovery and lifecycle operations.
-- `src/services/sidecar-provider-factory.ts` selects mock data in tests or when `VITE_USE_MOCK=true`, otherwise loads the connected provider.
-- Dataverse tables:
-  - `maftagsc_sidecarconfiguration`
-  - `maftagsc_targetbinding`
-- Alternate keys:
-  - `maftagsc_sidecarconfiguration_appid_key`
-  - `maftagsc_targetbinding_form_key`
-- Exact redirect URI:
-  - `https://carremacodeapps.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html`
-- Runtime library/function:
-  - `maftagsc_/copilot/hrAgentSidePane.js`
-  - `AgentSidecar.initializeGuide`
-
-## Previously passing validation baseline
-
-Before the partial discovery change:
-
-- Code App typecheck passed.
-- Model-driven TypeScript passed.
-- ESLint passed.
-- UI tests passed: 24/24.
-- Model-driven tests passed: 6/6.
-- Production build passed with a non-blocking main-chunk size warning.
-- Both administration alternate keys were active.
-- Solution export/unpack/repack and ZIP integrity passed.
-- Connected host rendered successfully.
-- Administrator authorization and empty configuration listing passed.
-
-The new discovery source and adapter have not yet restored this complete green baseline.
+- **Runtime auth is delegated MSAL PKCE** (scope `CopilotStudio.Copilots.Invoke`) + `CopilotStudioWebChat`. It does **not** call the token-broker Custom API (`maftagsc_GetDirectLineToken`); that plugin/step is disabled and off the critical path.
+- **Sign-in completion**: `authRedirect.ts` is a self-contained MSAL redirect client that reports via same-origin `localStorage`; `agentSidePane.ts` opens it as a popup and polls. **Do not** reintroduce `acquireTokenPopup` or the MSAL redirect-bridge (`broadcastResponseToMainFrame`) — Dynamics' COOP header breaks it.
+- **Context sync**: `agentSidePaneLauncher.ts` writes `maftagsc.sidecar.context.<paneId>` on each OnLoad; `agentSidePane.ts` `readSharedContext` + a 1s navigation watcher pushes `pvaSetContext`.
+- **Per-form model**: `TargetTable.forms[] {formId, name, enabled}`; deploy binds only `enabled` forms; `src/lib/target-forms.ts` picks the Information default.
+- Three-layer: components render, hooks orchestrate, providers/services behind adapters; `src/generated/**` is read-only. `HashRouter`. Vite port 3001 / PAC host port 3000. `base: './'` for production build.
 
 ## Key files
 
-- `AGENTS.md` — repository-wide constraints.
-- `CONTEXT.md` — canonical business glossary.
-- `HANDOFF.md` — this focused handoff.
-- `src/components/SidecarWizard/SidecarWizard.tsx` — administrator setup journey.
-- `src/services/real-sidecar-admin-provider.ts` — connected provider and lifecycle engine.
-- `src/services/model-driven-app-discovery.ts` — new discovery adapter under active development.
-- `src/services/model-driven-app-discovery.test.ts` — current regression tests and type failure.
-- `src/generated/services/EntitiesService.ts` — generated metadata client; read-only.
-- `src/services/dataverse-custom-api.ts` — generated operation wrappers.
-- `src/services/sidecar-admin-contracts.ts` — provider contract.
-- `src/types/sidecar-admin-models.ts` — administration domain models.
-- `dataverse/planning-payload.json` — reusable platform plan.
-- `dataverse/prototype-feedback.md` — prototype and implementation decisions; update after connected validation.
-- `docs/adr/0005-use-code-app-for-sidecar-administration.md` — administrator technology decision.
-- `docs/adr/0006-use-dedicated-sidecar-configuration-schema.md` — schema decision.
+- `src/components/SidecarWizard/SidecarWizard.tsx` — wizard (per-form selection, progress banner).
+- `src/services/real-sidecar-admin-provider.ts` — connected provider + deploy/lifecycle engine.
+- `src/services/mock-sidecar-admin-provider.ts`, `src/mockData/sidecarAdministration.ts` — mock/dev provider and data.
+- `src/hooks/useOperationReport.ts`, `src/components/OperationProgress/OperationProgress.tsx` — progress + downloadable report.
+- `src/lib/target-forms.ts` — Information-form default helper.
+- `model-driven/webresources/maftagsc_/copilot/agentSidePane.ts` (sidecar), `agentSidePaneLauncher.ts` (launcher), `authRedirect.ts` (sign-in), `agentSidePane.template.html`.
+- `model-driven/build.mjs`, `model-driven/build.test.mjs`.
+- `docs/setup-guide/AgentSidecarSetupGuide.html` — interactive setup guide + values worksheet (includes the Agents SDK connection string).
+- `README.md` — product framing. `AGENTS.md` — repo constraints. `CONTEXT.md` — glossary.
+- Repo memory: `/memories/repo/environments.md`, `/memories/repo/dataverse-auth.md`.
 
-## Definition of done for the immediate continuation
+## Backlog / candidate new features
 
-The next session should consider its immediate task complete only when:
+- Package `AgentSidecarCore` as a **managed** solution for distribution (currently unmanaged).
+- Validate **multiple sidecars** across several apps in one environment (already keyed per app).
+- **Auto-enable newly added tables** via drift reconcile (`autoEnableNewTables` flag exists).
+- Cleanup UX for **Conflict** validation bindings (deprecated/system forms).
+- **Automated tests** for the new surfaces: `useOperationReport`, per-form wizard behavior, navigation watcher.
+- Optional: real screenshots in the setup guide (`figure.shot` is currently hidden).
+- Optional: remove the unused token-broker Custom API/plugin from the Core solution.
 
-- The partial discovery implementation typechecks.
-- Its regression tests pass.
-- The complete validation baseline is green.
-- The authenticated wizard shows HR Management with seven eligible tables and correct active main-form counts.
-- Friendly labels are shown.
-- HR Mgmt Classic resolves read-only.
-- No Code App deployment or live form mutation has occurred.
+## Guardrails
 
-After that, the project returns to the original objective’s final proof point: one controlled non-HR lifecycle test demonstrating that the administrator—not manual form editing—can safely drive Agent Sidecar behavior.
+- **Deploy performs live form mutations.** Get explicit approval before deploying in an environment you care about — testing deploy in dev mutates the HR forms.
+- Reverify the environment (`pac org who`) before any write/publish/import.
+- Do not edit `src/generated/**`. Do not reintroduce CLI/build steps into the user-facing README path.
+- Preserve delegated identity and user-scoped authorization; no secrets, no direct DB clients, no non-Power-Platform hosting.
