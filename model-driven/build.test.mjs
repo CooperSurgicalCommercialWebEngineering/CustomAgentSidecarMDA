@@ -22,6 +22,8 @@ test("generated side pane uses the registered scope and dedicated popup redirect
     assert.match(html, /CurrentAppId/);
     assert.match(html, /CurrentPageType/);
     assert.match(html, /CurrentRecordId/);
+    assert.match(html, /CurrentUserRoles/);
+    assert.match(html, /signed-in user holds these roles/);
     assert.match(html, /Benefit Plan record form/);
     assert.match(html, /Segoe UI Web \(West European\)/);
     assert.match(html, /primaryFont/);
@@ -91,6 +93,39 @@ test("live page context replaces stale record details before each message", asyn
     assert.match(source, /readSharedContext\(configuration, fallback\)/);
     assert.match(source, /startNavigationWatcher\(store, configuration, context\)/);
     assert.match(source, /await sidecarConfigurationRepository\.getByAppId\(appId\)/);
+});
+
+test("signed-in user security roles flow into the agent context", async () => {
+    const paneSource = await read(sourceRoot, "agentSidePane.ts");
+    const launcherSource = await read(sourceRoot, "agentSidePaneLauncher.ts");
+    const rolesSource = await read(sourceRoot, "sidecarUserRoles.ts");
+
+    // Launcher captures role names from the host global context and hands them
+    // off through the same-origin localStorage channel (not the URL payload).
+    assert.match(launcherSource, /userSettings\?\.roles\?\.getAll/);
+    assert.match(launcherSource, /roles: getUserRoles\(\)/);
+    assert.match(launcherSource, /normalizeUserRoles/);
+
+    // Pane parses, reads shared roles, signs on them, and surfaces them in both
+    // the pvaSetContext event and the trusted per-message envelope.
+    assert.match(paneSource, /roles: normalizeUserRoles\(value\.roles\)/);
+    assert.match(paneSource, /parsed\.roles !== undefined \? normalizeUserRoles\(parsed\.roles\) : fallback\.roles/);
+    assert.match(paneSource, /context\.roles\.join\(","\)/);
+    assert.match(paneSource, /formatUserRolesLine\(context\.roles\)/);
+    assert.match(paneSource, /CurrentUserRoles: serializeUserRoles\(context\.roles\)/);
+    assert.match(paneSource, /CurrentUserRoles: serializeUserRoles\(next\.roles\)/);
+
+    // Roles are de-duplicated and bounded; only role names are handled.
+    assert.match(rolesSource, /MAX_USER_ROLES/);
+    assert.match(rolesSource, /MAX_ROLE_NAME_LENGTH/);
+    assert.match(rolesSource, /signed-in user holds these roles/);
+
+    // Built artifacts carry the new variable and envelope line.
+    const html = await read(sourceRoot, "agentSidePane.html");
+    const launcher = await read(sourceRoot, "agentSidePane.js");
+    assert.match(html, /CurrentUserRoles/);
+    assert.match(html, /signed-in user holds these roles/);
+    assert.match(launcher, /getAll/);
 });
 
 test("solution projections exactly match maintained web resources", async () => {

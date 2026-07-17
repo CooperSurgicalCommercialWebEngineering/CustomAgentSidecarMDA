@@ -4,6 +4,7 @@ import {
     normalizeGuid,
     type SidecarConfiguration
 } from "./sidecarConfiguration";
+import { normalizeUserRoles } from "./sidecarUserRoles";
 
 // The launcher runs on every form OnLoad and writes the current record context
 // here; the already-open side pane watches this key so navigation updates the
@@ -30,15 +31,28 @@ interface AppProperties {
     appId?: unknown;
 }
 
+interface UserRole {
+    name?: unknown;
+}
+
+interface UserSettings {
+    roles?: {
+        getAll?(): ReadonlyArray<UserRole>;
+    };
+}
+
+interface GlobalContext {
+    getCurrentAppProperties(): Promise<AppProperties>;
+    userSettings?: UserSettings;
+}
+
 interface SidePane {
     navigate(input: Record<string, unknown>): Promise<void>;
 }
 
 interface XrmApi {
     Utility: {
-        getGlobalContext(): {
-            getCurrentAppProperties(): Promise<AppProperties>;
-        };
+        getGlobalContext(): GlobalContext;
     };
     App: {
         sidePanes: {
@@ -67,11 +81,24 @@ interface LaunchContext {
     recordId: string | null;
     recordName: string;
     appId: string;
+    roles: string[];
 }
 
 async function getConfiguration(): Promise<SidecarConfiguration> {
     const appProperties = await Xrm.Utility.getGlobalContext().getCurrentAppProperties();
     return sidecarConfigurationRepository.getByAppId(appProperties.appId);
+}
+
+// Read the signed-in user's Dataverse security-role names from the host global
+// context. These are passed to the agent as context only — never used to grant
+// or restrict access. Only role names are read (no ids, no other user data).
+function getUserRoles(): string[] {
+    try {
+        const roleItems = Xrm.Utility.getGlobalContext().userSettings?.roles?.getAll?.() ?? [];
+        return normalizeUserRoles(roleItems.map((role) => role?.name));
+    } catch {
+        return [];
+    }
 }
 
 function getLaunchContext(
@@ -103,7 +130,8 @@ function getLaunchContext(
         entityName,
         recordId,
         recordName,
-        appId: configuration.appId
+        appId: configuration.appId,
+        roles: getUserRoles()
     };
 }
 
@@ -111,10 +139,19 @@ function createPageInput(
     configuration: SidecarConfiguration,
     context: LaunchContext
 ): Record<string, unknown> {
+    // Roles travel through the same-origin localStorage handoff, not the URL
+    // payload, so the serialized launch data stays well under the pane's size
+    // cap regardless of how many roles the user holds.
     return {
         pageType: "webresource",
         webresourceName: configuration.webResourceName,
-        data: JSON.stringify(context)
+        data: JSON.stringify({
+            pageType: context.pageType,
+            entityName: context.entityName,
+            recordId: context.recordId,
+            recordName: context.recordName,
+            appId: context.appId
+        })
     };
 }
 

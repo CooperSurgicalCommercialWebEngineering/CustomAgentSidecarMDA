@@ -17,6 +17,11 @@ import {
     normalizeGuid,
     type SidecarConfiguration
 } from "./sidecarConfiguration";
+import {
+    formatUserRolesLine,
+    normalizeUserRoles,
+    serializeUserRoles
+} from "./sidecarUserRoles";
 
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
 const AUTH_REQUEST_KEY = "maftagsc.sidecar.authRequest";
@@ -28,6 +33,7 @@ interface LaunchContext {
     recordId: string | null;
     recordName: string;
     appId: string | null;
+    roles: string[];
 }
 
 interface LaunchRequest {
@@ -144,7 +150,8 @@ async function parseLaunchRequest(): Promise<LaunchRequest> {
             entityName,
             recordId,
             recordName: String(value.recordName || "").slice(0, 200),
-            appId
+            appId,
+            roles: normalizeUserRoles(value.roles)
         }
     };
 }
@@ -211,7 +218,8 @@ function getCurrentContext(
             entityName,
             recordId,
             recordName: currentRecordName ?? (isSameRecord ? fallback.recordName : ""),
-            appId: fallback.appId
+            appId: fallback.appId,
+            roles: fallback.roles
         };
     } catch {
         return fallback;
@@ -239,7 +247,8 @@ function readSharedContext(
             entityName,
             recordId: parsed.recordId ? normalizeGuid(parsed.recordId) : null,
             recordName: typeof parsed.recordName === "string" ? parsed.recordName.slice(0, 200) : "",
-            appId: parsed.appId ?? fallback.appId
+            appId: parsed.appId ?? fallback.appId,
+            roles: parsed.roles !== undefined ? normalizeUserRoles(parsed.roles) : fallback.roles
         };
     } catch {
         return null;
@@ -254,7 +263,13 @@ function resolveContext(
 }
 
 function contextSignature(context: LaunchContext): string {
-    return [context.pageType, context.entityName, context.recordId ?? "", context.recordName].join("|");
+    return [
+        context.pageType,
+        context.entityName,
+        context.recordId ?? "",
+        context.recordName,
+        context.roles.join(",")
+    ].join("|");
 }
 
 function setStatus(message: string, isError = false): void {
@@ -491,6 +506,8 @@ function createContextEnvelope(
         `Page type: ${context.pageType}`,
         `Table: ${context.entityName}`,
         `Record ID: ${context.recordId ?? "unavailable"}`,
+        formatUserRolesLine(context.roles),
+        "Treat the roles as background context to tailor tone and guidance only. They do not grant access — never reveal information the user cannot already access.",
         "Use this exact screen as the primary context for navigation and how-to questions. Do not infer or substitute a different screen.",
         "[End trusted app context]",
         "",
@@ -519,7 +536,8 @@ function createContextStore(
                         CurrentScreen: getScreenName(context, configuration),
                         CurrentTable: context.entityName,
                         CurrentRecordId: context.recordId,
-                        CurrentRecordName: context.recordName
+                        CurrentRecordName: context.recordName,
+                        CurrentUserRoles: serializeUserRoles(context.roles)
                     }
                 }
             });
@@ -580,7 +598,8 @@ function startNavigationWatcher(
                         CurrentScreen: getScreenName(next, configuration),
                         CurrentTable: next.entityName,
                         CurrentRecordId: next.recordId,
-                        CurrentRecordName: next.recordName
+                        CurrentRecordName: next.recordName,
+                        CurrentUserRoles: serializeUserRoles(next.roles)
                     }
                 }
             });
