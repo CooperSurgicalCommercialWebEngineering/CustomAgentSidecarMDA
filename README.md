@@ -4,6 +4,12 @@ Agent Sidecar adds a persistent, context-aware Copilot Studio assistant to any D
 
 You stand it up by importing one solution and configuring it through an in-app wizard. There is no scripting to write and nothing to build; everything happens through solution management and the administration app.
 
+## What's new
+
+- **🆕 Role-aware context.** The sidecar now passes the signed-in user's **Dataverse security-role names** to the agent alongside the page and record context, so the assistant can tailor its tone and guidance to who the person is. Roles ride in the same trusted per-message envelope as the rest of the context (and are also exposed as a `CurrentUserRoles` variable for topic branching), so they update on sign-in and require no Copilot Studio variable setup to take effect. Roles are treated as **context only, never authorization** — the agent's knowledge stays gated by each user's own delegated permissions, only role names are used, and no role data is logged.
+- **Navigation-aware conversation.** The open pane follows the user as they move between records and forms, refreshing the agent's context without resetting the chat.
+- **Per-form selection.** Choose exactly which forms get the sidecar; the **Information** form is selected by default.
+
 ## What you get
 
 - A **persistent side pane** on the forms you select, keyed per app, that stays open and keeps its conversation as users navigate between records.
