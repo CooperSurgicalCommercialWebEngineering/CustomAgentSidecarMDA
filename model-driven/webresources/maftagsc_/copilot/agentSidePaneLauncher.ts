@@ -35,10 +35,18 @@ interface UserRole {
     name?: unknown;
 }
 
+// Xrm exposes userSettings.roles as an ItemCollection. The documented accessor
+// is get() (returns the full array when called with no arguments); older/other
+// hosts may expose getAll() or only forEach(). Support all three so role names
+// are read reliably regardless of the host's collection surface.
+interface UserRoleCollection {
+    get?(): ReadonlyArray<UserRole> | undefined;
+    getAll?(): ReadonlyArray<UserRole> | undefined;
+    forEach?(callback: (role: UserRole) => void): void;
+}
+
 interface UserSettings {
-    roles?: {
-        getAll?(): ReadonlyArray<UserRole>;
-    };
+    roles?: UserRoleCollection;
 }
 
 interface GlobalContext {
@@ -94,8 +102,21 @@ async function getConfiguration(): Promise<SidecarConfiguration> {
 // or restrict access. Only role names are read (no ids, no other user data).
 function getUserRoles(): string[] {
     try {
-        const roleItems = Xrm.Utility.getGlobalContext().userSettings?.roles?.getAll?.() ?? [];
-        return normalizeUserRoles(roleItems.map((role) => role?.name));
+        const roles = Xrm.Utility.getGlobalContext().userSettings?.roles;
+        if (!roles) {
+            return [];
+        }
+        let items: ReadonlyArray<UserRole> = [];
+        if (typeof roles.get === "function") {
+            items = roles.get() ?? [];
+        } else if (typeof roles.getAll === "function") {
+            items = roles.getAll() ?? [];
+        } else if (typeof roles.forEach === "function") {
+            const collected: UserRole[] = [];
+            roles.forEach((role) => collected.push(role));
+            items = collected;
+        }
+        return normalizeUserRoles(items.map((role) => role?.name));
     } catch {
         return [];
     }

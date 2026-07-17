@@ -102,7 +102,10 @@ test("signed-in user security roles flow into the agent context", async () => {
 
     // Launcher captures role names from the host global context and hands them
     // off through the same-origin localStorage channel (not the URL payload).
-    assert.match(launcherSource, /userSettings\?\.roles\?\.getAll/);
+    // The documented ItemCollection accessor is get(); getAll()/forEach are
+    // supported as fallbacks.
+    assert.match(launcherSource, /userSettings\?\.roles/);
+    assert.match(launcherSource, /typeof roles\.get === "function"/);
     assert.match(launcherSource, /roles: getUserRoles\(\)/);
     assert.match(launcherSource, /normalizeUserRoles/);
 
