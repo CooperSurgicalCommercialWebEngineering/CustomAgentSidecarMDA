@@ -22,6 +22,7 @@ import {
     normalizeUserRoles,
     serializeUserRoles
 } from "./sidecarUserRoles";
+import { sidecarStyleOptions } from "./sidecarStyleOptions";
 
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
 const AUTH_REQUEST_KEY = "maftagsc.sidecar.authRequest";
@@ -675,13 +676,7 @@ function renderConversation(
     window.WebChat.renderWebChat({
         directLine: connection,
         store,
-        styleOptions: {
-            accent: "#0f6cbd",
-            primaryFont: "\"Segoe UI\", \"Segoe UI Web (West European)\", -apple-system, system-ui, Roboto, \"Helvetica Neue\", sans-serif",
-            bubbleBackground: "#f5f5f5",
-            bubbleFromUserBackground: "#deecf9",
-            hideUploadButton: true
-        }
+        styleOptions: sidecarStyleOptions
     }, webChat);
 
     activeConnection = connection;
