@@ -5,9 +5,10 @@
  * (model-driven/preview/preview.ts).
  */
 export const sidecarStyleOptions: Record<string, unknown> = {
-    accent: "#0f6cbd",
-    primaryFont: "\"Segoe UI\", \"Segoe UI Web (West European)\", -apple-system, system-ui, Roboto, \"Helvetica Neue\", sans-serif",
-    bubbleBackground: "#f5f5f5",
-    bubbleFromUserBackground: "#deecf9",
-    hideUploadButton: true
+  accent: '#3FB27F',
+  primaryFont:
+    '"Segoe UI", "Segoe UI Web (West European)", -apple-system, system-ui, Roboto, "Helvetica Neue", sans-serif',
+  bubbleBackground: '#f5f5f5',
+  bubbleFromUserBackground: '#3FB27F',
+  hideUploadButton: true,
 };
