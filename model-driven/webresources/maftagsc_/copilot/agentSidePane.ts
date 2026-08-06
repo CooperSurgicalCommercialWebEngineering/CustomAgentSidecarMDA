@@ -287,8 +287,10 @@ function showSignIn(): void {
 function applyPaneTitle(title: string): void {
     const safeTitle = (title ?? "").trim() || "Agent Sidecar";
     document.title = safeTitle;
-    const heading = document.getElementById("guide-title");
-    if (heading) heading.textContent = safeTitle;
+    for (const elementId of ["guide-title", "chat-title"]) {
+        const heading = document.getElementById(elementId);
+        if (heading) heading.textContent = safeTitle;
+    }
     const chat = document.getElementById("chat");
     if (chat) chat.setAttribute("aria-label", `${safeTitle} conversation`);
 }
@@ -676,11 +678,46 @@ function renderConversation(
         directLine: connection,
         store,
         styleOptions: {
-            accent: "#0f6cbd",
+            accent: "#005596",
             primaryFont: "\"Segoe UI\", \"Segoe UI Web (West European)\", -apple-system, system-ui, Roboto, \"Helvetica Neue\", sans-serif",
-            bubbleBackground: "#f5f5f5",
-            bubbleFromUserBackground: "#deecf9",
-            hideUploadButton: true
+            backgroundColor: "#f7fafc",
+            bubbleBackground: "#ffffff",
+            bubbleBorderColor: "#dbe5eb",
+            bubbleBorderRadius: 18,
+            bubbleBorderStyle: "solid",
+            bubbleBorderWidth: 1,
+            bubbleNubOffset: 16,
+            bubbleNubSize: 8,
+            bubbleTextColor: "#3f4143",
+            bubbleFromUserBackground: "#005596",
+            bubbleFromUserBorderColor: "#005596",
+            bubbleFromUserBorderRadius: 18,
+            bubbleFromUserBorderStyle: "solid",
+            bubbleFromUserBorderWidth: 1,
+            bubbleFromUserNubOffset: 16,
+            bubbleFromUserNubSize: 8,
+            bubbleFromUserTextColor: "#ffffff",
+            bubbleMessageMaxWidth: 340,
+            bubbleMinHeight: 38,
+            hideUploadButton: true,
+            messageActivityWordBreak: "break-word",
+            paddingRegular: 12,
+            paddingWide: 16,
+            sendBoxBackground: "#ffffff",
+            sendBoxBorderTop: "solid 1px #dbe5eb",
+            sendBoxButtonColor: "#005596",
+            sendBoxButtonColorOnHover: "#6c2196",
+            sendBoxButtonShadeBorderRadius: 999,
+            sendBoxHeight: 58,
+            sendBoxPlaceholderColor: "#73777a",
+            sendBoxTextColor: "#3f4143",
+            subtleColor: "#636466",
+            suggestedActionBackgroundColor: "#ffffff",
+            suggestedActionBackgroundColorOnHover: "#e8f3f8",
+            suggestedActionBorderColor: "#005596",
+            suggestedActionBorderRadius: 999,
+            suggestedActionBorderWidth: 1,
+            suggestedActionTextColor: "#005596"
         }
     }, webChat);
 

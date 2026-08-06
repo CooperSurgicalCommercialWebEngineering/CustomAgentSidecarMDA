@@ -23,8 +23,17 @@ jobs:
       - name: Type Check
         run: npm run typecheck
 
+      - name: Model-driven Type Check
+        run: npm run typecheck:model-driven
+
       - name: Unit Tests
         run: npm run test
+
+      - name: Build Model-driven Resources
+        run: npm run build:model-driven
+
+      - name: Model-driven Tests
+        run: npm run test:model-driven
 
       - name: Build
         run: npm run build

@@ -100,35 +100,42 @@ test("signed-in user security roles flow into the agent context", async () => {
     const launcherSource = await read(sourceRoot, "agentSidePaneLauncher.ts");
     const rolesSource = await read(sourceRoot, "sidecarUserRoles.ts");
 
-    // Launcher captures role names from the host global context and hands them
-    // off through the same-origin localStorage channel (not the URL payload).
-    // The documented ItemCollection accessor is get(); getAll()/forEach are
-    // supported as fallbacks.
     assert.match(launcherSource, /userSettings\?\.roles/);
     assert.match(launcherSource, /typeof roles\.get === "function"/);
     assert.match(launcherSource, /roles: getUserRoles\(\)/);
     assert.match(launcherSource, /normalizeUserRoles/);
-
-    // Pane parses, reads shared roles, signs on them, and surfaces them in both
-    // the pvaSetContext event and the trusted per-message envelope.
     assert.match(paneSource, /roles: normalizeUserRoles\(value\.roles\)/);
     assert.match(paneSource, /parsed\.roles !== undefined \? normalizeUserRoles\(parsed\.roles\) : fallback\.roles/);
     assert.match(paneSource, /context\.roles\.join\(","\)/);
     assert.match(paneSource, /formatUserRolesLine\(context\.roles\)/);
     assert.match(paneSource, /CurrentUserRoles: serializeUserRoles\(context\.roles\)/);
     assert.match(paneSource, /CurrentUserRoles: serializeUserRoles\(next\.roles\)/);
-
-    // Roles are de-duplicated and bounded; only role names are handled.
     assert.match(rolesSource, /MAX_USER_ROLES/);
     assert.match(rolesSource, /MAX_ROLE_NAME_LENGTH/);
     assert.match(rolesSource, /signed-in user holds these roles/);
 
-    // Built artifacts carry the new variable and envelope line.
     const html = await read(sourceRoot, "agentSidePane.html");
     const launcher = await read(sourceRoot, "agentSidePane.js");
     assert.match(html, /CurrentUserRoles/);
     assert.match(html, /signed-in user holds these roles/);
     assert.match(launcher, /getAll/);
+});
+
+test("side pane applies the CooperSurgical-inspired conversation theme", async () => {
+    const source = await read(sourceRoot, "agentSidePane.ts");
+    const template = await read(sourceRoot, "agentSidePane.template.html");
+
+    assert.match(source, /accent: "#005596"/);
+    assert.match(source, /bubbleBorderRadius: 18/);
+    assert.match(source, /bubbleNubSize: 8/);
+    assert.match(source, /bubbleFromUserBackground: "#005596"/);
+    assert.match(source, /bubbleFromUserTextColor: "#ffffff"/);
+    assert.match(source, /sendBoxButtonColorOnHover: "#6c2196"/);
+    assert.match(template, /--cooper-blue: #005596/);
+    assert.match(template, /class="brand-orb"/);
+    assert.match(template, /id="chat-title"/);
+    assert.match(template, /webchat__bubble--from-user/);
+    assert.match(source, /\["guide-title", "chat-title"\]/);
 });
 
 test("solution projections exactly match maintained web resources", async () => {
@@ -146,15 +153,12 @@ test("solution projections exactly match maintained web resources", async () => 
     );
 });
 
-test("authentication redirect completes sign-in via a same-origin localStorage handshake", async () => {
+test("authentication redirect runs the MSAL 5 broadcast bridge without loading the host app", async () => {
     const html = await read(solutionRoot, "authRedirect.html");
 
     assert.equal((html.match(/<!doctype html>/gi) ?? []).length, 1);
     assert.doesNotMatch(html, /main\.aspx|window\.open/i);
     assert.match(html, /Completing sign-in/);
-    assert.match(html, /handleRedirectPromise/);
-    assert.match(html, /acquireTokenRedirect/);
-    assert.match(html, /maftagsc\.sidecar\.authResult/);
-    assert.doesNotMatch(html, /broadcastResponseToMainFrame/);
+    assert.match(html, /BroadcastChannel/);
     assert.doesNotMatch(html, /HR_AGENT_AUTH_REDIRECT_BUNDLE/);
 });
