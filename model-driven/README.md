@@ -48,6 +48,60 @@ The app-keyed compatibility runtime was deployed in place to the existing
 approval. Any later import or publish still requires target-environment
 confirmation and the repository's deployment safeguards.
 
+## Redesigning the sidecar UI
+
+The pane's entire visual design lives in two files:
+
+| File | Controls |
+|---|---|
+| `webresources/maftagsc_/copilot/agentSidePane.template.html` | The shell: status card, spinner, Sign in / Try again buttons, toolbar, New conversation button, fonts, colors (the `<style>` block) |
+| `webresources/maftagsc_/copilot/sidecarStyleOptions.ts` | The chat conversation: Bot Framework Web Chat style tokens (accent, bubbles, send box, avatars, and [any other Web Chat styleOption](https://github.com/microsoft/BotFramework-WebChat/blob/main/docs/API.md#style-options)) |
+
+Both are the single source of truth for production **and** the local preview, so
+what you see in the preview is exactly what ships.
+
+### 1. Preview while you edit (no Dataverse needed)
+
+```text
+pnpm run dev:sidecar-preview
+```
+
+Open http://localhost:5178. The pane renders with a mock conversation; the
+toolbar in the top-left switches between the Loading / Sign in / Error / Chat
+states, and typing a message shows both bubble styles. The server rebuilds on
+every request — edit either styling file, save, refresh the browser. Stop with
+`Ctrl+C`. (Port 5178; 3000 is reserved for the Code App.)
+
+The preview harness lives in `model-driven/preview/` and never ships in the
+solution.
+
+### 2. Verify
+
+```text
+pnpm run test:model-driven
+```
+
+Runs the build validations, preview harness tests, and solution repack test.
+
+### 3. Package the importable solution
+
+```text
+pnpm run package:solution-core
+```
+
+This rebuilds the web resources and rewrites
+`solution-core/AgentSidecarCore.zip` in place: the four sidecar web resources
+are replaced with the fresh build and the solution version is bumped (e.g.
+`1.0.0.1` → `1.0.0.2`). Send the zip to whoever administers the target
+environment — they import it at make.powerapps.com → **Solutions → Import**,
+choosing **Upgrade**. Existing sidecar configuration lives in Dataverse data,
+not the solution, so it survives the upgrade.
+
+**Scope limit:** the repack updates web resources only. Changes to schema, the
+administration Code App, or plugins must go through the canonical pipeline in
+`HANDOFF.md` (deploy to dev, `pac solution export`). Test-import the repacked
+zip in a dev environment before distributing it broadly.
+
 ## Side-pane smoke test
 
 1. Open a saved Benefit Plan in the **HR Management** Model-driven App.
