@@ -122,20 +122,22 @@ test("signed-in user security roles flow into the agent context", async () => {
 });
 
 test("side pane applies the CooperSurgical-inspired conversation theme", async () => {
-    const source = await read(sourceRoot, "agentSidePane.ts");
+    const paneSource = await read(sourceRoot, "agentSidePane.ts");
+    const styleSource = await read(sourceRoot, "sidecarStyleOptions.ts");
     const template = await read(sourceRoot, "agentSidePane.template.html");
 
-    assert.match(source, /accent: "#005596"/);
-    assert.match(source, /bubbleBorderRadius: 18/);
-    assert.match(source, /bubbleNubSize: 8/);
-    assert.match(source, /bubbleFromUserBackground: "#005596"/);
-    assert.match(source, /bubbleFromUserTextColor: "#ffffff"/);
-    assert.match(source, /sendBoxButtonColorOnHover: "#6c2196"/);
+    assert.match(paneSource, /sidecarStyleOptions/);
+    assert.match(styleSource, /accent: "#005596"/);
+    assert.match(styleSource, /bubbleBorderRadius: 18/);
+    assert.match(styleSource, /bubbleNubSize: 8/);
+    assert.match(styleSource, /bubbleFromUserBackground: "#005596"/);
+    assert.match(styleSource, /bubbleFromUserTextColor: "#ffffff"/);
+    assert.match(styleSource, /sendBoxButtonColorOnHover: "#6c2196"/);
     assert.match(template, /--cooper-blue: #005596/);
     assert.match(template, /class="brand-orb"/);
     assert.match(template, /id="chat-title"/);
     assert.match(template, /webchat__bubble--from-user/);
-    assert.match(source, /\["guide-title", "chat-title"\]/);
+    assert.match(paneSource, /\["guide-title", "chat-title"\]/);
 });
 
 test("solution projections exactly match maintained web resources", async () => {
