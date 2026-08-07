@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Sidecar — Styling & Release Guide</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--cp-bg);color:var(--cp-text);font:16px/1.6 "Segoe UI",Aptos,Calibri,-apple-system,BlinkMacSystemFont,sans-serif} code,pre{font-family:Consolas,"Courier New",Courier,monospace} a{color:var(--cp-link)}
+#progress{position:fixed;inset:0 auto auto 0;width:0;height:4px;background:var(--cp-accent);z-index:20}.layout{display:grid;grid-template-columns:280px minmax(0,1fr)} aside{position:sticky;top:0;height:100vh;overflow:auto;background:var(--cp-bg-elevated);border-right:1px solid var(--cp-border);padding:24px 18px}.brand{display:flex;gap:12px;align-items:center}.mark{width:40px;height:40px;border-radius:10px;background:var(--cp-accent);color:var(--cp-accent-fg);display:grid;place-items:center;font-weight:800}.brand strong{display:block}.brand small,.muted{color:var(--cp-text-muted)} nav{margin-top:24px}nav a{display:flex;gap:10px;padding:8px 10px;border-radius:10px;color:var(--cp-text-muted);text-decoration:none;font-size:14px}nav a:hover,nav a.active{background:var(--cp-accent-soft);color:var(--cp-accent)}nav span{width:22px;font-weight:700}.nav-foot{margin-top:22px;font-size:12px;color:var(--cp-text-muted)}.meter{height:7px;border:1px solid var(--cp-border);border-radius:99px;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;width:0;background:var(--cp-accent);transition:.2s}
+main{max-width:1080px;padding:0 clamp(22px,5vw,70px) 100px}.hero{padding:58px 0 36px}.eyebrow{color:var(--cp-accent);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:12px}.hero h1{font-size:clamp(34px,5vw,54px);line-height:1.05;margin:10px 0 16px;max-width:15ch}.hero p{font-size:18px;color:var(--cp-text-muted);max-width:70ch}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.btn{border:1px solid var(--cp-border-strong);background:var(--cp-surface);color:var(--cp-text);border-radius:.625rem;padding:9px 14px;cursor:pointer;font:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px}.btn:hover{border-color:var(--cp-accent);background:var(--cp-accent-soft)}.btn.primary{background:var(--cp-accent);border-color:var(--cp-accent);color:var(--cp-accent-fg)}
+section{padding:38px 0;border-top:1px solid var(--cp-border);scroll-margin-top:10px}section h2{font-size:28px;margin:0 0 8px}.section-lede{color:var(--cp-text-muted);margin-top:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:16px;padding:20px;box-shadow:0 0 2px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.14)}.card h3{margin:0 0 6px;font-size:18px}.pill{display:inline-block;padding:2px 9px;border-radius:99px;border:1px solid var(--cp-border);font-size:12px;font-weight:700;color:var(--cp-text-muted)}.pill.required{border-color:var(--cp-accent);color:var(--cp-accent)}.pill.optional{border-color:var(--cp-success);color:var(--cp-success)}
+.callout{border:1px solid var(--cp-border);border-left:4px solid var(--cp-accent);background:var(--cp-surface-soft);border-radius:.625rem;padding:14px 16px;margin:16px 0}.callout.warn{border-left-color:var(--cp-warning)}.callout.good{border-left-color:var(--cp-success)}.callout.danger{border-left-color:var(--cp-danger)}.callout strong{display:block}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}.tab{border:1px solid var(--cp-border);background:var(--cp-surface);color:var(--cp-text-muted);padding:7px 12px;border-radius:.625rem;cursor:pointer}.tab[aria-selected="true"]{color:var(--cp-accent-fg);background:var(--cp-accent);border-color:var(--cp-accent)}.tabpanel[hidden]{display:none}.code{position:relative;background:var(--cp-bg-elevated);border:1px solid var(--cp-border);border-radius:.625rem;margin:12px 0}.code pre{margin:0;padding:16px 70px 16px 16px;overflow:auto;font-size:13px}.copy{position:absolute;right:8px;top:8px;border:1px solid var(--cp-border);background:var(--cp-surface);color:var(--cp-text);border-radius:8px;padding:4px 8px;cursor:pointer}.steps{list-style:none;padding:0;counter-reset:step}.steps li{counter-increment:step;position:relative;padding:0 0 22px 46px}.steps li:before{content:counter(step);position:absolute;left:0;top:0;width:31px;height:31px;border:1px solid var(--cp-accent);border-radius:50%;display:grid;place-items:center;color:var(--cp-accent);font-weight:800}.check{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px dashed var(--cp-border)}.check input{margin-top:5px;width:18px;height:18px;accent-color:var(--cp-accent)}.check.done label{text-decoration:line-through;color:var(--cp-text-muted)}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--cp-border);vertical-align:top}th{font-size:12px;color:var(--cp-text-muted);text-transform:uppercase;letter-spacing:.06em}details{background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:.625rem;padding:12px 16px;margin:10px 0}summary{cursor:pointer;font-weight:700}.screenshot{margin:20px auto;max-width:520px}.screenshot img{display:block;width:100%;max-height:760px;object-fit:contain;background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:16px;box-shadow:0 0 2px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.14)}figcaption{color:var(--cp-text-muted);font-size:13px;margin-top:8px}.source{word-break:break-word}.footer{font-size:13px;color:var(--cp-text-muted);padding:30px 0}
+@media(max-width:900px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--cp-border)}nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}.hero{padding-top:36px}}@media print{aside,.actions,#progress,.copy,.tabs{display:none!important}.layout{display:block}main{max-width:none;padding:0}section{break-inside:avoid}.tabpanel[hidden]{display:block}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="layout">
+<aside>
+  <div class="brand"><div class="mark">CS</div><div><strong>Agent Sidecar</strong><small>Corporate Styling & Release Guide</small></div></div>
+  <nav id="nav">
+    <a href="#outcome"><span>1</span>Target outcome</a><a href="#prereqs"><span>2</span>Machine prerequisites</a><a href="#access"><span>3</span>Access & environments</a><a href="#customize"><span>4</span>Customize safely</a><a href="#validate"><span>5</span>Build & validate</a><a href="#iterate"><span>6</span>Iterate in development</a><a href="#release"><span>7</span>Package & promote</a><a href="#test"><span>8</span>Acceptance checklist</a><a href="#trouble"><span>?</span>Troubleshooting</a><a href="#references"><span>§</span>References</a>
+  </nav>
+  <div class="nav-foot"><span id="count">0 of 0</span> tasks complete<div class="meter"><i id="meter"></i></div></div>
+</aside>
+<main>
+<header class="hero">
+  <div class="eyebrow">CooperSurgical-inspired experience</div>
+  <h1>Style, test, and release the Agent Sidecar</h1>
+  <p>This interactive guide covers the complete workstation setup, safe source-editing model, local validation, iterative Dynamics testing, and controlled solution promotion process.</p>
+  <div class="actions"><button class="btn primary" id="theme">◐ Toggle theme</button><button class="btn" id="reset">↺ Reset checklist</button><button class="btn" onclick="window.print()">⌑ Print / PDF</button></div>
+</header>
+
+<section id="outcome">
+  <h2>1. Target outcome</h2><p class="section-lede">The refreshed sidecar uses restrained corporate styling while preserving authentication, current-record context, and role-aware behavior.</p>
+  <figure class="screenshot"><img src="assets/agent-sidecar-coopersurgical-theme.png" alt="Dynamics 365 Agent Sidecar showing the CooperSurgical-inspired conversation theme"><figcaption>Validated in Dynamics 365: branded toolbar, white agent bubbles, blue user bubble, asymmetric rounded corners, and contextual Account response.</figcaption></figure>
+  <div class="callout good"><strong>What can be changed safely</strong>Colors, typography, spacing, toolbar treatment, loading and error states, message bubbles, composer controls, suggested actions, borders, and shadows.</div>
+  <div class="callout danger"><strong>Keep behavior out of a styling change</strong>Do not alter authentication, token handling, target-binding resolution, record context, or Agents SDK connection logic merely to change appearance.</div>
+</section>
+
+<section id="prereqs">
+  <h2>2. Machine prerequisites</h2><p class="section-lede">VS Code is already installed. Install and verify the remaining tools before cloning or building.</p>
+  <div class="tabs" role="tablist" aria-label="Operating system"><button class="tab" role="tab" aria-selected="true" data-tab="mac">macOS</button><button class="tab" role="tab" aria-selected="false" data-tab="windows">Windows</button></div>
+  <div id="mac" class="tabpanel" role="tabpanel">
+    <div class="grid">
+      <div class="card"><span class="pill required">Required</span><h3>Git</h3><p>Needed to clone, branch, review, and preserve changes.</p><div class="code"><button class="copy">Copy</button><pre><code>git --version</code></pre></div><p class="muted">On a fresh Mac, this may open the Xcode Command Line Tools installer.</p></div>
+      <div class="card"><span class="pill required">Required</span><h3>Node.js LTS + npm</h3><p>Use the current Node.js LTS release. npm ships with Node.</p><div class="code"><button class="copy">Copy</button><pre><code>node --version
+npm --version</code></pre></div><p><a href="https://nodejs.org/en/download" target="_blank" rel="noopener">Official Node.js download ↗</a></p></div>
+      <div class="card"><span class="pill required">Required</span><h3>pnpm</h3><p>The repository uses a pnpm lockfile. Enable Corepack, then verify pnpm.</p><div class="code"><button class="copy">Copy</button><pre><code>corepack enable
+pnpm --version</code></pre></div></div>
+      <div class="card"><span class="pill required">Required</span><h3>Power Platform CLI</h3><p>Install the Microsoft Power Platform Tools extension in VS Code (recommended), or install PAC as a .NET global tool.</p><div class="code"><button class="copy">Copy</button><pre><code>dotnet --version
+dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+pac help</code></pre></div><p class="muted">Microsoft currently recommends .NET 10 for the global-tool route. PAC is installed under <code>$HOME/.dotnet/tools</code>.</p></div>
+    </div>
+  </div>
+  <div id="windows" class="tabpanel" role="tabpanel" hidden>
+    <div class="grid">
+      <div class="card"><span class="pill required">Required</span><h3>Git</h3><p>Install Git for Windows and reopen VS Code.</p><div class="code"><button class="copy">Copy</button><pre><code>git --version</code></pre></div><p><a href="https://git-scm.com/download/win" target="_blank" rel="noopener">Official Git download ↗</a></p></div>
+      <div class="card"><span class="pill required">Required</span><h3>Node.js LTS + npm</h3><p>Install current Node.js LTS with the PATH option enabled.</p><div class="code"><button class="copy">Copy</button><pre><code>node --version
+npm --version</code></pre></div><p><a href="https://nodejs.org/en/download" target="_blank" rel="noopener">Official Node.js download ↗</a></p></div>
+      <div class="card"><span class="pill required">Required</span><h3>pnpm</h3><p>Use Corepack from Node.js, then verify pnpm.</p><div class="code"><button class="copy">Copy</button><pre><code>corepack enable
+pnpm --version</code></pre></div></div>
+      <div class="card"><span class="pill required">Required</span><h3>Power Platform CLI</h3><p>Install Microsoft Power Platform Tools in VS Code (recommended). Use a VS Code PowerShell terminal. The .NET global-tool route is also supported.</p><div class="code"><button class="copy">Copy</button><pre><code>dotnet --version
+dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+pac help</code></pre></div></div>
+    </div>
+  </div>
+  <div class="callout"><strong>Recommended VS Code extensions</strong>Microsoft Power Platform Tools, ESLint, and Prettier. GitHub Pull Requests and Issues is helpful for reviewing and submitting changes.</div>
+  <div class="callout warn"><strong>Optional agent-assisted Dataverse tooling</strong>Python 3, the Dataverse-skills plugin, <code>PowerPlatform-Dataverse-Client</code>, and pandas are needed only when using this repository's agent-assisted Dataverse workflows. They are not required to edit CSS, run the Model-driven build, or manually import a solution through the Maker portal.</div>
+  <h3>One-command verification</h3><div class="code"><button class="copy">Copy</button><pre><code>git --version
+node --version
+npm --version
+pnpm --version
+dotnet --version
+pac help</code></pre></div>
+  <div class="card"><div class="check"><input type="checkbox" id="p1"><label for="p1">Git command succeeds.</label></div><div class="check"><input type="checkbox" id="p2"><label for="p2">Node, npm, and pnpm commands succeed.</label></div><div class="check"><input type="checkbox" id="p3"><label for="p3">PAC CLI is available inside the VS Code terminal.</label></div><div class="check"><input type="checkbox" id="p4"><label for="p4">Repository clone opens in VS Code without trust or permission errors.</label></div></div>
+</section>
+
+<section id="access">
+  <h2>3. Access and environment prerequisites</h2><p class="section-lede">Tooling alone is not enough. Confirm the environment, solution, and security model before changing anything.</p>
+  <table><tr><th>Need</th><th>Why</th></tr><tr><td>GitHub repository access</td><td>Clone the source, create a branch, and submit a pull request.</td></tr><tr><td>Dedicated Dataverse development environment</td><td>Unmanaged customization and runtime iteration belong in development—not production.</td></tr><tr><td>System Customizer or equivalent</td><td>Update web resources, solution version, publish customizations, and export the solution.</td></tr><tr><td>Import rights in test/UAT</td><td>Install the candidate managed solution and perform acceptance testing.</td></tr><tr><td>Access to the target Model-driven App and agent</td><td>Open the sidecar and verify live record context.</td></tr><tr><td>Environment URLs and authentication profiles</td><td>Every CLI mutation must be aimed at an explicitly confirmed environment.</td></tr></table>
+  <div class="callout danger"><strong>Environment confirmation gate</strong>Before every export, import, or publish, run <code>pac org who --environment https://YOUR-ENVIRONMENT.crm.dynamics.com</code> and verify both the environment name and URL.</div>
+  <div class="card"><div class="check"><input type="checkbox" id="a1"><label for="a1">A dedicated development environment is available.</label></div><div class="check"><input type="checkbox" id="a2"><label for="a2">The unmanaged <b>AgentSidecarCore</b> solution is present in development.</label></div><div class="check"><input type="checkbox" id="a3"><label for="a3">A separate test/UAT environment is available for the release candidate.</label></div><div class="check"><input type="checkbox" id="a4"><label for="a4">The operator has permission to publish, export, and import solutions.</label></div></div>
+</section>
+
+<section id="customize">
+  <h2>4. Customize the maintained source</h2><p class="section-lede">Use source control as the record of intent. Generated HTML and exported solution ZIPs are build artifacts.</p>
+  <ol class="steps">
+    <li><strong>Clone and branch.</strong><div class="code"><button class="copy">Copy</button><pre><code>git clone https://github.com/martycarreras-psnl/CustomAgentMDA.git
+cd CustomAgentMDA
+git switch -c feat/your-brand-sidecar
+pnpm install</code></pre></div></li>
+    <li><strong>Change the shell and corporate visual system.</strong><p>Edit <code>model-driven/webresources/maftagsc_/copilot/agentSidePane.template.html</code> for theme variables, toolbar, cards, spacing, states, supplemental CSS, and accessible focus treatment.</p></li>
+    <li><strong>Change Web Chat presentation.</strong><p>Edit the <code>styleOptions</code> in <code>model-driven/webresources/maftagsc_/copilot/agentSidePane.ts</code> for message bubbles, nubs, composer controls, suggested actions, typography, and conversation spacing.</p></li>
+    <li><strong>Keep the behavioral boundary intact.</strong><p>Do not alter delegated authentication, role-aware context, app-keyed configuration, record targeting, or token handling as part of a visual-only change.</p></li>
+  </ol>
+  <div class="grid"><div class="card"><h3>Template owns</h3><ul><li>Corporate design tokens</li><li>Header and toolbar</li><li>Loading/sign-in/error states</li><li>Layout, borders, shadows</li><li>Responsive and focus styling</li></ul></div><div class="card"><h3>TypeScript style options own</h3><ul><li>Agent/user bubble appearance</li><li>Bubble tails and radii</li><li>Composer and send button</li><li>Suggested action pills</li><li>Web Chat spacing and typography</li></ul></div></div>
+  <div class="callout danger"><strong>Never edit generated assets as source</strong>Do not hand-edit <code>model-driven/.../agentSidePane.html</code>, <code>solution/WebResources/.../agentSidePane.html</code>, or an exported ZIP. The build regenerates those HTML projections.</div>
+</section>
+
+<section id="validate">
+  <h2>5. Build and validate locally</h2><p class="section-lede">Run the complete Model-driven gate before uploading anything to Dataverse.</p>
+  <div class="code"><button class="copy">Copy</button><pre><code>pnpm run typecheck:model-driven
+pnpm run build:model-driven
+pnpm run test:model-driven
+git diff --check</code></pre></div>
+  <p>The build bundles the TypeScript dependencies into the deployable HTML and synchronizes the generated solution projection. The tests protect the theme markers, build output, authentication assumptions, and role-aware context behavior.</p>
+  <div class="callout warn"><strong>Local preview has limits</strong>A file-based preview can confirm static layout, but authentication, Dataverse context, app ID resolution, and the live Copilot Studio connection must be tested inside a Model-driven App in a development environment.</div>
+  <div class="card"><div class="check"><input type="checkbox" id="v1"><label for="v1">Model-driven TypeScript check passes.</label></div><div class="check"><input type="checkbox" id="v2"><label for="v2">Model-driven build succeeds and refreshes generated HTML.</label></div><div class="check"><input type="checkbox" id="v3"><label for="v3">All Model-driven regression tests pass.</label></div><div class="check"><input type="checkbox" id="v4"><label for="v4">The diff contains only intended source, generated projection, tests, and documentation changes.</label></div></div>
+</section>
+
+<section id="iterate">
+  <h2>6. Iterate safely in development</h2><p class="section-lede">For rapid styling cycles, upload the generated web resource into the unmanaged development solution, publish, refresh, and repeat.</p>
+  <ol class="steps">
+    <li><strong>Confirm the development target.</strong><div class="code"><button class="copy">Copy</button><pre><code>pac org who --environment https://YOUR-DEV-ENVIRONMENT.crm.dynamics.com</code></pre></div></li>
+    <li><strong>Open the unmanaged solution.</strong><p>In <a href="https://make.powerapps.com" target="_blank" rel="noopener">Power Apps Maker Portal ↗</a>, select the development environment, open <b>Solutions → AgentSidecarCore → Objects → Web resources</b>, and open <code>maftagsc_/copilot/agentSidePane.html</code>.</p></li>
+    <li><strong>Upload the generated file.</strong><p>Upload <code>model-driven/webresources/maftagsc_/copilot/agentSidePane.html</code>, save, and publish. This is a deployment of a generated artifact; the maintained source remains the template and TypeScript in Git.</p></li>
+    <li><strong>Refresh the runtime.</strong><p>Close/reopen the side pane and hard-refresh the Model-driven App. Web-resource caching can otherwise make a successful upload look unchanged.</p></li>
+    <li><strong>Smoke-test and repeat.</strong><p>Check the toolbar, both bubble types, composer, suggested actions, loading/error states, current-record response, keyboard use, narrow pane width, and browser zoom.</p></li>
+  </ol>
+  <div class="callout good"><strong>Fast loop</strong>Edit maintained source → type-check → build → test → upload generated web resource to unmanaged Dev → publish → hard refresh → smoke-test.</div>
+</section>
+
+<section id="release">
+  <h2>7. Package and promote an approved theme</h2><p class="section-lede">After visual approval, turn the development solution into a versioned release candidate.</p>
+  <ol class="steps">
+    <li><strong>Commit and review.</strong><div class="code"><button class="copy">Copy</button><pre><code>git status
+git add model-driven solution docs
+git commit -m "feat(sidecar): apply corporate conversation theme"
+git push -u origin feat/your-brand-sidecar</code></pre></div><p>Open a pull request and require the CI gates to pass.</p></li>
+    <li><strong>Increment the solution version in development.</strong><p>Open <b>AgentSidecarCore</b> in the Maker portal, select <b>Overview</b>, and set a version higher than the installed downstream version—for example, <code>1.0.0.3</code>.</p></li>
+    <li><strong>Export release artifacts from development.</strong><p>Export the approved solution as <b>managed</b> for test/UAT/production. Retain an unmanaged export as the development backup/source artifact.</p><div class="code"><button class="copy">Copy</button><pre><code>pac solution export --name AgentSidecarCore \
+  --path ./out/AgentSidecarCore-1.0.0.3-managed.zip \
+  --managed true \
+  --environment https://YOUR-DEV-ENVIRONMENT.crm.dynamics.com \
+  --overwrite</code></pre></div></li>
+    <li><strong>Import the exact managed candidate into test/UAT.</strong><div class="code"><button class="copy">Copy</button><pre><code>pac org who --environment https://YOUR-TEST-ENVIRONMENT.crm.dynamics.com
+pac solution import \
+  --path ./out/AgentSidecarCore-1.0.0.3-managed.zip \
+  --environment https://YOUR-TEST-ENVIRONMENT.crm.dynamics.com \
+  --publish-changes</code></pre></div></li>
+    <li><strong>Promote without rebuilding.</strong><p>After UAT approval, import the exact same managed ZIP into production. Do not rebuild or manually modify the package between environments.</p></li>
+  </ol>
+  <div class="callout danger"><strong>Important: do not unpack/repack the combined Core ZIP</strong>The Core currently carries a Power Apps Code App. Microsoft notes that Code Apps do not support Solution Packager or Git source integration. Export and import that combined solution ZIP as-is; unpacking/repacking can drop the Code App component.</div>
+  <div class="callout warn"><strong>Avoid overwrite by default</strong>Do not use force-overwrite or “overwrite unmanaged customizations” unless the release owner intentionally wants to replace active unmanaged layers and has reviewed the impact.</div>
+  <div class="callout warn"><strong>Current repository artifact caveat</strong>The checked-in <code>solution-core/AgentSidecarCore.zip</code> is not yet the durable, tested <code>1.0.0.2</code> release artifact. Until it is refreshed or attached to a release, export the approved Core from the development environment rather than distributing that repository ZIP.</div>
+  <div class="card"><div class="check"><input type="checkbox" id="r1"><label for="r1">PR approved and CI passed.</label></div><div class="check"><input type="checkbox" id="r2"><label for="r2">Solution version is higher than every downstream installation.</label></div><div class="check"><input type="checkbox" id="r3"><label for="r3">Managed and unmanaged exports are retained with checksums.</label></div><div class="check"><input type="checkbox" id="r4"><label for="r4">The exact managed candidate was tested before production promotion.</label></div></div>
+</section>
+
+<section id="test">
+  <h2>8. Acceptance checklist</h2><p class="section-lede">Complete this in test/UAT before production promotion.</p>
+  <div class="card"><div class="check"><input type="checkbox" id="t1"><label for="t1">The sidecar opens and reaches Connected.</label></div><div class="check"><input type="checkbox" id="t2"><label for="t2">The configured assistant title appears.</label></div><div class="check"><input type="checkbox" id="t3"><label for="t3">Agent and user bubbles use the approved styling.</label></div><div class="check"><input type="checkbox" id="t4"><label for="t4">A question about the current record returns the correct table, name, and record ID.</label></div><div class="check"><input type="checkbox" id="t5"><label for="t5">Navigating to another record refreshes context without breaking the pane.</label></div><div class="check"><input type="checkbox" id="t6"><label for="t6">New conversation works.</label></div><div class="check"><input type="checkbox" id="t7"><label for="t7">Keyboard focus and controls are visible and operable.</label></div><div class="check"><input type="checkbox" id="t8"><label for="t8">The layout works at narrow pane widths and 200% browser zoom.</label></div><div class="check"><input type="checkbox" id="t9"><label for="t9">No token, secret, or connection credential appears in source, console, URL, or logs.</label></div><div class="check"><input type="checkbox" id="t10"><label for="t10">The production import uses the exact UAT-approved managed ZIP.</label></div></div>
+</section>
+
+<section id="trouble">
+  <h2>Troubleshooting</h2>
+  <details><summary>The old design still appears after publishing</summary><p>Close the pane, hard-refresh the Model-driven App, and reopen it. Confirm the development web resource contains the new build marker. Dataverse web-resource caching is often the cause.</p></details>
+  <details><summary><code>pac</code> is installed but not found on macOS/Linux</summary><p>Check <code>$HOME/.dotnet/tools/pac</code>. Ensure <code>$HOME/.dotnet/tools</code>—not a literal <code>~/.dotnet/tools</code> string—is on PATH, then reopen the VS Code terminal.</p></details>
+  <details><summary><code>pac</code> works only in one VS Code terminal</summary><p>If PAC came from the Power Platform Tools extension, use the VS Code terminal. Install PAC as a .NET global tool if it must also be available to other shells.</p></details>
+  <details><summary>Node, npm, or pnpm is not recognized</summary><p>Install Node.js LTS, close every VS Code terminal, reopen VS Code, and rerun the checks. Use <code>corepack enable</code> for pnpm.</p></details>
+  <details><summary>Solution import does not appear as an update</summary><p>Confirm the solution unique name and package type match the installed solution, and that the incoming version is higher.</p></details>
+  <details><summary>The import succeeds but chat does not connect</summary><p>Styling does not configure identity. Verify target binding, app registration, delegated permissions, agent schema name, secure token-broker configuration, and user access to the published agent.</p></details>
+</section>
+
+<section id="references">
+  <h2>References</h2>
+  <ul class="source"><li><a href="https://github.com/martycarreras-psnl/CustomAgentMDA/pull/2" target="_blank" rel="noopener">Theme implementation PR #2 ↗</a></li><li><a href="https://github.com/martycarreras-psnl/CustomAgentMDA/pull/2#issuecomment-5200307973" target="_blank" rel="noopener">Target-environment validation evidence ↗</a></li><li><a href="https://learn.microsoft.com/power-platform/developer/howto/install-vs-code-extension" target="_blank" rel="noopener">Install Microsoft Power Platform Tools for VS Code ↗</a></li><li><a href="https://learn.microsoft.com/power-platform/developer/howto/install-cli-net-tool" target="_blank" rel="noopener">Install Power Platform CLI with .NET Tool ↗</a></li><li><a href="https://learn.microsoft.com/power-platform/developer/cli/reference/solution" target="_blank" rel="noopener">PAC solution command reference ↗</a></li><li><a href="https://learn.microsoft.com/power-platform/alm/solution-concepts-alm" target="_blank" rel="noopener">Managed and unmanaged solution concepts ↗</a></li><li><a href="https://learn.microsoft.com/power-platform/alm/update-solutions-alm" target="_blank" rel="noopener">Create and update solutions ↗</a></li><li><a href="https://learn.microsoft.com/power-apps/maker/data-platform/import-update-export-solutions" target="_blank" rel="noopener">Import, update, and export solutions ↗</a></li></ul>
+</section>
+<div class="footer">Agent Sidecar corporate styling and release guide · Generated 6 August 2026 · Checklist progress is stored only in this browser.</div>
+</main>
+</div>
+<script>
+const root=document.documentElement;
+document.getElementById('theme').addEventListener('click',()=>root.dataset.theme=root.dataset.theme==='dark'?'light':'dark');
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{const text=b.parentElement.querySelector('code').innerText;await navigator.clipboard.writeText(text);const old=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=old,1200)}));
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));document.querySelectorAll('.tabpanel').forEach(x=>x.hidden=true);tab.setAttribute('aria-selected','true');document.getElementById(tab.dataset.tab).hidden=false}));
+const checks=[...document.querySelectorAll('.check input')];
+function update(){let done=0;checks.forEach(c=>{c.closest('.check').classList.toggle('done',c.checked);if(c.checked)done++;localStorage.setItem('as-guide-'+c.id,c.checked)});document.getElementById('count').textContent=`${done} of ${checks.length}`;document.getElementById('meter').style.width=`${checks.length?done/checks.length*100:0}%`}
+checks.forEach(c=>{c.checked=localStorage.getItem('as-guide-'+c.id)==='true';c.addEventListener('change',update)});update();
+document.getElementById('reset').addEventListener('click',()=>{checks.forEach(c=>c.checked=false);update()});
+const sections=[...document.querySelectorAll('section')],links=[...document.querySelectorAll('nav a')];
+function onScroll(){const max=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=`${max?scrollY/max*100:0}%`;let current=sections[0]?.id;sections.forEach(s=>{if(s.getBoundingClientRect().top<180)current=s.id});links.forEach(a=>a.classList.toggle('active',a.hash==='#'+current))}addEventListener('scroll',onScroll,{passive:true});onScroll();
+</script>
+</body>
+</html>
