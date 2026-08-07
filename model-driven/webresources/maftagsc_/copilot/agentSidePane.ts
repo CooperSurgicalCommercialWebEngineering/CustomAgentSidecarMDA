@@ -288,8 +288,10 @@ function showSignIn(): void {
 function applyPaneTitle(title: string): void {
     const safeTitle = (title ?? "").trim() || "Agent Sidecar";
     document.title = safeTitle;
-    const heading = document.getElementById("guide-title");
-    if (heading) heading.textContent = safeTitle;
+    for (const elementId of ["guide-title", "chat-title"]) {
+        const heading = document.getElementById(elementId);
+        if (heading) heading.textContent = safeTitle;
+    }
     const chat = document.getElementById("chat");
     if (chat) chat.setAttribute("aria-label", `${safeTitle} conversation`);
 }
