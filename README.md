@@ -6,6 +6,8 @@ You stand it up by importing one solution and configuring it through an in-app w
 
 ## What's new
 
+- **🆕 CooperSurgical-inspired theme.** The sidecar now uses refined blue and purple conversation chrome, pill-shaped controls, and rounded asymmetric message bubbles with subtle tails. It uses portable system fonts rather than CooperSurgical's proprietary typeface. Fork maintainers can customize the shell in [model-driven/webresources/maftagsc_/copilot/agentSidePane.template.html](model-driven/webresources/maftagsc_/copilot/agentSidePane.template.html) and Web Chat options in [model-driven/webresources/maftagsc_/copilot/agentSidePane.ts](model-driven/webresources/maftagsc_/copilot/agentSidePane.ts), then rebuild rather than editing generated HTML. See [CHANGELOG.md](CHANGELOG.md) for the full change history.
+- **Styling and release resources.** Use the [interactive styling and release guide](https://martycarreras-psnl.github.io/CustomAgentMDA/) for machine prerequisites, safe customization, validation, Dynamics iteration, and solution promotion. The [downloadable guide bundle](https://martycarreras-psnl.github.io/CustomAgentMDA/AgentSidecarStylingGuideBundle.zip) includes the guide and its [validated Dynamics screenshot](https://martycarreras-psnl.github.io/CustomAgentMDA/assets/agent-sidecar-coopersurgical-theme.png) for offline sharing.
 - **🆕 Role-aware context.** The sidecar now passes the signed-in user's **Dataverse security-role names** to the agent alongside the page and record context, so the assistant can tailor its tone and guidance to who the person is. Roles ride in the same trusted per-message envelope as the rest of the context (and are also exposed as a `CurrentUserRoles` variable for topic branching), so they update on sign-in and require no Copilot Studio variable setup to take effect. Roles are treated as **context only, never authorization** — the agent's knowledge stays gated by each user's own delegated permissions, only role names are used, and no role data is logged.
 - **Navigation-aware conversation.** The open pane follows the user as they move between records and forms, refreshing the agent's context without resetting the chat.
 - **Per-form selection.** Choose exactly which forms get the sidecar; the **Information** form is selected by default.
@@ -29,7 +31,7 @@ Everything below is done through **solution import** and the **administration ap
 ### 2. Prepare the prerequisites
 
 - A Power Platform environment with Dataverse where you are a **System Administrator**.
-- A **published custom Copilot Studio agent** in that environment. The administration app discovers compatible Standard and GitHub Copilot harness agents, identifies their harness from Dataverse metadata, and constructs the correct runtime URL. Standard-harness connectivity uses the documented Agents SDK route; GitHub Copilot harness connectivity currently uses the `/copilotstudio/agenticruntime/3p/` route and should be treated as experimental until Microsoft documents it as a stable production contract.
+- A **published Copilot Studio agent** in that environment. Note its **environment ID** and **schema name**, and copy its **Microsoft 365 Agents SDK connection string** (Copilot Studio → your agent → Channels → Web app / Agents SDK).
 - A **Microsoft Entra app registration** for the side pane's browser sign-in. Follow the dedicated [Entra app registration guide (PDF)](docs/user-guides/HR-Management-App-Guide-Entra-App-Registration.pdf) ([Word](docs/user-guides/HR-Management-App-Guide-Entra-App-Registration.docx)). In short: single-tenant **SPA**, redirect URI `https://<your-org>.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html`, delegated **Power Platform API** permission `CopilotStudio.Copilots.Invoke` with **admin consent**, and **no client secret**.
 
 ### 3. Import the solution
@@ -42,8 +44,8 @@ Open the **Agent Sidecar** app and run the wizard:
 
 1. **Application** — pick the model-driven app to add the sidecar to.
 2. **Tables & forms** — choose the tables; expand any table to select specific forms (the **Information** form is selected by default, others are optional).
-3. **Agent** — choose a compatible published custom agent from the current environment. The harness, schema name, environment ID, and runtime URL are resolved automatically.
-4. **Identity** — paste only the SPA app registration's **client ID**. The tenant ID and Dataverse organization URL come from the running Code App context; the wizard links directly to Microsoft Entra App registrations.
+3. **Agent** — paste your agent's Agents SDK connection string and environment ID.
+4. **Identity** — enter the SPA app registration's **client ID** and **tenant ID**.
 5. **Review & Deploy** — deploy. The app adds the sidecar to the selected forms, publishes, and verifies the result. From the same app you can later disable, reconcile drift, or uninstall — each with live progress and a downloadable report.
 
 ### 5. Use it
@@ -155,7 +157,7 @@ The side pane preserves the user's identity end to end:
 4. The agent accesses its knowledge as that user, so the user's existing permissions remain authoritative.
 5. Any live Dataverse reads remain subject to table, row, and field security.
 
-Access tokens are handled by MSAL and are not written to URLs, logs, source files, or solution configuration. Application ID, tenant ID, environment ID, and agent schema name are identifiers, not secrets. The app reads tenant and environment identifiers from the authenticated Power Apps runtime context.
+Access tokens are handled by MSAL and are not written to URLs, logs, source files, or solution configuration. Application ID, tenant ID, environment ID, and agent schema name are identifiers, not secrets.
 
 ### Microsoft Entra app registration
 
@@ -170,7 +172,7 @@ The guide covers the settings that make the delegated Agents SDK connection work
 2. Add the exact redirect URI: `https://<your-org>.crm.dynamics.com/WebResources/maftagsc_/copilot/authRedirect.html`.
 3. Add the delegated **Power Platform API** permission `CopilotStudio.Copilots.Invoke`.
 4. Grant tenant admin consent for that delegated permission.
-5. Copy the non-secret Application ID into the wizard's Identity step. The tenant ID is detected automatically.
+5. Copy the non-secret Application ID and tenant ID into the wizard's Identity step.
 6. Leave **Certificates & secrets** empty — the browser uses authorization code with PKCE and must never receive a client secret.
 
 The guide also includes a configuration worksheet, validation checklist, and troubleshooting for redirect URI, consent, and agent-connection failures.

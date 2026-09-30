@@ -5,26 +5,24 @@ import {
     type AuthenticationResult
 } from "@azure/msal-browser";
 import {
+    ConnectionSettings,
     CopilotStudioClient,
     CopilotStudioWebChat,
     type CopilotStudioWebChatConnection
 } from "@microsoft/agents-copilotstudio-client";
 import type { Activity } from "@microsoft/agents-activity";
 import { sidecarConfigurationRepository } from "./hrSidecarBootstrap";
-import { applyPromptCatalog } from "./promptCatalog";
 import {
-    getBindingPrompts,
     getEntityBinding,
     normalizeGuid,
     type SidecarConfiguration
 } from "./sidecarConfiguration";
-import { chooseResolvedContext } from "./contextResolution";
 import {
     formatUserRolesLine,
     normalizeUserRoles,
     serializeUserRoles
 } from "./sidecarUserRoles";
-import { createSidecarConnectionSettings } from "./sidecarConnectionSettings";
+import { sidecarStyleOptions } from "./sidecarStyleOptions";
 
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
 const AUTH_REQUEST_KEY = "maftagsc.sidecar.authRequest";
@@ -108,9 +106,6 @@ let activeContext: LaunchContext | null = null;
 let activeConfiguration: SidecarConfiguration | null = null;
 let resetInProgress = false;
 let navigationWatcher: number | null = null;
-// The live Web Chat store; a prompt chip dispatches a send-message action through
-// it so a chip click travels the same pipeline as a typed message.
-let activeStore: unknown = null;
 
 function getRequiredElement<T extends HTMLElement>(id: string): T {
     const element = document.getElementById(id);
@@ -138,7 +133,7 @@ async function parseLaunchRequest(): Promise<LaunchRequest> {
     }
 
     const appId = normalizeGuid(value.appId);
-    const configuration = applyPromptCatalog(await sidecarConfigurationRepository.getByAppId(appId));
+    const configuration = await sidecarConfigurationRepository.getByAppId(appId);
     const entityName = String(value.entityName || "").trim().toLowerCase();
     if (!getEntityBinding(configuration, entityName)) {
         throw new Error("Screen-specific help isn't available for this table.");
@@ -198,7 +193,7 @@ function getCurrentRecordName(
 function getCurrentContext(
     fallback: LaunchContext,
     configuration: SidecarConfiguration
-): LaunchContext | null {
+): LaunchContext {
     try {
         const hostXrm = getHostXrm();
         const input = hostXrm?.Utility?.getPageContext?.().input;
@@ -207,7 +202,7 @@ function getCurrentContext(
             : null;
         const entityName = String(input?.entityName ?? "").trim().toLowerCase();
         if (!pageType || !getEntityBinding(configuration, entityName)) {
-            return null;
+            return fallback;
         }
 
         const recordId = pageType === "entityrecord" ? normalizeGuid(input?.entityId) : null;
@@ -228,14 +223,13 @@ function getCurrentContext(
             roles: fallback.roles
         };
     } catch {
-        return null;
+        return fallback;
     }
 }
 
-// The launcher writes the current-form context here on navigation (same-origin
-// localStorage, COOP- and partition-safe). It is authoritative only for forms
-// whose launcher OnLoad handler is registered; resolveContext reconciles it with
-// the pane's live host read so a bound form missing that handler still updates.
+// The launcher writes the authoritative current-form context here on every
+// navigation. Prefer it (COOP- and partition-safe, same origin) over reading the
+// host Xrm from inside the pane, which is unreliable across frames.
 function readSharedContext(
     configuration: SidecarConfiguration,
     fallback: LaunchContext
@@ -266,11 +260,7 @@ function resolveContext(
     fallback: LaunchContext,
     configuration: SidecarConfiguration
 ): LaunchContext {
-    return chooseResolvedContext(
-        readSharedContext(configuration, fallback),
-        getCurrentContext(fallback, configuration),
-        fallback
-    );
+    return readSharedContext(configuration, fallback) ?? getCurrentContext(fallback, configuration);
 }
 
 function contextSignature(context: LaunchContext): string {
@@ -298,8 +288,10 @@ function showSignIn(): void {
 function applyPaneTitle(title: string): void {
     const safeTitle = (title ?? "").trim() || "Agent Sidecar";
     document.title = safeTitle;
-    const heading = document.getElementById("guide-title");
-    if (heading) heading.textContent = safeTitle;
+    for (const elementId of ["guide-title", "chat-title"]) {
+        const heading = document.getElementById(elementId);
+        if (heading) heading.textContent = safeTitle;
+    }
     const chat = document.getElementById("chat");
     if (chat) chat.setAttribute("aria-label", `${safeTitle} conversation`);
 }
@@ -594,7 +586,6 @@ function startNavigationWatcher(
         }
         lastSignature = signature;
         activeContext = next;
-        renderPrompts(configuration);
         const dispatch = (store as { dispatch?: (action: WebChatAction) => void }).dispatch;
         if (typeof dispatch !== "function") {
             return;
@@ -629,43 +620,6 @@ function resetWebChatHost(): HTMLElement {
     return replacement;
 }
 
-// Render the current form's role-aware suggested-prompt chips. Chips are additive
-// custom DOM above Web Chat; an empty/absent catalog simply hides the bar.
-function renderPrompts(configuration: SidecarConfiguration): void {
-    const container = document.getElementById("prompts");
-    if (!container) {
-        return;
-    }
-    container.replaceChildren();
-    const context = activeContext;
-    const prompts = context
-        ? getBindingPrompts(configuration, context.entityName, context.roles)
-        : [];
-    if (prompts.length === 0) {
-        container.hidden = true;
-        return;
-    }
-    for (const prompt of prompts) {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "prompt-chip";
-        chip.textContent = prompt.label;
-        chip.title = prompt.text;
-        chip.addEventListener("click", () => sendPrompt(prompt.text));
-        container.appendChild(chip);
-    }
-    container.hidden = false;
-}
-
-function sendPrompt(text: string): void {
-    const store = activeStore as WebChatStoreApi | null;
-    if (!store || typeof store.dispatch !== "function") {
-        return;
-    }
-    store.dispatch({ type: "WEB_CHAT/SEND_MESSAGE", payload: { text, method: "keyboard" } });
-    getRequiredElement<HTMLElement>("chat").focus();
-}
-
 function renderConversation(
     token: string,
     context: LaunchContext,
@@ -679,7 +633,10 @@ function renderConversation(
         throw new Error("The chat client couldn't be loaded.");
     }
 
-    const settings = createSidecarConnectionSettings(configuration);
+    const settings = new ConnectionSettings({
+        environmentId: configuration.environmentId,
+        schemaName: configuration.agentSchemaName
+    });
     const client = new CopilotStudioClient(settings, token);
     const connection = CopilotStudioWebChat.createConnection(client, {
         showTyping: true
@@ -721,21 +678,13 @@ function renderConversation(
     window.WebChat.renderWebChat({
         directLine: connection,
         store,
-        styleOptions: {
-            accent: "#0f6cbd",
-            primaryFont: "\"Segoe UI\", \"Segoe UI Web (West European)\", -apple-system, system-ui, Roboto, \"Helvetica Neue\", sans-serif",
-            bubbleBackground: "#f5f5f5",
-            bubbleFromUserBackground: "#deecf9",
-            hideUploadButton: true
-        }
+        styleOptions: sidecarStyleOptions
     }, webChat);
 
     activeConnection = connection;
     activeToken = token;
-    activeStore = store;
     activeContext = context;
     activeConfiguration = configuration;
-    renderPrompts(configuration);
     chat.focus();
 }
 
