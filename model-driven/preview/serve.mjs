@@ -66,7 +66,7 @@ if (isMain) {
             response.writeHead(500, {
                 "content-type": "text/plain; charset=utf-8"
             });
-            response.end(String(error));
+            response.end("Unable to build the sidecar design preview.");
         }
     });
     server.listen(port, () => {
