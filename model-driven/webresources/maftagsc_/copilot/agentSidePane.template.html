@@ -220,6 +220,42 @@
             outline-offset: 2px;
         }
 
+        #prompts {
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--sidecar-chip-bar-border);
+            background: var(--sidecar-chip-bar-bg);
+        }
+
+        .prompt-chip {
+            max-width: 100%;
+            padding: 5px 12px;
+            border: 1px solid var(--sidecar-chip-border);
+            border-radius: 14px;
+            color: var(--sidecar-chip-accent);
+            background: var(--sidecar-chip-bg);
+            font: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: left;
+            white-space: normal;
+            cursor: pointer;
+        }
+
+        .prompt-chip:hover {
+            border-color: var(--sidecar-chip-accent);
+            background: var(--sidecar-chip-hover-bg);
+        }
+
+        .prompt-chip:focus-visible {
+            outline: 2px solid var(--sidecar-chip-accent);
+            outline-offset: 2px;
+        }
+
         .status-card {
             box-sizing: border-box;
             width: min(100%, 340px);
