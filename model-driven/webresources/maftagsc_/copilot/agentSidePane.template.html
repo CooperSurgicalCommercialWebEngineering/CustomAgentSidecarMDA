@@ -19,6 +19,16 @@
             font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, system-ui, Roboto, "Helvetica Neue", sans-serif;
             color: var(--cooper-ink);
             background: var(--cooper-surface);
+
+            /* Suggested-prompt chips — self-contained theme tokens. Defaults match
+               stock Fluent. To brand the chips, edit --sidecar-chip-accent (and
+               optionally the two backgrounds); these never touch the host pane theme. */
+            --sidecar-chip-accent: var(--cooper-blue);
+            --sidecar-chip-bg: #ffffff;
+            --sidecar-chip-hover-bg: var(--cooper-blue-soft);
+            --sidecar-chip-border: var(--cooper-line);
+            --sidecar-chip-bar-bg: #ffffff;
+            --sidecar-chip-bar-border: var(--cooper-line);
         }
 
         html,
@@ -47,6 +57,7 @@
 
         #status[hidden],
         #chat[hidden],
+        #prompts[hidden],
         #sign-in[hidden] {
             display: none;
         }
@@ -55,7 +66,7 @@
             width: 100%;
             height: 100%;
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr);
+            grid-template-rows: auto auto minmax(0, 1fr);
             background: var(--cooper-surface);
         }
 
@@ -173,6 +184,42 @@
             color: #ffffff;
         }
 
+        #prompts {
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--sidecar-chip-bar-border);
+            background: var(--sidecar-chip-bar-bg);
+        }
+
+        .prompt-chip {
+            max-width: 100%;
+            padding: 5px 12px;
+            border: 1px solid var(--sidecar-chip-border);
+            border-radius: 14px;
+            color: var(--sidecar-chip-accent);
+            background: var(--sidecar-chip-bg);
+            font: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: left;
+            white-space: normal;
+            cursor: pointer;
+        }
+
+        .prompt-chip:hover {
+            border-color: var(--sidecar-chip-accent);
+            background: var(--sidecar-chip-hover-bg);
+        }
+
+        .prompt-chip:focus-visible {
+            outline: 2px solid var(--sidecar-chip-accent);
+            outline-offset: 2px;
+        }
+
         .status-card {
             box-sizing: border-box;
             width: min(100%, 340px);
@@ -276,6 +323,7 @@
                 title="Clear this chat and start a new conversation"
             >New conversation</button>
         </div>
+        <div id="prompts" role="group" aria-label="Suggested prompts for this form" hidden></div>
         <div id="webchat"></div>
     </div>
 

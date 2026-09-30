@@ -1,5 +1,7 @@
 import {
   mockAdminAccess,
+  mockAgents,
+  mockRuntimeEnvironment,
   mockSidecarConfigurations,
   mockTable,
   mockTargetApps,
@@ -13,6 +15,7 @@ import type {
   TargetModelDrivenApp,
 } from '@/types/sidecar-admin-models';
 import { isGuid, parseCopilotStudioConnectionString } from '@/utils/agent-link';
+import { parsePromptCatalog, serializePromptCatalog } from '@/lib/sidecar-prompts';
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -36,6 +39,9 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
     async getAccessContext() {
       return clone(mockAdminAccess);
     },
+    async getRuntimeEnvironmentContext() {
+      return clone(mockRuntimeEnvironment);
+    },
     async listConfigurations() {
       return clone(configurations);
     },
@@ -47,6 +53,9 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
     },
     async discoverTargetApps() {
       return clone(targetApps);
+    },
+    async discoverAgents() {
+      return clone(mockAgents);
     },
     async resolveManualTargetApp(appId) {
       if (!isGuid(appId)) throw new Error('Enter a valid Model-driven App ID.');
@@ -144,6 +153,16 @@ export function createMockSidecarAdministrationProvider(): SidecarAdministration
       configuration.lastOperationSummary = configuration.driftItems.length
         ? 'Validation detected drift; no changes were applied.'
         : 'Manual health validation completed.';
+      return clone(configuration);
+    },
+    async savePrompts(id, promptsByTable) {
+      const configuration = requireConfiguration(configurations, id);
+      const catalog = parsePromptCatalog(serializePromptCatalog(promptsByTable));
+      configuration.tables = configuration.tables.map((table) => ({
+        ...table,
+        prompts: catalog[table.logicalName]?.length ? catalog[table.logicalName] : undefined,
+      }));
+      configuration.lastOperationSummary = 'Suggested prompts updated.';
       return clone(configuration);
     },
     async reconcile(id, onProgress?: SidecarProgressCallback) {
