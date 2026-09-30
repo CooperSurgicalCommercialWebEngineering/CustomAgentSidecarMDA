@@ -117,10 +117,10 @@ conflict markers. In both, the rule is **keep your theme line AND keep the incom
 Replace this conflict block:
 
 ```
-<<<<<<< HEAD
+HEAD side:
             color: var(--your-ink-var);          /* <- your existing theme lines */
             background: var(--your-surface-var);
-=======
+incoming side:
             color: #242424;
             background: #ffffff;
 
@@ -131,7 +131,7 @@ Replace this conflict block:
             --sidecar-chip-border: #d1d1d1;
             --sidecar-chip-bar-bg: #fafafa;
             --sidecar-chip-bar-border: #e0e0e0;
->>>>>>> prompts/feature/dynamic-prompts-only
+end incoming side
 ```
 
 …with **your two lines, followed by the chip token block** (drop the incoming `color:`/`background:`
@@ -157,12 +157,12 @@ stock lines — keep YOURS):
 Replace this conflict block:
 
 ```
-<<<<<<< HEAD
+HEAD side:
             grid-template-rows: auto minmax(0, 1fr);
             background: var(--your-surface-var);   /* <- keep if present in your theme */
-=======
+incoming side:
             grid-template-rows: auto auto minmax(0, 1fr);
->>>>>>> prompts/feature/dynamic-prompts-only
+end incoming side
 ```
 
 …with the **incoming 3-row grid** (the chip bar needs its row) **plus any theme line you had**:

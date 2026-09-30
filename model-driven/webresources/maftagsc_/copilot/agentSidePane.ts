@@ -25,6 +25,7 @@ import {
     serializeUserRoles
 } from "./sidecarUserRoles";
 import { createSidecarConnectionSettings } from "./sidecarConnectionSettings";
+import { sidecarStyleOptions } from "./sidecarStyleOptions";
 
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
 const AUTH_REQUEST_KEY = "maftagsc.sidecar.authRequest";
@@ -298,8 +299,10 @@ function showSignIn(): void {
 function applyPaneTitle(title: string): void {
     const safeTitle = (title ?? "").trim() || "Agent Sidecar";
     document.title = safeTitle;
-    const heading = document.getElementById("guide-title");
-    if (heading) heading.textContent = safeTitle;
+    for (const elementId of ["guide-title", "chat-title"]) {
+        const heading = document.getElementById(elementId);
+        if (heading) heading.textContent = safeTitle;
+    }
     const chat = document.getElementById("chat");
     if (chat) chat.setAttribute("aria-label", `${safeTitle} conversation`);
 }
@@ -721,13 +724,7 @@ function renderConversation(
     window.WebChat.renderWebChat({
         directLine: connection,
         store,
-        styleOptions: {
-            accent: "#0f6cbd",
-            primaryFont: "\"Segoe UI\", \"Segoe UI Web (West European)\", -apple-system, system-ui, Roboto, \"Helvetica Neue\", sans-serif",
-            bubbleBackground: "#f5f5f5",
-            bubbleFromUserBackground: "#deecf9",
-            hideUploadButton: true
-        }
+        styleOptions: sidecarStyleOptions
     }, webChat);
 
     activeConnection = connection;

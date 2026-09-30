@@ -40,8 +40,9 @@
   "scripts": {
     "dev": "concurrently \"vite --port 3000\" \"pac code run\"",
     "dev:local": "VITE_USE_MOCK=true vite --port 3000",
+    "dev:sidecar-preview": "node model-driven/preview/serve.mjs",
     "build:model-driven": "node model-driven/build.mjs",
-    "test:model-driven": "node --test model-driven/build.test.mjs",
+    "test:model-driven": "node --test model-driven/build.test.mjs model-driven/preview/serve.test.mjs",
     "typecheck:model-driven": "tsc --project model-driven/tsconfig.json",
     "prototype:seed": "pacaf-seed dataverse/planning-payload.json",
     "typecheck": "tsc --noEmit",
