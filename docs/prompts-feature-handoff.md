@@ -117,21 +117,8 @@ conflict markers. In both, the rule is **keep your theme line AND keep the incom
 Replace this conflict block:
 
 ```
-HEAD side:
             color: var(--your-ink-var);          /* <- your existing theme lines */
             background: var(--your-surface-var);
-incoming side:
-            color: #242424;
-            background: #ffffff;
-
-            /* Suggested-prompt chips — self-contained theme tokens ... */
-            --sidecar-chip-accent: #0f6cbd;
-            --sidecar-chip-bg: #ffffff;
-            --sidecar-chip-hover-bg: #eff6fc;
-            --sidecar-chip-border: #d1d1d1;
-            --sidecar-chip-bar-bg: #fafafa;
-            --sidecar-chip-bar-border: #e0e0e0;
-end incoming side
 ```
 
 …with **your two lines, followed by the chip token block** (drop the incoming `color:`/`background:`
@@ -157,12 +144,8 @@ stock lines — keep YOURS):
 Replace this conflict block:
 
 ```
-HEAD side:
-            grid-template-rows: auto minmax(0, 1fr);
-            background: var(--your-surface-var);   /* <- keep if present in your theme */
-incoming side:
-            grid-template-rows: auto auto minmax(0, 1fr);
-end incoming side
+            grid-template-rows: auto minmax(0, 1fr); /* original themed layout */
+            background: var(--your-surface-var);
 ```
 
 …with the **incoming 3-row grid** (the chip bar needs its row) **plus any theme line you had**:
@@ -226,9 +209,11 @@ In-app authoring writes to a multiline-text column, `maftagsc_prompts`, on the e
 `maftagsc_sidecarconfiguration` table. Add it once per environment. **Runtime chips work without it**
 (they fall back to the bundled catalog), but **saving prompts in the admin app requires it.**
 
-- **Route A — import the solution** (recommended; the column is already defined in
-  `solution/Entities/maftagsc_sidecarconfiguration/Entity.xml`): pack and import the solution the same
-  way you deploy your themed pane today, then **Publish all customizations**.
+- **Route A — import a refreshed solution package**: the column is defined in
+  `solution/Entities/maftagsc_sidecarconfiguration/Entity.xml`, but the checked-in
+  `solution-core/AgentSidecarCore.zip` does not contain it. Use a package exported or packed from
+  the updated solution source before importing, then **Publish all customizations**. Do not rely on
+  the current ZIP to create this column.
 - **Route B — add it manually** in the maker portal: open the **Sidecar configuration**
   (`maftagsc_sidecarconfiguration`) table → **New column** → Display name `Prompts`, name
   `maftagsc_prompts`, data type **Multiline Text**, **not required** → Save → **Publish**.
