@@ -5,7 +5,13 @@ import {
     FallbackSidecarConfigurationRepository
 } from "./sidecarConfigurationRepository";
 
-function entityBinding(logicalName: string, screenName: string): SidecarEntityBinding {
+// Bindings intentionally carry no inline prompts: the suggested-prompt catalog
+// (promptCatalog.ts) is the single source of truth and is applied uniformly to
+// both this bootstrap fallback and the Dataverse-backed configuration at runtime.
+function entityBinding(
+    logicalName: string,
+    screenName: string
+): SidecarEntityBinding {
     return Object.freeze({ logicalName, screenName });
 }
 
@@ -34,6 +40,7 @@ const HR_SIDECAR_CONFIGURATION: SidecarConfiguration = Object.freeze({
     tenantId: "d92190b9-98e7-46da-8b11-580e06c7d15d",
     environmentId: "f9b87f8b-0abf-e629-affb-b13195d1ed14",
     agentSchemaName: "cr0b1_HRMgmtClassic",
+    agentConnectionString: "https://f9b87f8b0abfe629affbb13195d1ed.14.environment.api.powerplatform.com/copilotstudio/dataverse-backed/authenticated/bots/cr0b1_HRMgmtClassic/conversations?api-version=2022-03-01-preview",
     scope: "https://api.powerplatform.com/CopilotStudio.Copilots.Invoke",
     redirectPath: "/WebResources/maftagsc_/copilot/authRedirect.html",
     contextLabel: "HR Management app",

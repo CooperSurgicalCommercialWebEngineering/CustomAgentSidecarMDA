@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSidecarAdministrationProvider } from '@/services/sidecar-provider-factory';
-import type { SidecarConfiguration, SidecarDraft, SidecarProgressCallback } from '@/types/sidecar-admin-models';
+import type { SidecarConfiguration, SidecarDraft, SidecarPromptDefinition, SidecarProgressCallback } from '@/types/sidecar-admin-models';
 
 const provider = createSidecarAdministrationProvider();
 
@@ -9,6 +9,8 @@ export const sidecarQueryKeys = {
   configurations: ['sidecar-admin', 'configurations'] as const,
   configuration: (id: string) => ['sidecar-admin', 'configurations', id] as const,
   targetApps: ['sidecar-admin', 'target-apps'] as const,
+  runtimeEnvironment: ['sidecar-admin', 'runtime-environment'] as const,
+  agents: ['sidecar-admin', 'agents'] as const,
 };
 
 function useConfigurationMutation<TInput>(
@@ -53,6 +55,21 @@ export function useTargetApps() {
   return useQuery({ queryKey: sidecarQueryKeys.targetApps, queryFn: () => provider.discoverTargetApps() });
 }
 
+export function useRuntimeEnvironment() {
+  return useQuery({
+    queryKey: sidecarQueryKeys.runtimeEnvironment,
+    queryFn: () => provider.getRuntimeEnvironmentContext(),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+export function useAgents() {
+  return useQuery({
+    queryKey: sidecarQueryKeys.agents,
+    queryFn: () => provider.discoverAgents(),
+  });
+}
+
 export function useResolveManualTargetApp() {
   return useMutation({ mutationFn: (appId: string) => provider.resolveManualTargetApp(appId) });
 }
@@ -74,6 +91,12 @@ export function useDeploySidecar() {
 
 export function useValidateSidecar() {
   return useConfigurationMutation((id: string) => provider.validate(id));
+}
+
+export function useSavePrompts() {
+  return useConfigurationMutation((input: { id: string; promptsByTable: Record<string, SidecarPromptDefinition[]> }) =>
+    provider.savePrompts(input.id, input.promptsByTable),
+  );
 }
 
 export function useReconcileSidecar() {
