@@ -8,6 +8,18 @@ This is a **mechanical apply/deploy script**, not a "build it from a description
 pre-built, pre-tested branch and walks you through the one small merge you have to confirm. Follow the
 steps in order. Each **VERIFY** gate must pass before you continue.
 
+> ⚠️ **Two solutions live in this repo — do not confuse them.**
+> - **`AgentSidecarCore`** is the reusable **deliverable**: it contains the Agent Sidecar
+>   administration Code App (`maftagsc_agentsidecar_4b928`). This is what customers import.
+> - **`HRAgentSidecar`** is only the **HR reference**. The unpacked **`solution/`** folder in this
+>   repo is that reference (`solution/Other/Solution.xml` → `<UniqueName>HRAgentSidecar</UniqueName>`),
+>   and it does **not** contain the administration Code App.
+>
+> **Never build the customer deliverable by packing `solution/`.** Doing so ships a package with no
+> admin app — the app "disappears" on import. Always produce `AgentSidecarCore.zip` by exporting the
+> **AgentSidecarCore** solution from Dataverse, and validate it with `npm run validate:solution-package`
+> before handing it on.
+
 ---
 
 ## 0. What you are applying (and what you are NOT)
@@ -226,12 +238,24 @@ In-app authoring writes to a multiline-text column, `maftagsc_prompts`, on the e
 `maftagsc_sidecarconfiguration` table. Add it once per environment. **Runtime chips work without it**
 (they fall back to the bundled catalog), but **saving prompts in the admin app requires it.**
 
-- **Route A — import the solution** (recommended; the column is already defined in
-  `solution/Entities/maftagsc_sidecarconfiguration/Entity.xml`): pack and import the solution the same
-  way you deploy your themed pane today, then **Publish all customizations**.
-- **Route B — add it manually** in the maker portal: open the **Sidecar configuration**
-  (`maftagsc_sidecarconfiguration`) table → **New column** → Display name `Prompts`, name
-  `maftagsc_prompts`, data type **Multiline Text**, **not required** → Save → **Publish**.
+- **Route A — ship it inside the AgentSidecarCore solution** (recommended): the column must live in
+  the **AgentSidecarCore** solution — the reusable deliverable that also contains the administration
+  Code App. Add `maftagsc_prompts` to `maftagsc_sidecarconfiguration` **in AgentSidecarCore** (maker
+  portal or `pac`), then export that solution from Dataverse and import the refreshed package. Then
+  **Publish all customizations** and run `npm run validate:solution-package` to confirm the export is
+  complete.
+
+  > ⚠️ **Do NOT pack the repo's `solution/` folder as the deliverable.** That unpacked source is the
+  > **HRAgentSidecar** reference (`solution/Other/Solution.xml` → `<UniqueName>HRAgentSidecar`), which
+  > has **no** administration Code App. Packing and importing it adds the prompts column but makes the
+  > admin app disappear. The `maftagsc_prompts` definition in
+  > `solution/Entities/maftagsc_sidecarconfiguration/Entity.xml` belongs to that HR reference — it does
+  > **not** put the column into the AgentSidecarCore deliverable.
+- **Route B — add just the column** (no rebuild): run `python scripts/provision_sidecar_admin_schema.py`
+  (idempotent; creates `maftagsc_prompts` via the Dataverse Web API), **or** add it manually in the
+  maker portal: open the **Sidecar configuration** (`maftagsc_sidecarconfiguration`) table → **New
+  column** → Display name `Prompts`, name `maftagsc_prompts`, data type **Multiline Text**, **not
+  required** → Save → **Publish**.
 
 ---
 
@@ -259,11 +283,17 @@ Use **your existing deployment path**. The change set is: two web resources + th
 1. **Pane web resources** — publish the regenerated files
    `solution/WebResources/maftagsc_/copilot/agentSidePane.html` and `.../agentSidePane.js` (import the
    solution, or update the two web resources directly), then **Publish all customizations**.
-2. **Administration (Code App)** — from the repo root:
+2. **Administration (Code App)** — from the repo root, push into **AgentSidecarCore** so the admin app
+   and the prompts editor land in the deliverable:
    ```powershell
    pac auth create --environment <YOUR_ENV_URL>   # if not already authed
    npm run build
-   pac code push
+   pac code push -s AgentSidecarCore
+   ```
+   Then export and validate the refreshed deliverable before you hand it on:
+   ```powershell
+   pac solution export --name AgentSidecarCore --path ./solution-core/AgentSidecarCore.zip --managed false --overwrite
+   npm run validate:solution-package
    ```
 3. **Column** — done in Step 6.
 

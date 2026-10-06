@@ -39,5 +39,17 @@ jobs:
       - name: Model-driven Tests
         run: npm run test:model-driven
 
+      - name: Solution Package Validator Tests
+        run: npm run test:solution-package
+
+      # Gate the shippable deliverable. This step is EXPECTED to fail until a
+      # corrected AgentSidecarCore.zip is exported from Dataverse (admin Code App
+      # rebuilt via `pac code push -s AgentSidecarCore` + the maftagsc_prompts
+      # column added, then `pac solution export`). Once the refreshed package is
+      # committed, set `continue-on-error: false` to make this a hard release gate.
+      - name: Validate Solution Package (advisory until re-export)
+        continue-on-error: true
+        run: npm run validate:solution-package
+
       - name: Build
         run: npm run build

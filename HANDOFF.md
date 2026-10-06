@@ -42,8 +42,13 @@ The core capability is **complete and working end to end** in two environments. 
 **Code App changes** (wizard/admin UI in `src/`):
 1. `npm run build && pac code push -s AgentSidecarCore` (dev)
 2. `pac solution export --name AgentSidecarCore --path ./solution-core/AgentSidecarCore.zip --managed false --overwrite`
-3. `pac solution import --path ./solution-core/AgentSidecarCore.zip --environment 7d8dcd87-2e21-e805-b9be-678794ecc80b --publish-changes --force-overwrite`
-4. Commit the refreshed zip and push.
+3. `npm run validate:solution-package` — confirm the export is a complete deliverable (admin Code App + prompts editor + `maftagsc_prompts` column + prompt chips) **before** importing. Do not import a package that fails validation.
+4. `pac solution import --path ./solution-core/AgentSidecarCore.zip --environment <ENVIRONMENT_ID> --publish-changes --force-overwrite`
+5. Commit the refreshed zip and push.
+
+> ⚠️ Always build `AgentSidecarCore.zip` by **exporting the AgentSidecarCore solution** (step 2). Never
+> create the deliverable by packing the repo's `solution/` folder — that is the **HRAgentSidecar**
+> reference and has no administration Code App, so importing it makes the admin app disappear.
 
 **Web-resource changes** (side-pane runtime in `model-driven/`):
 1. `node model-driven/build.mjs` (rebuilds `solution/WebResources/maftagsc_/copilot/*`)
