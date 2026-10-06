@@ -185,6 +185,37 @@ pac auth create --environment <DEV_ENVIRONMENT_URL>   # if not already authed
 pac org who                                            # VERIFY this prints your DEV org
 ```
 
+#### Step 1b — Protect the theme (back up + confirm no drift)
+
+The CooperSurgical side-pane theme (the `--cooper-*` brand colors in `agentSidePane.html`) is **already
+committed in this repo and already live** in your environment. These steps make sure a rebuild can never
+revert it.
+
+1. **Back up the current solution first** — this snapshot preserves the live theme no matter what:
+   ```powershell
+   pac solution export --name AgentSidecarCore --path .\solution-core\AgentSidecarCore-backup-pretheme.zip --managed false --overwrite
+   ```
+2. **Confirm the repo matches the live theme** (so a rebuild reproduces it, not reverts it). Quick check
+   — both should show the same `--cooper-*` tokens:
+   ```powershell
+   # Repo source of truth:
+   Select-String -Path model-driven\webresources\maftagsc_\copilot\agentSidePane.template.html -Pattern '--cooper-'
+   # Live export you just made (open the backup zip's agentSidePane web resource and compare).
+   ```
+   - **If they match** → the theme is in the repo (the expected case). Safe to proceed.
+   - **If the live side-pane has edits the repo lacks** → someone themed it *in the environment*. **Stop**
+     and get those edits into the repo first (commit them), or you will revert Krysta's work in Step 4.
+
+> 🎨 **Theme-risk summary:** only the side-pane **web-resource** step (Step 4) can affect the chat theme.
+> `pac code push` (Step 3) rebuilds the **admin app**, a separate surface. The column (Step 2) and the
+> export (Step 5) never touch the theme.
+>
+> 🔴 **Do NOT merge `feat/coopersurgical-sidecar-theme-ours` (or `…/feat/coopersurgical-sidecar-theme`)
+> "to be safe."** The CooperSurgical theme is **already on `main`** (it arrived via PR #4) and its brand
+> tokens are byte-identical to that branch. Those branches are **stale (Aug 2026)** and predate the
+> chips/prompts work — merging one would **revert** the side-pane, not protect it. Build the theme from
+> `main`, which is the current source of truth.
+
 #### Step 2 — Add the `maftagsc_prompts` column to **AgentSidecarCore**
 
 **Preferred — run the provisioner script** (idempotent; creates the column via the Dataverse Web API,
