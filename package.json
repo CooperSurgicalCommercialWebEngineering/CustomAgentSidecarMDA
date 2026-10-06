@@ -43,6 +43,8 @@
     "dev:sidecar-preview": "node model-driven/preview/serve.mjs",
     "build:model-driven": "node model-driven/build.mjs",
     "test:model-driven": "node --test model-driven/build.test.mjs model-driven/preview/serve.test.mjs",
+    "validate:solution-package": "node scripts/validate-solution-package.mjs",
+    "test:solution-package": "node --test scripts/validate-solution-package.test.mjs",
     "typecheck:model-driven": "tsc --project model-driven/tsconfig.json",
     "prototype:seed": "pacaf-seed dataverse/planning-payload.json",
     "typecheck": "tsc --noEmit",
