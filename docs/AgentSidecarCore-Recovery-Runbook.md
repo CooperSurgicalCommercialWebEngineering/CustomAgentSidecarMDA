@@ -45,8 +45,8 @@ You need **all** of the following:
 - **Node.js 20+** and the repo cloned locally.
 
 > If you only have Dataverse admin but not the dev toolchain, you can still do **Part B, Option 1**
-> (restore the last good app) and **Route B** for the column (add it by hand in the maker portal). The
-> full re-release (Option 2) needs the dev toolchain.
+> (restore the last good app) and add the column (run the provisioner script, or add it by hand in the
+> maker portal — **M4**). The full re-release (Option 2) needs the dev toolchain.
 
 ---
 
@@ -103,7 +103,7 @@ emergencies, or a single missing piece.
 
 | Part | How it gets into Core | Notes |
 |------|-----------------------|-------|
-| Column `maftagsc_prompts` | Add the column **inside AgentSidecarCore** (maker portal or `pac`), then export | The table `maftagsc_sidecarconfiguration` is already a Core root component, so the column exports with Core |
+| Column `maftagsc_prompts` | **Preferred:** run `python scripts/provision_sidecar_admin_schema.py` (creates the column via the Dataverse Web API, idempotent). **Or** add it by hand in the maker portal. Then export. | The table `maftagsc_sidecarconfiguration` is already a Core root component, so the column exports with Core |
 | Admin **prompts editor** | `npm run build` → `pac code push -s AgentSidecarCore` | The editor is bundled into the Code App; a stale bundle = no editor (validator check #9) |
 | **Chip** runtime + catalog | `npm run build:model-driven` → update the 2 web resources → export | Already present in today's Core; chips fall back to a bundled catalog even with no column |
 
@@ -111,10 +111,10 @@ emergencies, or a single missing piece.
 
 | # | Method | When to use | Complete, shippable package? |
 |---|--------|-------------|------------------------------|
-| **M1** | **Build &amp; export from dev** (Part B · Option 2): add column → `pac code push -s AgentSidecarCore` → rebuild web resources → `pac solution export --name AgentSidecarCore` → **validate 10/10** | The real fix; run once per release **in dev** | ✅ Yes — this is the single source of truth |
+| **M1** | **Build &amp; export from dev** (Part B · Option 2): add column (run the provisioner script) → `pac code push -s AgentSidecarCore` → rebuild web resources → `pac solution export --name AgentSidecarCore` → **validate 10/10** | The real fix; run once per release **in dev** | ✅ Yes — this is the single source of truth |
 | **M2** | **Import the validated artifact** to **test/prod** (Part B · Steps 7–8): `pac solution import` the *same* file M1 produced | Promoting to downstream environments | ✅ Consumes M1's ZIP — never rebuild between environments |
 | **M3** | **Interim restore** (Part B · Option 1): re-import the last known-good Core ZIP (`77cd24d`) | The app is down **now** and you need relief before M1 | ⚠️ Un-breaks the app; does **not** add prompts |
-| **M4** | **Manual column only** (Route B): add `maftagsc_prompts` by hand in the maker portal | You can't rebuild, but need admins to save prompts, and the env already runs a prompts-enabled app bundle | ⚠️ Column only; the editor still needs M1's `pac code push` |
+| **M4** | **Column only, no rebuild** (Route B): run `python scripts/provision_sidecar_admin_schema.py` (or add `maftagsc_prompts` by hand) | You can't rebuild, but need admins to save prompts, and the env already runs a prompts-enabled app bundle | ⚠️ Column only; the editor still needs M1's `pac code push` |
 
 > ❌ **Not a method:** packing the repo's `solution/` folder. That is `HRAgentSidecar`, which has no
 > admin app — it is the exact mistake that started this incident.
@@ -187,11 +187,22 @@ pac org who                                            # VERIFY this prints your
 
 #### Step 2 — Add the `maftagsc_prompts` column to **AgentSidecarCore**
 
-In the maker portal, make sure you are **inside the `AgentSidecarCore` solution** (not HRAgentSidecar):
-**Solutions → AgentSidecarCore → Tables → Sidecar configuration (`maftagsc_sidecarconfiguration`) →
-+ New column**:
+**Preferred — run the provisioner script** (idempotent; creates the column via the Dataverse Web API,
+exactly matching the canonical schema — multiline text, `MaxLength` 100000, not required):
 
-- **Display name:** `Prompts`
+```powershell
+# Authenticates with scripts/auth.py against the env in your .env (see .env.template).
+python scripts/provision_sidecar_admin_schema.py
+```
+
+The script is safe to re-run — it skips components that already exist and only adds what's missing
+(including `maftagsc_prompts`). This is the recommended, repeatable path.
+
+**Fallback — add it by hand** in the maker portal. Make sure you are **inside the `AgentSidecarCore`
+solution** (not HRAgentSidecar): **Solutions → AgentSidecarCore → Tables → Sidecar configuration
+(`maftagsc_sidecarconfiguration`) → + New column**:
+
+- **Display name:** `Prompts` (the script labels it "Suggested prompts (JSON)")
 - **Name:** `maftagsc_prompts`
 - **Data type:** **Multiline Text**
 - **Required:** No
@@ -325,7 +336,7 @@ Tick every box before telling anyone "it's fixed in production":
 | Symptom | Cause | Fix |
 |--------|-------|-----|
 | Admin app missing after import | You imported `HRAgentSidecar` (packed `solution/`) | Import a validated **AgentSidecarCore** export instead |
-| Chips show but admins can't save prompts | `maftagsc_prompts` column missing | Part B, Step 2 (or Route B manual column) |
+| Chips show but admins can't save prompts | `maftagsc_prompts` column missing | Part B, Step 2 — run the provisioner script (or add the column by hand) |
 | App present but prompts editor missing | Stale Code App bundle; `pac code push` not run with `-s AgentSidecarCore` | Part B, Step 3, then re-export |
 | `pac code push` asks for a browser / permission error | You used an SPN auth profile | Use a **user** auth profile (see TROUBLESHOOTING.md) |
 | Data disappeared | A solution was **uninstalled** | Restore from backup; never uninstall to "reset" |

@@ -395,6 +395,12 @@ def table_definitions(choice_ids: dict[str, str]) -> tuple[dict[str, Any], ...]:
                 picklist_column("maftagsc_healthstate", "Health State", "ApplicationRequired", choice_ids["maftagsc_sidecarhealthstate"]),
                 datetime_column("maftagsc_lastvalidatedat", "Last Validated At", "None"),
                 memo_column("maftagsc_lastoperationsummary", "Last Operation Summary", 4000, "None"),
+                # Suggested-prompt catalog authored in the admin app and read by the
+                # runtime chips. JSON keyed by table logical name. Matches the
+                # canonical definition in
+                # solution/Entities/maftagsc_sidecarconfiguration/Entity.xml
+                # (Format=text, MaxLength=100000, not required).
+                memo_column("maftagsc_prompts", "Suggested prompts (JSON)", 100000, "None"),
             ],
         },
         {

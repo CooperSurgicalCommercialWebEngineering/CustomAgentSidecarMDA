@@ -251,9 +251,11 @@ In-app authoring writes to a multiline-text column, `maftagsc_prompts`, on the e
   > admin app disappear. The `maftagsc_prompts` definition in
   > `solution/Entities/maftagsc_sidecarconfiguration/Entity.xml` belongs to that HR reference — it does
   > **not** put the column into the AgentSidecarCore deliverable.
-- **Route B — add it manually** in the maker portal: open the **Sidecar configuration**
-  (`maftagsc_sidecarconfiguration`) table → **New column** → Display name `Prompts`, name
-  `maftagsc_prompts`, data type **Multiline Text**, **not required** → Save → **Publish**.
+- **Route B — add just the column** (no rebuild): run `python scripts/provision_sidecar_admin_schema.py`
+  (idempotent; creates `maftagsc_prompts` via the Dataverse Web API), **or** add it manually in the
+  maker portal: open the **Sidecar configuration** (`maftagsc_sidecarconfiguration`) table → **New
+  column** → Display name `Prompts`, name `maftagsc_prompts`, data type **Multiline Text**, **not
+  required** → Save → **Publish**.
 
 ---
 
