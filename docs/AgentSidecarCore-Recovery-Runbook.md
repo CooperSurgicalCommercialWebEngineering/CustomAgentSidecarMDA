@@ -178,6 +178,10 @@ and opens.
 
 Do this in a **development** environment first, then promote the exported file to test/prod.
 
+> **Dev-only today?** That's fine. **Steps 1–6 fix your Dev environment and produce the validated repo
+> artifact** — Dev is working as soon as Steps 1–3 run there. **Steps 7–8 (test → prod) are left here for
+> when you're ready**; skip them until those environments exist, then import the *same* validated file.
+
 #### Step 1 — Confirm where you are
 
 ```powershell
