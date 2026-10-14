@@ -86,6 +86,26 @@ purpose is clear. It continues to provide:
 The Code App prompt editor remains read-only. Suggested-prompt authoring belongs in the centralized
 model-driven Admin app.
 
+#### Setup launcher UX decision
+
+Version 1.0.0.5 intentionally opens Setup & Deployment in a new tab. The model-driven Admin app and
+the Code App are separate Power Apps runtimes, and direct launch avoids adding an environment-level
+Content Security Policy prerequisite to the customer import. It also preserves the Code App's full
+viewport and avoids iframe-specific authentication, storage, popup, scrolling, and navigation
+failure modes in this release.
+
+Microsoft supports embedding a Code App in an iframe when the hosting origin is added to the
+environment's `frame-ancestors` policy. A future release can therefore keep the existing Code App
+unchanged and modify only `adminLauncher.html` to embed the resolved `appopenuri`, with **Open in a
+new tab** retained as a fallback. That option requires each target environment to allow its
+`https://<org>.crm.dynamics.com` origin and must be piloted before customer rollout. See
+[Embed a Code App in an iframe](https://learn.microsoft.com/power-apps/developer/code-apps/how-to/embed-iframe).
+
+Replacing the current browser tab with the Code App was rejected because it removes the
+model-driven navigation shell and relies on browser Back to return. Rebuilding Setup & Deployment
+as a model-driven custom page remains deferred because it would duplicate the existing deployment
+workspace and create substantially greater release risk.
+
 ### Sidecar end-user experience
 
 Regular users continue working in their normal business model-driven apps. They do not need either
