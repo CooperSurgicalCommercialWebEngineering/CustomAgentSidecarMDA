@@ -261,8 +261,8 @@ test('the reader round-trips stored entries', () => {
   assert.match(entries.get('solution.xml').toString('utf8'), /AgentSidecarCore/);
 });
 
-// Regression guard: the currently checked-in package must be recognised as
-// incomplete (missing prompts column + editor) so it cannot ship by accident.
+// Regression guard: the currently checked-in package predates centralized
+// administration and must not be mistaken for the 1.0.0.5 release artifact.
 // Skips cleanly if the artifact is not present in a given checkout.
 test('the checked-in AgentSidecarCore.zip is detected as incomplete', () => {
   const zipPath = resolve(here, '..', 'solution-core', 'AgentSidecarCore.zip');
@@ -276,8 +276,11 @@ test('the checked-in AgentSidecarCore.zip is detected as incomplete', () => {
   assert.ok(passed.has('solution-name'));
   assert.ok(passed.has('admin-app-root-component'));
   assert.ok(passed.has('canvasapp-package-files'));
-  // ...but the prompts feature was never fully packaged into it.
+  // ...but it does not contain the centralized administration surfaces.
   assert.equal(result.ok, false);
-  assert.ok(failed.has('prompts-column'));
-  assert.ok(failed.has('prompts-editor-bundled'));
+  assert.ok(failed.has('admin-model-driven-app-root-component'));
+  assert.ok(failed.has('admin-model-driven-app-sitemap'));
+  assert.ok(failed.has('prompt-editor-web-resource'));
+  assert.ok(failed.has('auth-redirect-web-resource'));
+  assert.ok(failed.has('admin-launcher-web-resource'));
 });
