@@ -25,10 +25,25 @@ const LOCAL_SIGNATURE = 0x04034b50;
 export const EXPECTED_SOLUTION_NAME = 'AgentSidecarCore';
 export const REFERENCE_SOLUTION_NAME = 'HRAgentSidecar';
 export const CODE_APP_SCHEMA = 'maftagsc_agentsidecar_4b928';
+export const ADMIN_MODEL_DRIVEN_APP_SCHEMA = 'cr27f_AgentSidecarAdministration';
 export const PROMPTS_COLUMN = 'maftagsc_prompts';
 export const CODE_APP_DIR = `CanvasApps/${CODE_APP_SCHEMA}_CodeAppPackages/`;
 export const PROMPTS_EDITOR_MARKERS = ['Suggested prompts', 'Prompt text sent to the agent'];
 export const PROMPT_CHIP_MARKER = 'prompt-chip';
+export const PROMPT_EDITOR_WEB_RESOURCE = 'maftagsc_/copilot/promptEditor.html';
+export const PROMPT_EDITOR_WEB_RESOURCE_MARKERS = ['getCurrentAppProperties', 'maftagsc_prompts'];
+export const AUTH_REDIRECT_WEB_RESOURCE = 'maftagsc_/copilot/authRedirect.html';
+export const AUTH_REDIRECT_WEB_RESOURCE_MARKERS = [
+  'handleRedirectPromise',
+  'maftagsc.sidecar.authRequest',
+  'sidecarAuth',
+];
+export const ADMIN_LAUNCHER_WEB_RESOURCE = 'maftagsc_/copilot/adminLauncher.html';
+export const ADMIN_LAUNCHER_WEB_RESOURCE_MARKERS = [
+  'maftagsc_agentsidecar_4b928',
+  'appopenuri',
+  'apps.powerapps.com',
+];
 
 function findEndOfCentralDirectory(buffer) {
   const minimumRecord = 22;
@@ -146,6 +161,32 @@ export function validateSolutionPackage(buffer) {
     adminRoot,
   );
 
+  const adminModelDrivenRoot = rootComponents(solutionXml).some(
+    (component) => /type="80"/.test(component) && component.includes(ADMIN_MODEL_DRIVEN_APP_SCHEMA),
+  );
+  add(
+    'admin-model-driven-app-root-component',
+    `Central Admin model-driven app is a root component (type 80, ${ADMIN_MODEL_DRIVEN_APP_SCHEMA})`,
+    adminModelDrivenRoot,
+  );
+
+  const adminSiteMapRoot = rootComponents(solutionXml).some(
+    (component) => /type="62"/.test(component) && component.includes(ADMIN_MODEL_DRIVEN_APP_SCHEMA),
+  );
+  const adminSiteMapPresent =
+    adminSiteMapRoot &&
+    Boolean(
+      customizationsXml?.includes('<SiteMapUniqueName>cr27f_AgentSidecarAdministration</SiteMapUniqueName>') &&
+      customizationsXml.includes('$webresource:maftagsc_/copilot/promptEditor.html') &&
+      customizationsXml.includes('$webresource:maftagsc_/copilot/adminLauncher.html'),
+    );
+  add(
+    'admin-model-driven-app-sitemap',
+    'Central Admin app site map packages Prompt Management and Setup & Deployment',
+    adminSiteMapPresent,
+    adminSiteMapPresent ? '' : 'the type 62 site map root or one of its administration pages is missing',
+  );
+
   const codeAppFiles = names.filter((name) => name.startsWith(CODE_APP_DIR));
   const hasIndex = codeAppFiles.some((name) => name.endsWith('/index.html'));
   const jsAssets = codeAppFiles.filter((name) => name.endsWith('.js'));
@@ -180,6 +221,57 @@ export function validateSolutionPackage(buffer) {
     'prompt-chip-runtime',
     'Prompt-chip runtime is in the side-pane web resource',
     chipPresent,
+  );
+
+  const promptEditorRoot = rootComponents(solutionXml).some(
+    (component) => /type="61"/.test(component) && component.includes(PROMPT_EDITOR_WEB_RESOURCE),
+  );
+  const promptEditorNames = names.filter((name) => /prompteditor/i.test(name));
+  const promptEditorPresent =
+    promptEditorRoot &&
+    promptEditorNames.some((name) => {
+      const content = entries.get(name)?.toString('utf8') ?? '';
+      return PROMPT_EDITOR_WEB_RESOURCE_MARKERS.every((marker) => content.includes(marker));
+    });
+  add(
+    'prompt-editor-web-resource',
+    'Xrm.WebApi Prompt Management web resource is packaged',
+    promptEditorPresent,
+    promptEditorPresent ? '' : 'promptEditor.html is missing, incomplete, or not a root component',
+  );
+
+  const authRedirectRoot = rootComponents(solutionXml).some(
+    (component) => /type="61"/.test(component) && component.includes(AUTH_REDIRECT_WEB_RESOURCE),
+  );
+  const authRedirectNames = names.filter((name) => /authredirect/i.test(name));
+  const authRedirectPresent =
+    authRedirectRoot &&
+    authRedirectNames.some((name) => {
+      const content = entries.get(name)?.toString('utf8') ?? '';
+      return AUTH_REDIRECT_WEB_RESOURCE_MARKERS.every((marker) => content.includes(marker));
+    });
+  add(
+    'auth-redirect-web-resource',
+    'Compiled MSAL authentication redirect web resource is packaged',
+    authRedirectPresent,
+    authRedirectPresent ? '' : 'authRedirect.html is missing, incomplete, or not a root component',
+  );
+
+  const adminLauncherRoot = rootComponents(solutionXml).some(
+    (component) => /type="61"/.test(component) && component.includes(ADMIN_LAUNCHER_WEB_RESOURCE),
+  );
+  const adminLauncherNames = names.filter((name) => /adminlauncher/i.test(name));
+  const adminLauncherPresent =
+    adminLauncherRoot &&
+    adminLauncherNames.some((name) => {
+      const content = entries.get(name)?.toString('utf8') ?? '';
+      return ADMIN_LAUNCHER_WEB_RESOURCE_MARKERS.every((marker) => content.includes(marker));
+    });
+  add(
+    'admin-launcher-web-resource',
+    'Portable Setup & Deployment launcher web resource is packaged',
+    adminLauncherPresent,
+    adminLauncherPresent ? '' : 'adminLauncher.html is missing, incomplete, or not a root component',
   );
 
   return { ok: checks.every((check) => check.pass), checks };

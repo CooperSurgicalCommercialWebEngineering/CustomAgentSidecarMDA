@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "appId": "71d3fa20-9990-4622-9775-11b56f2ed893",
-  "appDisplayName": "Agent Sidecar",
+  "appDisplayName": "Agent Sidecar Setup & Deployment",
   "region": "prod",
   "environmentId": "f9b87f8b-0abf-e629-affb-b13195d1ed14",
   "description": " ",

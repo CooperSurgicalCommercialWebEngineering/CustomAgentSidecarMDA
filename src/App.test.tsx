@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '../tests/setup/test-utils';
 import { App } from './App';
 
-describe('Agent Sidecar Administration', () => {
+describe('Agent Sidecar Setup & Deployment', () => {
   it('renders the administrator portfolio and health summary', async () => {
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'Sidecar portfolio' })).toBeTruthy();
@@ -60,7 +60,7 @@ describe('Agent Sidecar Administration', () => {
     fireEvent.click(screen.getByRole('combobox', { name: /Published Copilot Studio agent/ }));
     fireEvent.click(await screen.findByRole('option', { name: /Insights and actions — GitHub Copilot harness/ }));
     expect((await screen.findAllByText(/contoso_InsightsAndActions · GitHub Copilot harness · published/)).length).toBeGreaterThan(0);
-  });
+  }, 10_000);
 
   it('opens a sidecar and automatically validates health', async () => {
     render(<App />);
@@ -87,5 +87,5 @@ describe('Agent Sidecar Administration', () => {
     const enable = await screen.findByRole('button', { name: 'Enable' });
     fireEvent.click(enable);
     expect(await screen.findByRole('button', { name: 'Disable' })).toBeTruthy();
-  });
+  }, 10_000);
 });

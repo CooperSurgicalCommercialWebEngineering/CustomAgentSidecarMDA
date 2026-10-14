@@ -151,9 +151,56 @@ test("solution projections exactly match maintained web resources", async () => 
         await read(sourceRoot, "agentSidePane.js")
     );
     assert.equal(
+        await read(solutionRoot, "promptEditor.html"),
+        await read(sourceRoot, "promptEditor.html")
+    );
+    assert.equal(
         await read(solutionRoot, "agentGuideLibrary.svg"),
         await read(sourceRoot, "agentGuideLibrary.svg")
     );
+    assert.equal(
+        await read(solutionRoot, "adminLauncher.html"),
+        await read(sourceRoot, "adminLauncher.html")
+    );
+});
+
+test("central admin launcher resolves the environment-specific Code App URL", async () => {
+    const source = await read(sourceRoot, "adminLauncher.ts");
+    const template = await read(sourceRoot, "adminLauncher.template.html");
+
+    assert.match(source, /maftagsc_agentsidecar_4b928/);
+    assert.match(source, /retrieveMultipleRecords/);
+    assert.match(source, /appopenuri/);
+    assert.match(source, /apps\.powerapps\.com/);
+    assert.match(source, /result\.entities\.length > 1/);
+    assert.doesNotMatch(source, /db02e4be|505fd4e7|87f120ad/);
+    assert.match(template, /Open Setup &amp; Deployment/);
+    assert.match(template, /target="_blank"/);
+    assert.match(template, /rel="noopener noreferrer"/);
+});
+
+test("prompt management uses the host Dataverse session and notifies open panes", async () => {
+    const source = await read(sourceRoot, "promptEditor.ts");
+    const template = await read(sourceRoot, "promptEditor.template.html");
+    const paneSource = await read(sourceRoot, "agentSidePane.ts");
+
+    assert.match(source, /getCurrentAppProperties/);
+    assert.match(source, /configuration-select/);
+    assert.match(source, /statecode eq 0&\$orderby=maftagsc_appdisplayname asc/);
+    assert.match(source, /hostMatches/);
+    assert.match(source, /configuration\.maftagsc_appid/);
+    assert.match(source, /Xrm/);
+    assert.match(source, /WebApi\.retrieveMultipleRecords/);
+    assert.match(source, /WebApi\.updateRecord/);
+    assert.match(source, /maftagsc_prompts/);
+    assert.match(source, /modifiedon/);
+    assert.match(source, /BroadcastChannel/);
+    assert.match(source, /maftagsc\.sidecar\.prompts/);
+    assert.doesNotMatch(source, /PowerPlatform\.Dataverse|connectionReferences|acquireToken/);
+    assert.match(template, /existing Dataverse privileges/);
+    assert.match(template, /Choose the model-driven app/);
+    assert.match(paneSource, /refreshActivePrompts/);
+    assert.match(paneSource, /PROMPT_REFRESH_CHANNEL/);
 });
 
 test("authentication redirect runs the MSAL 5 broadcast bridge without loading the host app", async () => {

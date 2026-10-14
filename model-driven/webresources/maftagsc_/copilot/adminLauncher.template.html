@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agent Sidecar Setup &amp; Deployment</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --blue: #005596;
+            --blue-dark: #004270;
+            --blue-soft: #e8f3f8;
+            --purple: #6c2196;
+            --ink: #3f4143;
+            --muted: #636466;
+            --surface: #f7fafc;
+            --line: #dbe5eb;
+            --danger: #b10e1e;
+            font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, system-ui, sans-serif;
+            color: var(--ink);
+            background: var(--surface);
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--surface); }
+        header {
+            padding: 24px clamp(18px, 4vw, 48px);
+            color: #fff;
+            background: linear-gradient(120deg, var(--blue-dark), var(--blue), var(--purple));
+        }
+        header h1 { margin: 0 0 6px; font-size: 26px; }
+        header p { margin: 0; opacity: .9; }
+        main { max-width: 900px; margin: 0 auto; padding: 28px clamp(18px, 4vw, 48px); }
+        .card {
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgb(24 55 72 / 8%);
+        }
+        .card h2 { margin: 0 0 10px; font-size: 20px; }
+        .card p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+        #status {
+            margin: 18px 0;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface);
+        }
+        #status[data-kind="error"] { border-color: #e5a4aa; color: var(--danger); }
+        #status[data-kind="success"] { border-color: #9bc9ad; color: #126b36; }
+        .launch {
+            display: inline-flex;
+            align-items: center;
+            min-height: 40px;
+            padding: 9px 18px;
+            border-radius: 999px;
+            color: #fff;
+            background: var(--blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .launch:hover { background: var(--blue-dark); }
+        .launch:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+        .launch[aria-disabled="true"] { opacity: .55; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Agent Sidecar Setup &amp; Deployment</h1>
+        <p>Configure apps, agents, table bindings, deployment health, and lifecycle operations.</p>
+    </header>
+    <main>
+        <section class="card">
+            <h2>Open the deployment workspace</h2>
+            <p>
+                Setup &amp; Deployment opens in a new tab. Return to this administration app for
+                day-to-day Prompt Management.
+            </p>
+            <div id="status" role="status" aria-live="polite">
+                Locating Agent Sidecar Setup &amp; Deployment…
+            </div>
+            <a
+                id="launch"
+                class="launch"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-disabled="true"
+            >Open Setup &amp; Deployment</a>
+        </section>
+    </main>
+    <!-- AGENT_SIDECAR_ADMIN_LAUNCHER_BUNDLE -->
+</body>
+</html>

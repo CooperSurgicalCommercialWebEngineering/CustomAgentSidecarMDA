@@ -97,9 +97,10 @@ interface SidecarPromptsEditorProps {
   tables: TargetTable[];
   busy: boolean;
   onSave: (promptsByTable: PromptsByTable) => Promise<void>;
+  readOnly?: boolean;
 }
 
-export function SidecarPromptsEditor({ tables, busy, onSave }: SidecarPromptsEditorProps) {
+export function SidecarPromptsEditor({ tables, busy, onSave, readOnly = false }: SidecarPromptsEditorProps) {
   const styles = useStyles();
 
   const serverDraft = useMemo(() => tablesToDraft(tables), [tables]);
@@ -123,7 +124,7 @@ export function SidecarPromptsEditor({ tables, busy, onSave }: SidecarPromptsEdi
     }
   }, [serverSignature, serverDraft, draftSignature]);
 
-  const disabled = busy || saving;
+  const disabled = busy || saving || readOnly;
 
   const allOpen = tables.length > 0 && tables.every((table) => openTables[table.logicalName]);
   const toggleTable = (logicalName: string) =>
@@ -182,6 +183,16 @@ export function SidecarPromptsEditor({ tables, busy, onSave }: SidecarPromptsEdi
         </MessageBar>
       )}
 
+      {readOnly && (
+        <MessageBar intent="info">
+          <MessageBarBody>
+            <MessageBarTitle>Prompt editing moved</MessageBarTitle>
+            Use the Prompt Management page in the target model-driven app. It uses your existing
+            Dataverse session and does not require a separate connector approval.
+          </MessageBarBody>
+        </MessageBar>
+      )}
+
       {tables.length === 0 && <Text className={styles.empty}>No bound tables yet. Deploy the sidecar to author prompts.</Text>}
 
       {tables.length > 0 && (
@@ -234,14 +245,16 @@ export function SidecarPromptsEditor({ tables, busy, onSave }: SidecarPromptsEdi
                       onChange={(_, data) => updatePrompt(table.logicalName, prompt.key, { label: data.value })}
                     />
                   </div>
-                  <Button
-                    appearance="subtle"
-                    icon={<DeleteRegular />}
-                    disabled={disabled}
-                    aria-label="Remove prompt"
-                    title="Remove prompt"
-                    onClick={() => removePrompt(table.logicalName, prompt.key)}
-                  />
+                  {!readOnly && (
+                    <Button
+                      appearance="subtle"
+                      icon={<DeleteRegular />}
+                      disabled={disabled}
+                      aria-label="Remove prompt"
+                      title="Remove prompt"
+                      onClick={() => removePrompt(table.logicalName, prompt.key)}
+                    />
+                  )}
                 </div>
                 <Text className={styles.fieldLabel}>Prompt text sent to the agent</Text>
                 <Textarea
@@ -262,7 +275,7 @@ export function SidecarPromptsEditor({ tables, busy, onSave }: SidecarPromptsEdi
               </div>
             ))}
 
-                <div>
+                {!readOnly && <div>
                   <Button
                     appearance="secondary"
                     icon={<AddRegular />}
@@ -271,14 +284,14 @@ export function SidecarPromptsEditor({ tables, busy, onSave }: SidecarPromptsEdi
                   >
                     Add prompt
                   </Button>
-                </div>
+                </div>}
               </>
             )}
           </div>
         );
       })}
 
-      {tables.length > 0 && (
+      {tables.length > 0 && !readOnly && (
         <div className={styles.footer}>
           <Button appearance="primary" icon={<SaveRegular />} disabled={disabled || !isDirty} onClick={save}>
             {saving ? 'Saving…' : 'Save prompts'}

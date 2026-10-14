@@ -1,5 +1,15 @@
 # Agent Sidecar — Session Handoff
 
+> **October 13, 2026 update:** The remainder of this file describes the earlier baseline and is
+> retained for historical context. The current source of truth is
+> [`docs/AgentSidecarCore-1.0.0.5-Release-Record.md`](docs/AgentSidecarCore-1.0.0.5-Release-Record.md).
+> The authoritative repository is
+> `CooperSurgicalCommercialWebEngineering/CustomAgentSidecarMDA`, and the current working branch is
+> `chore/agentsidecarcore-release-safeguards`. Marty Carreras' repositories are references only.
+> Version 1.0.0.5 adds centralized Prompt Management, the Agent Sidecar Administration
+> model-driven app and site map, the portable Setup & Deployment launcher, the required
+> `authRedirect.html`, and a 15-check release gate.
+
 ## What this project is now
 
 Agent Sidecar is a **reusable capability** that adds a persistent, context-aware Copilot Studio assistant to any Dataverse model-driven app. It is deployed by importing one solution (`solution-core/AgentSidecarCore.zip`) and configured through an in-app admin wizard. **HR Management is the optional reference implementation only.** See `README.md` for the product framing.

@@ -18,6 +18,12 @@ const templatePath = path.join(copilotRoot, "agentSidePane.template.html");
 const outputPath = path.join(copilotRoot, "agentSidePane.html");
 const authRedirectPath = path.join(copilotRoot, "authRedirect.html");
 const authRedirectEntryPath = path.join(copilotRoot, "authRedirect.ts");
+const promptEditorTemplatePath = path.join(copilotRoot, "promptEditor.template.html");
+const promptEditorEntryPath = path.join(copilotRoot, "promptEditor.ts");
+const promptEditorOutputPath = path.join(copilotRoot, "promptEditor.html");
+const adminLauncherTemplatePath = path.join(copilotRoot, "adminLauncher.template.html");
+const adminLauncherEntryPath = path.join(copilotRoot, "adminLauncher.ts");
+const adminLauncherOutputPath = path.join(copilotRoot, "adminLauncher.html");
 const solutionOutputPath = path.resolve(
     modelDrivenRoot,
     "..",
@@ -54,8 +60,28 @@ const solutionIconPath = path.resolve(
     "copilot",
     "agentGuideLibrary.svg"
 );
+const solutionPromptEditorPath = path.resolve(
+    modelDrivenRoot,
+    "..",
+    "solution",
+    "WebResources",
+    "maftagsc_",
+    "copilot",
+    "promptEditor.html"
+);
+const solutionAdminLauncherPath = path.resolve(
+    modelDrivenRoot,
+    "..",
+    "solution",
+    "WebResources",
+    "maftagsc_",
+    "copilot",
+    "adminLauncher.html"
+);
 const marker = "<!-- HR_AGENT_SIDEPANE_BUNDLE -->";
 const authRedirectMarker = "<!-- HR_AGENT_AUTH_REDIRECT_BUNDLE -->";
+const promptEditorMarker = "<!-- AGENT_SIDECAR_PROMPT_EDITOR_BUNDLE -->";
+const adminLauncherMarker = "<!-- AGENT_SIDECAR_ADMIN_LAUNCHER_BUNDLE -->";
 
 async function bundle(entryPoint) {
     const result = await build({
@@ -113,15 +139,59 @@ if (
     throw new Error("The generated authentication redirect page failed structural validation.");
 }
 
+const promptEditorTemplate = await readFile(promptEditorTemplatePath, "utf8");
+if (!promptEditorTemplate.includes(promptEditorMarker)) {
+    throw new Error("The prompt editor template is missing its bundle marker.");
+}
+const promptEditorBundle = await bundle(promptEditorEntryPath);
+const promptEditorHtml = promptEditorTemplate.replace(
+    promptEditorMarker,
+    () => `<script>${promptEditorBundle}</script>`
+);
+if (
+    (promptEditorHtml.match(/<!doctype html>/gi) ?? []).length !== 1 ||
+    promptEditorHtml.includes(promptEditorMarker) ||
+    !promptEditorHtml.includes("maftagsc_prompts") ||
+    !promptEditorHtml.includes("getCurrentAppProperties")
+) {
+    throw new Error("The generated prompt editor failed structural validation.");
+}
+
+const adminLauncherTemplate = await readFile(adminLauncherTemplatePath, "utf8");
+if (!adminLauncherTemplate.includes(adminLauncherMarker)) {
+    throw new Error("The admin launcher template is missing its bundle marker.");
+}
+const adminLauncherBundle = await bundle(adminLauncherEntryPath);
+const adminLauncherHtml = adminLauncherTemplate.replace(
+    adminLauncherMarker,
+    () => `<script>${adminLauncherBundle}</script>`
+);
+if (
+    (adminLauncherHtml.match(/<!doctype html>/gi) ?? []).length !== 1 ||
+    adminLauncherHtml.includes(adminLauncherMarker) ||
+    !adminLauncherHtml.includes("maftagsc_agentsidecar_4b928") ||
+    !adminLauncherHtml.includes("appopenuri")
+) {
+    throw new Error("The generated admin launcher failed structural validation.");
+}
+
 await writeFile(outputPath, html, "utf8");
 await writeFile(launcherPath, launcherBundle, "utf8");
 await writeFile(solutionOutputPath, html, "utf8");
 await writeFile(solutionAuthRedirectPath, authRedirectHtml, "utf8");
 await writeFile(solutionLauncherPath, launcherBundle, "utf8");
 await writeFile(solutionIconPath, await readFile(iconPath, "utf8"), "utf8");
+await writeFile(promptEditorOutputPath, promptEditorHtml, "utf8");
+await writeFile(solutionPromptEditorPath, promptEditorHtml, "utf8");
+await writeFile(adminLauncherOutputPath, adminLauncherHtml, "utf8");
+await writeFile(solutionAdminLauncherPath, adminLauncherHtml, "utf8");
 
 console.log(`Built ${path.relative(process.cwd(), outputPath)}`);
 console.log(`Synced ${path.relative(process.cwd(), solutionOutputPath)}`);
 console.log(`Synced ${path.relative(process.cwd(), solutionAuthRedirectPath)}`);
 console.log(`Synced ${path.relative(process.cwd(), solutionLauncherPath)}`);
 console.log(`Synced ${path.relative(process.cwd(), solutionIconPath)}`);
+console.log(`Built ${path.relative(process.cwd(), promptEditorOutputPath)}`);
+console.log(`Synced ${path.relative(process.cwd(), solutionPromptEditorPath)}`);
+console.log(`Built ${path.relative(process.cwd(), adminLauncherOutputPath)}`);
+console.log(`Synced ${path.relative(process.cwd(), solutionAdminLauncherPath)}`);

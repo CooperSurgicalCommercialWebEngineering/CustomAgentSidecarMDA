@@ -77,6 +77,11 @@ const VALID_SOLUTION_XML = `<?xml version="1.0"?>
     <UniqueName>AgentSidecarCore</UniqueName>
     <RootComponents>
       <RootComponent type="300" schemaName="maftagsc_agentsidecar_4b928" behavior="0" />
+      <RootComponent type="80" schemaName="cr27f_AgentSidecarAdministration" behavior="0" />
+      <RootComponent type="62" schemaName="cr27f_AgentSidecarAdministration" behavior="0" />
+      <RootComponent type="61" schemaName="maftagsc_/copilot/adminLauncher.html" behavior="0" />
+      <RootComponent type="61" schemaName="maftagsc_/copilot/promptEditor.html" behavior="0" />
+      <RootComponent type="61" schemaName="maftagsc_/copilot/authRedirect.html" behavior="0" />
     </RootComponents>
   </SolutionManifest>
 </ImportExportXml>`;
@@ -91,6 +96,15 @@ const VALID_CUSTOMIZATIONS_XML = `<?xml version="1.0"?>
       </attributes>
     </Entity>
   </Entities>
+  <AppModuleSiteMaps>
+    <AppModuleSiteMap>
+      <SiteMapUniqueName>cr27f_AgentSidecarAdministration</SiteMapUniqueName>
+      <SiteMap>
+        <SubArea Url="$webresource:maftagsc_/copilot/promptEditor.html" />
+        <SubArea Url="$webresource:maftagsc_/copilot/adminLauncher.html" />
+      </SiteMap>
+    </AppModuleSiteMap>
+  </AppModuleSiteMaps>
 </ImportExportXml>`;
 
 function validFiles() {
@@ -105,6 +119,18 @@ function validFiles() {
     {
       name: 'WebResources/maftagsc_copilotagentSidePanehtml71CEA068',
       content: '<div class="prompt-chip">Summarize</div>',
+    },
+    {
+      name: 'WebResources/maftagsc_copilotpromptEditorhtml0B217A23',
+      content: '<script>getCurrentAppProperties();const field="maftagsc_prompts";</script>',
+    },
+    {
+      name: 'WebResources/maftagsc_copilotauthRedirecthtml1B88ACD6',
+      content: '<script>handleRedirectPromise();localStorage.getItem("maftagsc.sidecar.authRequest");const start="sidecarAuth";</script>',
+    },
+    {
+      name: 'WebResources/maftagsc_copilotadminLauncherhtmlCC61283A',
+      content: '<script>const schema="maftagsc_agentsidecar_4b928";const field="appopenuri";const host="apps.powerapps.com";</script>',
     },
   ];
 }
@@ -134,10 +160,35 @@ test('the HRAgentSidecar reference name is rejected', () => {
 
 test('a missing admin Code App root component is caught', () => {
   const files = validFiles();
-  files[0].content = VALID_SOLUTION_XML.replace(/<RootComponents>[\s\S]*<\/RootComponents>/, '<RootComponents />');
+  files[0].content = VALID_SOLUTION_XML.replace(
+    '<RootComponent type="300" schemaName="maftagsc_agentsidecar_4b928" behavior="0" />',
+    '',
+  );
   const result = validateSolutionPackage(makeZip(files));
   assert.equal(result.ok, false);
   assert.ok(failIds(result).has('admin-app-root-component'));
+});
+
+test('a missing central Admin model-driven app root component is caught', () => {
+  const files = validFiles();
+  files[0].content = VALID_SOLUTION_XML.replace(
+    '<RootComponent type="80" schemaName="cr27f_AgentSidecarAdministration" behavior="0" />',
+    '',
+  );
+  const result = validateSolutionPackage(makeZip(files));
+  assert.equal(result.ok, false);
+  assert.ok(failIds(result).has('admin-model-driven-app-root-component'));
+});
+
+test('a missing central Admin app sitemap is caught', () => {
+  const files = validFiles();
+  files[0].content = VALID_SOLUTION_XML.replace(
+    '<RootComponent type="62" schemaName="cr27f_AgentSidecarAdministration" behavior="0" />',
+    '',
+  );
+  const result = validateSolutionPackage(makeZip(files));
+  assert.equal(result.ok, false);
+  assert.ok(failIds(result).has('admin-model-driven-app-sitemap'));
 });
 
 test('missing Code App package files are caught', () => {
@@ -171,6 +222,31 @@ test('a side-pane without prompt-chip runtime is caught', () => {
   const result = validateSolutionPackage(makeZip(files));
   assert.equal(result.ok, false);
   assert.ok(failIds(result).has('prompt-chip-runtime'));
+});
+
+test('a missing Xrm.WebApi prompt editor is caught', () => {
+  const files = validFiles().filter((file) => !/promptEditor/i.test(file.name));
+  const result = validateSolutionPackage(makeZip(files));
+  assert.equal(result.ok, false);
+  assert.ok(failIds(result).has('prompt-editor-web-resource'));
+});
+
+test('a missing MSAL authentication redirect is caught', () => {
+  const files = validFiles().filter((file) => !/authRedirect/i.test(file.name));
+  const result = validateSolutionPackage(makeZip(files));
+  assert.equal(result.ok, false);
+  assert.ok(failIds(result).has('auth-redirect-web-resource'));
+});
+
+test('a missing portable Setup launcher is caught', () => {
+  const files = validFiles().filter((file) => !/adminLauncher/i.test(file.name));
+  files[0].content = files[0].content.replace(
+    '<RootComponent type="61" schemaName="maftagsc_/copilot/adminLauncher.html" behavior="0" />',
+    '',
+  );
+  const result = validateSolutionPackage(makeZip(files));
+  assert.equal(result.ok, false);
+  assert.ok(failIds(result).has('admin-launcher-web-resource'));
 });
 
 test('a non-ZIP buffer fails the readability check', () => {
