@@ -6,9 +6,8 @@
 
 **Release type:** Unmanaged in-place update
 
-**Status:** Package built, validated, and re-imported in an internal non-production environment; exact
-`1.0.0.3 → 1.0.0.5` customer-style upgrade remains to be run in an environment that has
-`1.0.0.3`.
+**Status:** Package built, validated, re-imported, and accepted through an exact unmanaged
+`1.0.0.3 → 1.0.0.5` update in separate non-production environments.
 
 ## Source control and ownership
 
@@ -184,6 +183,7 @@ Final result: **15/15 passed**.
 | Final package validation | `15/15` passed |
 | Customer-neutrality scan | Passed |
 | Final non-production same-version re-import | Passed |
+| Exact unmanaged `1.0.0.3 → 1.0.0.5` update | Passed |
 
 The customer-neutrality scan found no source tenant ID, environment ID, pilot app ID, Sidecar
 configuration ID, Entra client ID, agent name, or pilot-table logical name in the package.
@@ -201,8 +201,17 @@ After final package import:
 - The temporary Prompt Management page remained absent from the pilot business app.
 - The authentication redirect remained packaged and published.
 
-The exact `1.0.0.3 → 1.0.0.5` upgrade was not claimed because none of the authenticated test
-environments had version `1.0.0.3`. That test must be performed in a real 1.0.0.3 environment.
+On October 14, 2026, the exact unmanaged `1.0.0.3 → 1.0.0.5` customer-style update was validated
+in a separate non-production environment:
+
+- `1.0.0.3` was imported first and configured against an existing model-driven app and published
+  Copilot Studio agent.
+- The final `1.0.0.5` ZIP was imported over `1.0.0.3` without uninstalling the solution.
+- The existing Sidecar configuration, target table/form binding, enabled state, agent selection,
+  and stored Agents SDK connection string were preserved.
+- The Sidecar completed delegated sign-in and returned an agent response after the update.
+- **Agent Sidecar Administration**, **Prompt Management**, and **Setup & Deployment** were present
+  and opened successfully.
 
 ## Customer update procedure
 
@@ -289,4 +298,4 @@ Before opening the pull request:
 - Commit the source, generated web resources, tests, and general documentation.
 - Open a pull request from `chore/agentsidecarcore-release-safeguards` to `main`.
 - Attach or link the validated ZIP according to the repository's release policy.
-- After exact `1.0.0.3 → 1.0.0.5` acceptance, tag the approved commit as `v1.0.0.5`.
+- After pull-request approval and merge, tag the approved commit as `v1.0.0.5`.

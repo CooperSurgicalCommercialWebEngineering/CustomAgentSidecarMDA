@@ -29,5 +29,8 @@ Notable user-visible changes to Agent Sidecar Platform are recorded here.
   app.
 - Option 1 removes separate Dataverse connector consent for prompt editing. It does not implement
   silent SSO for the Sidecar conversation.
+- The exact unmanaged `1.0.0.3 → 1.0.0.5` update was accepted in a non-production environment with
+  configuration, target binding, agent sign-in, message exchange, Prompt Management, and Setup &
+  Deployment verified after import.
 - The theme uses portable system fonts rather than CooperSurgical's proprietary typeface.
 - Maintainers can customize the shell in `model-driven/webresources/maftagsc_/copilot/agentSidePane.template.html` and Web Chat styling in `model-driven/webresources/maftagsc_/copilot/sidecarStyleOptions.ts`.

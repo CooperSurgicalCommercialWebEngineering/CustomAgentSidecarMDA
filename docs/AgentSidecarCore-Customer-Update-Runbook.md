@@ -6,6 +6,10 @@ Agent Sidecar installation.
 **Purpose:** update the existing `AgentSidecarCore` solution using a completed, validated solution
 ZIP supplied by the release owner.
 
+The unmanaged `1.0.0.3 → 1.0.0.5` update procedure in this runbook was validated successfully in
+a non-production environment on October 14, 2026. Existing configuration and form-binding data
+were preserved, and post-update agent sign-in and message exchange succeeded.
+
 ## What you do — and do not need to do
 
 You are performing a **solution update**, not producing a release.
