@@ -150,7 +150,7 @@ export function SidecarDetails({ configuration, loading, busy, error, report, on
             {configuration.tables.map((table) => <div className={styles.tableRow} key={table.logicalName}><div><Text weight="semibold">{table.displayName}</Text><br /><Text size={200} className={styles.muted}>{table.logicalName}</Text></div><Text>{table.formCount} main form{table.formCount === 1 ? '' : 's'}</Text></div>)}
           </Card>
 
-          <SidecarPromptsEditor tables={configuration.tables} busy={busy} onSave={onSavePrompts} />
+          <SidecarPromptsEditor tables={configuration.tables} busy={busy} onSave={onSavePrompts} readOnly />
         </div>
 
         <aside className={styles.stack}>

@@ -41,7 +41,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <header className={styles.header}>
         <div className={styles.brand}>
           <ShieldLockRegular />
-          <Title3>Agent Sidecar Administration</Title3>
+          <Title3>Agent Sidecar Setup &amp; Deployment</Title3>
         </div>
         <nav className={styles.nav} aria-label="Administration navigation">
           <Button

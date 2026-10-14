@@ -17,6 +17,11 @@ and make sure it can never silently disappear again.
 > - **A GitHub change by itself does NOT fix your environment.** The administration app only comes back
 >   when a **corrected `AgentSidecarCore` solution is exported from Dataverse and imported**. Follow
 >   **Part B**.
+>
+> **Received a completed `AgentSidecarCore` ZIP from the release owner?** Do not run the repository
+> build, npm, Python, Code App push, or export steps in this document. Follow the
+> [Customer Update Runbook](./AgentSidecarCore-Customer-Update-Runbook.md) to update the existing
+> solution in place. Do not delete or uninstall the current solution.
 
 ---
 
@@ -111,7 +116,7 @@ emergencies, or a single missing piece.
 
 | # | Method | When to use | Complete, shippable package? |
 |---|--------|-------------|------------------------------|
-| **M1** | **Build &amp; export from dev** (Part B · Option 2): add column (run the provisioner script) → `pac code push -s AgentSidecarCore` → rebuild web resources → `pac solution export --name AgentSidecarCore` → **validate 10/10** | The real fix; run once per release **in dev** | ✅ Yes — this is the single source of truth |
+| **M1** | **Build &amp; export from dev** (Part B · Option 2): add column (run the provisioner script) → `pac code push -s AgentSidecarCore` → rebuild web resources → `pac solution export --name AgentSidecarCore` → **validate 15/15** | The real fix; run once per release **in dev** | ✅ Yes — this is the single source of truth |
 | **M2** | **Import the validated artifact** to **test/prod** (Part B · Steps 7–8): `pac solution import` the *same* file M1 produced | Promoting to downstream environments | ✅ Consumes M1's ZIP — never rebuild between environments |
 | **M3** | **Interim restore** (Part B · Option 1): re-import the last known-good Core ZIP (`77cd24d`) | The app is down **now** and you need relief before M1 | ⚠️ Un-breaks the app; does **not** add prompts |
 | **M4** | **Column only, no rebuild** (Route B): run `python scripts/provision_sidecar_admin_schema.py` (or add `maftagsc_prompts` by hand) | You can't rebuild, but need admins to save prompts, and the env already runs a prompts-enabled app bundle | ⚠️ Column only; the editor still needs M1's `pac code push` |
@@ -358,7 +363,7 @@ After importing to a non-production environment, verify:
 Tick every box before telling anyone "it's fixed in production":
 
 - [ ] The administration app opens in the target environment.
-- [ ] `npm run validate:solution-package` printed **OK: 10/10 checks passed** for the file you shipped.
+- [ ] `npm run validate:solution-package` printed **OK: 15/15 checks passed** for the file you shipped.
 - [ ] You imported the **same** file you validated (no rebuild between test and prod).
 - [ ] Prompts can be authored **and** persist, and chips render on forms.
 - [ ] The validated `AgentSidecarCore.zip` is committed to the repo.

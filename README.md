@@ -6,6 +6,8 @@ You stand it up by importing one solution and configuring it through an in-app w
 
 ## What's new
 
+- **🆕 Centralized administration front door.** `AgentSidecarCore 1.0.0.5` packages an **Agent Sidecar Administration** model-driven app with **Setup & Deployment** and **Prompt Management**. Setup dynamically launches the environment's installed Code App; Prompt Management uses the signed-in model-driven app session through `Xrm.WebApi`, avoiding a separate Dataverse connector-consent prompt. See the [1.0.0.5 release record](docs/AgentSidecarCore-1.0.0.5-Release-Record.md).
+- **🆕 Suggested prompts.** Administrators can maintain up to six role-aware suggested prompts per configured table. Open Sidecar panes refresh prompt chips after a save without restarting the conversation.
 - **🆕 CooperSurgical-inspired theme.** The sidecar now uses refined blue and purple conversation chrome, pill-shaped controls, and rounded asymmetric message bubbles with subtle tails. It uses portable system fonts rather than CooperSurgical's proprietary typeface. Fork maintainers can customize the shell in [model-driven/webresources/maftagsc_/copilot/agentSidePane.template.html](model-driven/webresources/maftagsc_/copilot/agentSidePane.template.html) and Web Chat options in [model-driven/webresources/maftagsc_/copilot/agentSidePane.ts](model-driven/webresources/maftagsc_/copilot/agentSidePane.ts), then rebuild rather than editing generated HTML. See [CHANGELOG.md](CHANGELOG.md) for the full change history.
 - **Styling and release resources.** Use the [interactive styling and release guide](https://martycarreras-psnl.github.io/CustomAgentMDA/) for machine prerequisites, safe customization, validation, Dynamics iteration, and solution promotion. The [downloadable guide bundle](https://martycarreras-psnl.github.io/CustomAgentMDA/AgentSidecarStylingGuideBundle.zip) includes the guide and its [validated Dynamics screenshot](https://martycarreras-psnl.github.io/CustomAgentMDA/assets/agent-sidecar-coopersurgical-theme.png) for offline sharing.
 - **🆕 Role-aware context.** The sidecar now passes the signed-in user's **Dataverse security-role names** to the agent alongside the page and record context, so the assistant can tailor its tone and guidance to who the person is. Roles ride in the same trusted per-message envelope as the rest of the context (and are also exposed as a `CurrentUserRoles` variable for topic branching), so they update on sign-in and require no Copilot Studio variable setup to take effect. Roles are treated as **context only, never authorization** — the agent's knowledge stays gated by each user's own delegated permissions, only role names are used, and no role data is logged.
@@ -17,7 +19,8 @@ You stand it up by importing one solution and configuring it through an in-app w
 - A **persistent side pane** on the forms you select, keyed per app, that stays open and keeps its conversation as users navigate between records.
 - **Live context**: the current table, record, and screen are sent to your agent before every message and updated automatically as the user moves around the app.
 - **Delegated authentication** (Microsoft Entra, authorization code with PKCE): the agent answers as the signed-in user, so knowledge stays subject to that user's existing permissions. No secrets live in the browser.
-- An **Agent Sidecar administration app** — a Power Apps Code App, restricted to System Administrators — that discovers your apps, tables, and forms and deploys, validates, reconciles, or removes the sidecar with automatic rollback.
+- An **Agent Sidecar Administration** model-driven app that acts as the single front door for centralized Prompt Management and the environment-aware Setup & Deployment launcher.
+- An **Agent Sidecar Setup & Deployment** Code App, restricted to System Administrators, that discovers apps, tables, forms, and agents and deploys, validates, reconciles, or removes the Sidecar with automatic rollback.
 - A **reference implementation** (HR Management) you can deploy if you want to see the sidecar working end to end before wiring up your own app.
 
 ## Get rolling
@@ -36,11 +39,16 @@ Everything below is done through **solution import** and the **administration ap
 
 ### 3. Import the solution
 
-Import **[solution-core/AgentSidecarCore.zip](solution-core/AgentSidecarCore.zip)** into your environment (Power Platform admin center, or make.powerapps.com → **Solutions → Import**). It brings the sidecar tables, web resources, and the **Agent Sidecar administration app** itself. Map any prompted connections during import.
+Import the approved, validated `AgentSidecarCore` release ZIP into your environment (Power Platform admin center, or make.powerapps.com → **Solutions → Import**). Version 1.0.0.5 brings the Sidecar tables, runtime web resources, centralized model-driven Admin app and site map, portable Setup launcher, Prompt Management, and the Setup & Deployment Code App.
+
+> Do not use the checked-in `solution-core/AgentSidecarCore.zip` unless its checksum matches the
+> approved release. Historical copies in the repository predate the complete 1.0.0.5 package. See
+> the [customer update runbook](docs/AgentSidecarCore-Customer-Update-Runbook.md).
 
 ### 4. Configure and deploy in the app
 
-Open the **Agent Sidecar** app and run the wizard:
+Open **Agent Sidecar Administration**, select **Setup & Deployment**, and then open the deployment
+workspace. Run the wizard:
 
 1. **Application** — pick the model-driven app to add the sidecar to.
 2. **Tables & forms** — choose the tables; expand any table to select specific forms (the **Information** form is selected by default, others are optional).

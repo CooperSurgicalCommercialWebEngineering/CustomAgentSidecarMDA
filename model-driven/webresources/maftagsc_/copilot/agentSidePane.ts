@@ -30,6 +30,7 @@ import { sidecarStyleOptions } from "./sidecarStyleOptions";
 const ORIGINAL_TEXT_KEY = "hrSidecarOriginalText";
 const AUTH_REQUEST_KEY = "maftagsc.sidecar.authRequest";
 const AUTH_RESULT_PREFIX = "maftagsc.sidecar.authResult.";
+const PROMPT_REFRESH_CHANNEL = "maftagsc.sidecar.prompts";
 
 interface LaunchContext {
     pageType: "entityrecord" | "entitylist";
@@ -112,6 +113,7 @@ let navigationWatcher: number | null = null;
 // The live Web Chat store; a prompt chip dispatches a send-message action through
 // it so a chip click travels the same pipeline as a typed message.
 let activeStore: unknown = null;
+let promptRefreshChannel: BroadcastChannel | null = null;
 
 function getRequiredElement<T extends HTMLElement>(id: string): T {
     const element = document.getElementById(id);
@@ -669,6 +671,37 @@ function sendPrompt(text: string): void {
     getRequiredElement<HTMLElement>("chat").focus();
 }
 
+async function refreshActivePrompts(appId: unknown): Promise<void> {
+    if (!activeContext || !activeConfiguration) return;
+    const normalizedAppId = normalizeGuid(appId);
+    if (!normalizedAppId || normalizedAppId !== activeContext.appId) return;
+    const refreshed = applyPromptCatalog(
+        await sidecarConfigurationRepository.getByAppId(normalizedAppId)
+    );
+    activeConfiguration = refreshed;
+    renderPrompts(refreshed);
+}
+
+function startPromptRefreshListener(): void {
+    if ("BroadcastChannel" in window) {
+        promptRefreshChannel = new BroadcastChannel(PROMPT_REFRESH_CHANNEL);
+        promptRefreshChannel.addEventListener("message", (event: MessageEvent<unknown>) => {
+            const value = event.data as { type?: unknown; appId?: unknown } | null;
+            if (value?.type !== "prompts-updated") return;
+            void refreshActivePrompts(value.appId).catch((error) => {
+                console.warn("Saved prompts could not be refreshed automatically.", error);
+            });
+        });
+    }
+    window.addEventListener("storage", (event) => {
+        if (!event.key?.startsWith(`${PROMPT_REFRESH_CHANNEL}.`)) return;
+        const appId = event.key.slice(PROMPT_REFRESH_CHANNEL.length + 1);
+        void refreshActivePrompts(appId).catch((error) => {
+            console.warn("Saved prompts could not be refreshed automatically.", error);
+        });
+    });
+}
+
 function renderConversation(
     token: string,
     context: LaunchContext,
@@ -803,6 +836,7 @@ function initialize(): void {
     getRequiredElement<HTMLButtonElement>("new-conversation").addEventListener("click", () => {
         void startNewConversation();
     });
+    startPromptRefreshListener();
     void start(false);
 }
 

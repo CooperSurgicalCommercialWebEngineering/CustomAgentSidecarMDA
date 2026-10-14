@@ -1,0 +1,18 @@
+Hi Chris,
+
+Thanks for the questions. The instructions mixed together two different workflows, so your confusion is understandable.
+
+Steps 1-3 are release-build steps. They require a fully configured development workstation because they install the repository dependencies, build the administration Code App, and push the compiled app into the AgentSidecarCore solution before it is exported from Dataverse. They are not just Dataverse export and packaging steps.
+
+I understand that you were able to get beyond the npm certificate error. No additional npm troubleshooting is needed for this handoff.
+
+You should not need to complete the remaining build workflow in order to install this release. I have prepared an import-ready release bundle that already contains the Agent Sidecar, the prompts feature and prompts editor, the Dataverse prompts column, and Krysta's themed side pane. Your workflow will be to import the supplied solution package as an update, publish customizations if prompted, and run the smoke test. You will not need to compile the source.
+
+You confirmed that your installed AgentSidecarCore version is 1.0.0.2. The supplied update is version 1.0.0.3, so it meets Power Platform's requirement that the incoming solution version be higher than the installed version.
+
+Regarding the `PowerPlatform.Dataverse.client` Python module error: please do not install that module or continue with `provision_sidecar_admin_schema.py` for this handoff. The supplied solution package already contains the `maftagsc_prompts` Dataverse column that the provisioner would create. Python and the provisioner are release-producer alternatives, not customer update prerequisites.
+
+Please stop the original build/provision/export runbook at this point. I will send you the completed and validated release bundle with `AgentSidecarCore-Customer-Update-Runbook.md`. Follow that customer runbook to update the existing AgentSidecarCore solution in place. It does not require npm, Python, a local build, `pac code push`, or a Dataverse export. Do not delete or uninstall the current solution.
+
+Thanks,
+Kyle
